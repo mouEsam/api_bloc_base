@@ -264,16 +264,17 @@ class BaseRestClient {
     });
     response.whenComplete(() => progressController.close());
     return RequestResult(
-      cancelToken: cancelToken,
-      resultFuture: response,
-      progress: progressController.stream
+      cancelToken,
+      response,
+      progressController.stream
           .asBroadcastStream(onCancel: (sub) => sub.cancel()),
     );
   }
 
-  RequestResult<T> download<T>(
+  RequestResult<void> download(
     RequestMethod method,
-    String path, {
+    String path,
+    String savePath, {
     CancelToken? cancelToken,
     String? authorizationToken,
     Params? params,
@@ -286,10 +287,6 @@ class BaseRestClient {
     Map<String, dynamic>? queryParameters,
     RequestBodyType requestBodyType = RequestBodyType.FormData,
   }) {
-    if (T == BaseApiResponse) {
-      throw FlutterError(
-          'T must be either be a generic encodable Type or a sub class of BaseApiResponse');
-    }
     final progressController = StreamController<double>.broadcast();
     if (params != null) {
       print(Map.fromEntries(
@@ -352,8 +349,8 @@ class BaseRestClient {
       return progress;
     };
     dio.options.baseUrl = baseUrl;
-    Future<Response<ResponseBody?>> result = dio
-        .download(path, null,
+    Future<Response<ResponseBody?>> response = dio
+        .download(path, savePath,
             queryParameters: queryParameters,
             cancelToken: cancelToken,
             onReceiveProgress: _progressListener,
@@ -361,15 +358,11 @@ class BaseRestClient {
                 Options(method: method.method, headers: headers, extra: extra),
             data: body)
         .then((value) => value as Response<ResponseBody?>);
-    final _stream =
-        result.asStream().asBroadcastStream(onCancel: (sub) => sub.cancel());
-    _stream.listen((event) {},
-        onDone: () => progressController.close(),
-        onError: (e, s) => progressController.close(),
-        cancelOnError: true);
+    response.whenComplete(() => progressController.close());
     return RequestResult(
-      cancelToken: cancelToken,
-      progress: progressController.stream
+      cancelToken,
+      response,
+      progressController.stream
           .asBroadcastStream(onCancel: (sub) => sub.cancel()),
     );
   }
@@ -377,10 +370,10 @@ class BaseRestClient {
 
 class RequestResult<T> {
   final CancelToken? cancelToken;
-  final Future<Response<T>>? resultFuture;
+  final Future<Response<T>> resultFuture;
   final Stream<double>? progress;
 
-  const RequestResult({this.cancelToken, this.resultFuture, this.progress});
+  const RequestResult(this.cancelToken, this.resultFuture, this.progress);
 }
 
 class CustomTransformer extends DefaultTransformer {
