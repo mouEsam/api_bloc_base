@@ -1,4 +1,4 @@
-import 'package:api_bloc_base/api_bloc_base.dart';
+import 'package:api_bloc_base/src/presentation/bloc/worker/pagination_mixin.dart';
 
 class SimplePaginatedInput extends PaginatedInput {
   SimplePaginatedInput(input, String? nextUrl, int currentPage)

@@ -1,15 +1,23 @@
 import 'dart:async';
 
 import 'package:api_bloc_base/api_bloc_base.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/independant_mixin.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/independence_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/user/base_user_bloc.dart';
 
-mixin UserDependantMixin<Input, Data> on IndependentMixin<Input, Data> {
+mixin UserDependantMixin<Input, Output, State>
+    on IndependenceMixin<Input, Output, State> {
   BaseUserBloc get userBloc;
   String? authToken;
   get userId => userBloc.currentUser?.id;
   String get requireAuthToken => authToken!;
-  StreamSubscription? _userSubscription;
+  late StreamSubscription _userSubscription;
+
+  get subscriptions => super.subscriptions..add(_userSubscription);
+
+  void init() {
+    setUpUserListener();
+    super.init();
+  }
 
   void setUpUserListener() {
     _userSubscription = userBloc.userStream.listen(
@@ -18,18 +26,12 @@ mixin UserDependantMixin<Input, Data> on IndependentMixin<Input, Data> {
         if (newToken != null) {
           if (newToken != authToken) {
             authToken = newToken;
-            reset();
+            refreshData();
           }
         } else {
           authToken = null;
         }
       },
     );
-  }
-
-  @override
-  Future<void> close() {
-    _userSubscription?.cancel();
-    return super.close();
   }
 }

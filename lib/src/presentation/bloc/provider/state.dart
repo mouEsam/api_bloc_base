@@ -1,7 +1,9 @@
-import 'package:api_bloc_base/api_bloc_base.dart';
+import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:equatable/equatable.dart';
 
-abstract class ProviderState<T> extends Equatable {
+import '../base/state.dart';
+
+abstract class ProviderState<T> extends Equatable implements BlocState {
   const ProviderState();
 
   @override
@@ -11,11 +13,11 @@ abstract class ProviderState<T> extends Equatable {
   get props => [];
 }
 
-class ProviderLoading<T> extends ProviderState<T> {}
+class ProviderLoading<T> extends ProviderState<T> implements Loading {}
 
 class Invalidated<T> extends ProviderState<T> {}
 
-class ProviderLoaded<T> extends ProviderState<T> {
+class ProviderLoaded<T> extends ProviderState<T> implements Loaded<T> {
   final T data;
 
   const ProviderLoaded(this.data);
@@ -24,7 +26,7 @@ class ProviderLoaded<T> extends ProviderState<T> {
   get props => [this.data];
 }
 
-class ProviderError<T> extends ProviderState<T> {
+class ProviderError<T> extends ProviderState<T> implements Error {
   final ResponseEntity response;
 
   const ProviderError(this.response);

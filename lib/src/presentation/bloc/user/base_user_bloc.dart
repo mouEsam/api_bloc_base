@@ -6,7 +6,7 @@ import 'package:api_bloc_base/src/domain/entity/base_profile.dart';
 import 'package:api_bloc_base/src/domain/entity/credentials.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base_provider/provider_state.dart'
+import 'package:api_bloc_base/src/presentation/bloc/provider/state.dart'
     as provider;
 import 'package:dartz/dartz.dart';
 import 'package:rxdart/rxdart.dart';
@@ -28,9 +28,9 @@ abstract class BaseUserBloc<T extends BaseProfile>
   Stream<provider.ProviderState<T>> get profileStream =>
       userStream.map<provider.ProviderState<T>>((event) {
         if (event != null) {
-          return provider.ProviderLoadedState(event);
+          return provider.ProviderLoaded(event);
         } else {
-          return provider.ProviderLoadingState();
+          return provider.ProviderLoading();
         }
       });
 

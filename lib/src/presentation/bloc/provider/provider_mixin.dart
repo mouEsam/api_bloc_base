@@ -6,6 +6,7 @@ import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:rxdart/rxdart.dart';
+import '../base/state.dart';
 
 import 'state.dart';
 
@@ -16,34 +17,34 @@ mixin ProviderMixin<Data> on BaseCubit<ProviderState<Data>> {
   void injectInput(Data input);
   void clean();
 
-  ProviderState<Data> createLoadingState<Data>() {
+  ProviderState<Data> createLoadingState() {
     return ProviderLoading<Data>();
   }
 
-  ProviderState<Data> createLoadedState<Data>(Data data) {
+  ProviderState<Data> createLoadedState(Data data) {
     return ProviderLoaded<Data>(data);
   }
 
-  ProviderState<Data> createErrorState<Data>(ResponseEntity message) {
+  ProviderState<Data> createErrorState(ResponseEntity message) {
     return ProviderError<Data>(message);
   }
 
-  void emitState(ProviderState<Data> state) {
-    if (state is ProviderLoading<Data>) {
+  void emitState(BlocState state) {
+    if (state is Loading) {
       emitLoading();
-    } else if (state is ProviderLoaded<Data>) {
+    } else if (state is Loaded<Data>) {
       emitLoaded(state.data);
-    } else if (state is ProviderError<Data>) {
+    } else if (state is Error) {
       emitError(state.response);
     }
   }
 
   void emitLoading() {
-    emit(createLoadingState<Data>());
+    emit(createLoadingState());
   }
 
   void emitLoaded(Data data) {
-    emit(createLoadedState<Data>(data));
+    emit(createLoadedState(data));
   }
 
   void invalidate() {
@@ -51,7 +52,7 @@ mixin ProviderMixin<Data> on BaseCubit<ProviderState<Data>> {
   }
 
   void emitError(ResponseEntity response) {
-    emit(createErrorState<Data>(response));
+    emit(createErrorState(response));
   }
 
   void interceptOperation<S>(Result<Either<ResponseEntity, S>> result,

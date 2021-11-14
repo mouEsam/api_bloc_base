@@ -1,4 +1,5 @@
 import 'package:api_bloc_base/api_bloc_base.dart';
+import 'package:api_bloc_base/src/presentation/bloc/worker/worker_bloc.dart';
 import 'package:equatable/equatable.dart';
 
 class FormBlocData<Data> extends Equatable {
@@ -11,7 +12,7 @@ class FormBlocData<Data> extends Equatable {
   get props => [this.data, this.isEdit];
 }
 
-mixin FormMixin<Data> on BaseWorkingBloc<FormBlocData<Data>> {
+mixin FormMixin<Data> on WorkerBloc<FormBlocData<Data>> {
   static const EDIT_OPERATION = "EDIT_OPERATION";
 
   late Data data;
@@ -21,12 +22,12 @@ mixin FormMixin<Data> on BaseWorkingBloc<FormBlocData<Data>> {
 
   void editMode() {
     isEdit = true;
-    emitLoaded();
+    emitCurrent();
   }
 
   void viewMode() {
     isEdit = false;
-    emitLoaded();
+    emitCurrent();
   }
 
   Future<bool> Function()? get goBack {
@@ -35,7 +36,7 @@ mixin FormMixin<Data> on BaseWorkingBloc<FormBlocData<Data>> {
     } else {
       return () async {
         isEdit = false;
-        emitLoaded();
+        emitCurrent();
         return false;
       };
     }

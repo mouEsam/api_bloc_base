@@ -209,7 +209,7 @@ abstract class BaseRepository {
   String? getErrorMessage(error, [String? customErrorIfNoMessage]) {
     String? message;
     try {
-      message = error.message;
+      message = error.response;
     } catch (e, s) {
       message ??= customErrorIfNoMessage ?? defaultError;
     }

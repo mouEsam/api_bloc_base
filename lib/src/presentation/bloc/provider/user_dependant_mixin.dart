@@ -20,14 +20,23 @@ mixin UserDependantProviderMixin<Data, Profile extends BaseProfile>
 
   final ValueNotifier<bool> userIsGreen = ValueNotifier(false);
 
+  @override
   get trafficLights => super.trafficLights..addAll([userIsGreen]);
+  @override
+  get subscriptions => super.subscriptions..addAll([_subscription]);
 
   bool _isAGo = false;
 
   bool get isAGo => _isAGo;
 
+  @override
+  void init() {
+    setupUserListener();
+    super.init();
+  }
+
   void setupUserListener() {
-    _subscription = userBloc.userStream.listen(
+    _subscription = userBloc.userStream.distinct().listen(
       (user) {
         final newToken = user?.accessToken;
         if (newToken != null) {
@@ -48,17 +57,11 @@ mixin UserDependantProviderMixin<Data, Profile extends BaseProfile>
 
   bool shouldStart(Profile user) => true;
 
-  ProviderState<Data> createLoadedState<Data>(Data data) {
+  ProviderState<Data> createLoadedState(Data data) {
     return UserDependentProviderLoadedState<Data>(data, _lastLogin);
   }
 
-  ProviderState<Data> createErrorState<Data>(ResponseEntity response) {
+  ProviderState<Data> createErrorState(ResponseEntity response) {
     return UserDependentProviderErrorState<Data>(response, _lastLogin);
-  }
-
-  @override
-  Future<void> close() {
-    _subscription?.cancel();
-    return super.close();
   }
 }
