@@ -84,10 +84,6 @@ class ProviderBloc<Data> extends StatefulBloc<Data, ProviderState<Data>>
     emitState(input);
   }
 
-  Future<void> refreshData() {
-    return fetchData(refresh: true);
-  }
-
   void clean() {
     _dataSubject.value = null;
     _dataFuture = Completer();

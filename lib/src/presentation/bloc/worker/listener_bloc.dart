@@ -72,8 +72,7 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
 
   void setData(Output event) {
     handleInjectedOutput(event);
-    event = convertInjectedOutput(event);
-    currentData = event;
+    currentData = convertInjectedOutput(event);
     emitCurrent();
   }
 
