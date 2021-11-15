@@ -17,4 +17,9 @@ class SimpleUserProvider<UserType extends BaseProfile>
             getOnCreate: true,
             streamDataSource: Right(userBloc.userStream.whereType<UserType>()),
             appLifecycleObserver: appLifecycleObserver);
+
+  @override
+  Future<void> refreshData() {
+    return userBloc.autoSignIn(true);
+  }
 }
