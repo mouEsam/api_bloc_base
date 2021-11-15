@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/listener_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/sources_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/state.dart';
@@ -90,10 +91,14 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
   void handleSourcesOutput(event) {
     late final BlocState outputState;
     if (event is Loaded<Input>) {
-      final input = convertInput(event.data);
-      final output = convertInputToOutput(input);
-      final newOutput = convertOutput(output);
-      outputState = Loaded<Output>(newOutput);
+      try {
+        final input = convertInput(event.data);
+        final output = convertInputToOutput(input);
+        final newOutput = convertOutput(output);
+        outputState = Loaded<Output>(newOutput);
+      } catch (e, s) {
+        outputState = Error(Failure(extractErrorMessage(e)));
+      }
     } else {
       outputState = event;
     }
