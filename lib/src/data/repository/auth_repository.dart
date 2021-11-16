@@ -13,6 +13,7 @@ abstract class BaseAuthRepository<T extends BaseProfile>
   BaseResponseConverter<BaseUserResponse, T> get refreshConverter => converter;
 
   RequestResult<BaseUserResponse> internalLogin(BaseAuthParams params);
+
   RequestResult<BaseUserResponse> refresh(T account);
 
   Result<Either<ResponseEntity, T>> login(BaseAuthParams params) {

@@ -17,7 +17,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
     extends BaseCubit<BaseUserState> {
   final BaseAuthRepository<T> authRepository;
 
-  Timer? _timer;
+  Timer? _tokenRefreshTimer;
 
   final BehaviorSubject<T?> _userAccount = BehaviorSubject<T?>();
 
@@ -36,10 +36,17 @@ abstract class BaseUserBloc<T extends BaseProfile>
 
   T? get currentUser => _userAccount.valueOrNull;
 
+  @override
+  get timers => [_tokenRefreshTimer];
+  @override
+  get subscriptions => [_detailsSubscription];
+  @override
+  get subjects => [_userAccount];
+
   BaseUserBloc(this.authRepository) : super(UserLoadingState()) {
     autoSignIn();
     stream.listen((state) {
-      _timer?.cancel();
+      _tokenRefreshTimer?.cancel();
       T? user;
       if (state is SignedOutState) {
         _detailsSubscription?.cancel();
@@ -55,7 +62,8 @@ abstract class BaseUserBloc<T extends BaseProfile>
   }
 
   void setRefreshTimer(Duration refreshDuration) {
-    _timer = Timer.periodic(refreshDuration, (_) => autoSignIn(true));
+    _tokenRefreshTimer =
+        Timer.periodic(refreshDuration, (_) => autoSignIn(true));
   }
 
   Duration? shouldProfileRefresh(T state) => Duration(seconds: 30);
@@ -130,12 +138,4 @@ abstract class BaseUserBloc<T extends BaseProfile>
   }
 
   void emitSignedUser(T user);
-
-  @override
-  Future<void> close() {
-    _timer?.cancel();
-    _detailsSubscription?.cancel();
-    _userAccount.drain().then((value) => _userAccount.close());
-    return super.close();
-  }
 }
