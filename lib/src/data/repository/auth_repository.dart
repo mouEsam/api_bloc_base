@@ -1,6 +1,12 @@
-import 'package:api_bloc_base/api_bloc_base.dart';
+import 'package:api_bloc_base/src/data/model/remote/params/auth_params.dart';
 import 'package:api_bloc_base/src/data/model/remote/response/base_user_response.dart';
+import 'package:api_bloc_base/src/data/service/converter.dart';
+import 'package:api_bloc_base/src/data/source/local/user_defaults.dart';
+import 'package:api_bloc_base/src/data/source/remote/base_rest_client.dart';
+import 'package:api_bloc_base/src/domain/entity/_index.dart';
 import 'package:dartz/dartz.dart';
+
+import 'base_repository.dart';
 
 abstract class BaseAuthRepository<T extends BaseProfile>
     extends BaseRepository {

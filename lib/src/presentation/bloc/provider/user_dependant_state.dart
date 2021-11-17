@@ -1,4 +1,4 @@
-import 'package:api_bloc_base/api_bloc_base.dart';
+import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 
 import 'state.dart';
 
