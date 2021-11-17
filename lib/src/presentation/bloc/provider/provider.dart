@@ -49,7 +49,8 @@ class ProviderBloc<Data> extends StatefulBloc<Data, ProviderState<Data>>
   final BehaviorSubject<Data?> _dataSubject = BehaviorSubject<Data?>();
   var _dataFuture = Completer<Data?>();
   var _stateFuture = Completer<ProviderState<Data>>();
-  Data? get latestData => _dataSubject.value;
+  Data? get latestData => _dataSubject.valueOrNull;
+
   Stream<Data?> get dataStream =>
       async.LazyStream(() => _dataSubject.shareValue())
           .asBroadcastStream(onCancel: (c) => c.cancel());
