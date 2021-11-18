@@ -3,6 +3,7 @@ import 'dart:core' hide Enum;
 
 import 'package:api_bloc_base/src/domain/entity/entity.dart';
 import 'package:enum_to_string/enum_to_string.dart';
+import 'package:flutter/material.dart';
 
 abstract class Enum<E extends core.Enum> extends Entity {
   late final String _name;
@@ -16,22 +17,24 @@ abstract class Enum<E extends core.Enum> extends Entity {
       : _value = value,
         _name = EnumToString.convertToString(value);
 
-  Enum.fromString(String value, List<E> values) {
-    _init(values, value);
+  Enum.fromString(String value, List<E> values, bool allowUnknown) {
+    _init(values, value, allowUnknown);
   }
 
-  Enum.fromJson(String value, List<E> values) {
-    _init(values, value);
+  Enum.fromJson(String value, List<E> values, bool allowUnknown) {
+    _init(values, value, allowUnknown);
   }
 
-  void _init(List<dynamic> values, String value) {
+  void _init(List<dynamic> values, String value, bool allowUnknown) {
     final existingValue = EnumToString.fromString(values, value);
-    if (existingValue == null) {
+    if (existingValue != null) {
+      _value = existingValue;
+      _name = value;
+    } else if (allowUnknown) {
       _value = null;
       _name = value;
     } else {
-      _value = existingValue;
-      _name = value;
+      throw FlutterError("Unknown ${E.runtimeType} value: $value");
     }
   }
 
