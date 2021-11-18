@@ -11,6 +11,7 @@ abstract class Enum<E extends core.Enum> extends Entity {
 
   String get name => _name;
   E? get value => _value;
+  E get requireValue => _value as E;
   bool get exists => _value != null;
 
   Enum(E value)
@@ -42,4 +43,8 @@ abstract class Enum<E extends core.Enum> extends Entity {
   get props => [_name, _value];
 
   String toJson() => _name;
+}
+
+mixin ClosedEnumMixin<E extends core.Enum> on Enum<E> {
+  E get value => super.requireValue;
 }
