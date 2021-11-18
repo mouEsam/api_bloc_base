@@ -17,6 +17,14 @@ abstract class Enum<E extends core.Enum> extends Entity {
         _name = EnumToString.convertToString(value);
 
   Enum.fromString(String value, List<E> values) {
+    _init(values, value);
+  }
+
+  Enum.fromJson(String value, List<E> values) {
+    _init(values, value);
+  }
+
+  void _init(List<dynamic> values, String value) {
     final existingValue = EnumToString.fromString(values, value);
     if (existingValue == null) {
       _value = null;
@@ -29,4 +37,6 @@ abstract class Enum<E extends core.Enum> extends Entity {
 
   @override
   get props => [_name, _value];
+
+  String toJson() => _name;
 }
