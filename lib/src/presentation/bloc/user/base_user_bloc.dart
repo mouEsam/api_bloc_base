@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:api_bloc_base/src/data/repository/auth_repository.dart';
 import 'package:api_bloc_base/src/data/repository/base_repository.dart';
+import 'package:api_bloc_base/src/domain/entity/_index.dart';
 import 'package:api_bloc_base/src/domain/entity/base_profile.dart';
-import 'package:api_bloc_base/src/domain/entity/credentials.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/state.dart'
@@ -14,16 +14,15 @@ import 'package:rxdart/rxdart.dart';
 import 'base_user_state.dart';
 
 abstract class BaseUserBloc<T extends BaseProfile>
-    extends BaseCubit<BaseUserState> {
+    extends BaseCubit<UserState> {
+  final Duration? refreshInterval;
   final BaseAuthRepository<T> authRepository;
-
-  Timer? _tokenRefreshTimer;
-
   final BehaviorSubject<T?> _userAccount = BehaviorSubject<T?>();
-
-  StreamSubscription<T>? _detailsSubscription;
   Stream<T?> get userStream => _userAccount.shareValue();
   StreamSink<T?> get userSink => _userAccount.sink;
+  T? get currentUser => _userAccount.valueOrNull;
+
+  Timer? _tokenRefreshTimer;
 
   Stream<provider.ProviderState<T>> get profileStream =>
       userStream.map<provider.ProviderState<T>>((event) {
@@ -34,45 +33,21 @@ abstract class BaseUserBloc<T extends BaseProfile>
         }
       });
 
-  T? get currentUser => _userAccount.valueOrNull;
-
   @override
   get timers => [_tokenRefreshTimer];
   @override
-  get subscriptions => [_detailsSubscription];
-  @override
   get subjects => [_userAccount];
 
-  BaseUserBloc(this.authRepository) : super(UserLoadingState()) {
+  BaseUserBloc(this.refreshInterval, this.authRepository)
+      : super(UserLoadingState()) {
     autoSignIn();
-    stream.listen((state) {
-      _tokenRefreshTimer?.cancel();
-      T? user;
-      if (state is SignedOutState) {
-        _detailsSubscription?.cancel();
-      } else if (state is BaseSignedInState<T>) {
-        user = state.userAccount;
-        final refreshDuration = shouldProfileRefresh(user);
-        if (refreshDuration != null) {
-          setRefreshTimer(refreshDuration);
-        }
-      }
-      _userAccount.add(user);
-    });
   }
-
-  void setRefreshTimer(Duration refreshDuration) {
-    _tokenRefreshTimer =
-        Timer.periodic(refreshDuration, (_) => autoSignIn(true));
-  }
-
-  Duration? shouldProfileRefresh(T state) => Duration(seconds: 30);
 
   Future<Either<ResponseEntity, T>> autoSignIn([bool silent = true]) async {
     if (!silent) {
       emit(UserLoadingState());
     }
-    final result = await authRepository.autoLogin(currentUser).resultFuture;
+    final result = await authRepository.autoLogin().resultFuture;
     result.fold((l) {
       if (l is RefreshFailure<T>) {
         handleFailedRefresh(l.oldProfile, silent);
@@ -83,17 +58,29 @@ abstract class BaseUserBloc<T extends BaseProfile>
     return result;
   }
 
-  void handleFailedRefresh(T oldAccount, bool silent) {
-    final isValid = oldAccount.expiration?.isAfter(DateTime.now());
-    if (isValid != false) {
-      handleUser(oldAccount);
-    } else {
-      if (silent) {
-        setRefreshTimer(Duration(seconds: 5));
+  Future<Either<ResponseEntity, T>> refreshToken() async {
+    final result = await authRepository.refreshToken(currentUser!).resultFuture;
+    result.fold((l) {
+      if (l is RefreshFailure<T>) {
+        handleFailedRefresh(l.oldProfile, true);
       } else {
-        emit(TokenRefreshFailedState(oldAccount));
+        handleUser(null);
       }
-    }
+    }, (user) => handleUser(user));
+    return result;
+  }
+
+  Future<Either<ResponseEntity, T>> refreshProfile() async {
+    final result =
+        await authRepository.refreshProfile(currentUser!).resultFuture;
+    result.fold((l) {
+      if (l is RefreshFailure<T>) {
+        handleFailedRefresh(l.oldProfile, true);
+      } else {
+        handleUser(null);
+      }
+    }, (user) => handleUser(user));
+    return result;
   }
 
   Result<Either<ResponseEntity, T>> login(Credentials params);
@@ -101,7 +88,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
   Result<ResponseEntity> changePassword(String oldPassword, String password);
 
   Result<ResponseEntity> signOut() {
-    final op = authRepository.logout(currentUser!);
+    final op = authRepository.signOut(currentUser!);
     op.resultFuture.then((result) {
       if (result is Success ||
           (result is Failure && result is! InternetFailure)) {
@@ -128,8 +115,71 @@ abstract class BaseUserBloc<T extends BaseProfile>
     return op;
   }
 
+  @override
+  void stateChanged(UserState nextState) {
+    T? user;
+    if (nextState is SignedOutState) {
+      _tokenRefreshTimer?.cancel();
+    } else if (nextState is BaseSignedInState<T>) {
+      user = nextState.userAccount;
+      handleRefresh(user);
+    }
+    _userAccount.add(user);
+  }
+
+  void handleRefresh(T user) {
+    final token = user.userToken;
+    final now = DateTime.now();
+    final expiration = token.expiration;
+    if (expiration == null) {
+      if (refreshInterval != null) scheduleRefresh(refreshInterval!, false);
+    } else if (expiration.isAfter(now)) {
+      late final Duration refreshDuration;
+      late final bool refreshToken;
+      final interval = this.refreshInterval ?? Duration.zero;
+      final diff = expiration.difference(now);
+      if (interval > diff) {
+        refreshDuration = diff;
+        refreshToken = true;
+      } else {
+        refreshDuration = interval;
+        refreshToken = false;
+      }
+      scheduleRefresh(refreshDuration, refreshToken);
+    } else {
+      refreshToken();
+    }
+  }
+
+  void scheduleRefresh(Duration refreshDuration, bool isRefreshToken) {
+    _tokenRefreshTimer?.cancel();
+    _tokenRefreshTimer = Timer(
+      refreshDuration,
+      () {
+        if (isRefreshToken) {
+          refreshToken();
+        } else {
+          refreshProfile();
+        }
+      },
+    );
+  }
+
+  void handleFailedRefresh(T oldAccount, bool silent) {
+    final expiration = oldAccount.userToken.expiration;
+    final isValid = expiration == null || expiration.isAfter(DateTime.now());
+    if (isValid) {
+      handleUser(oldAccount);
+    } else {
+      if (silent) {
+        scheduleRefresh(Duration(seconds: 5), true);
+      } else {
+        emit(TokenRefreshFailedState(oldAccount));
+      }
+    }
+  }
+
   Future<void> handleUser(T? user) async {
-    print(user);
     if (user == null) {
       emit(SignedOutState());
     } else {

@@ -1,32 +1,27 @@
+import 'package:api_bloc_base/src/domain/entity/token.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import 'entity.dart';
 
 abstract class BaseProfile extends Entity {
   const BaseProfile({
-    required this.accessToken,
-    this.refreshToken,
-    this.expiration,
+    required this.userToken,
     required this.active,
   });
 
-  final String accessToken;
-  final String? refreshToken;
-  final DateTime? expiration;
+  final UserToken userToken;
   final bool active;
 
   @JsonKey(ignore: true)
   dynamic get id;
 
-  @override
-  bool get stringify => true;
+  @JsonKey(ignore: true)
+  String get accessToken => userToken.accessToken;
+
+  BaseProfile updateToken(UserToken newToken);
 
   @override
-  List<Object?> get props => [
-        this.accessToken,
-        this.refreshToken,
-        this.expiration,
-      ];
+  List<Object?> get props;
 
   Map<String, dynamic> toJson();
 }

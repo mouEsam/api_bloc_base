@@ -43,7 +43,7 @@ abstract class BaseResponseConverter<T extends BaseApiResponse, X>
 
   const BaseResponseConverter([this.handlePath]);
 
-  X convert(T initialData);
+  X convert(T response);
 
   bool isErrorMessage(BaseApiResponse initialData) {
     return initialData.errors != null ||
@@ -78,9 +78,11 @@ abstract class BaseModelConverter<Input, Output>
   final bool failIfError;
 
   const BaseModelConverter([this.failIfError = false]);
-
+  
   List<Converter> get converters => [];
 
+  Output? convert(Input model);
+  
   Output? convertSingle(Input? initialData) {
     Output? result;
     if (failIfError) {

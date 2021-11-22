@@ -5,7 +5,7 @@ import 'converter.dart';
 class DummyConverter extends BaseResponseConverter<BaseApiResponse, dynamic> {
   const DummyConverter() : super();
 
-  convert(initialData) {
+  convert(model) {
     throw UnimplementedError();
   }
 

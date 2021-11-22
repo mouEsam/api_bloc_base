@@ -26,6 +26,15 @@ abstract class BaseCubit<State> extends Cubit<State> implements Initializable {
   void init() {}
 
   @override
+  @mustCallSuper
+  void onChange(change) {
+    super.onChange(change);
+    stateChanged(change.nextState);
+  }
+
+  void stateChanged(State nextState) {}
+
+  @override
   Future<void> close() async {
     notifiers.forEach((element) {
       try {

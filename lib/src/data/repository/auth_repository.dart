@@ -1,4 +1,5 @@
 import 'package:api_bloc_base/src/data/model/remote/params/auth_params.dart';
+import 'package:api_bloc_base/src/data/model/remote/response/base_api_response.dart';
 import 'package:api_bloc_base/src/data/model/remote/response/base_user_response.dart';
 import 'package:api_bloc_base/src/data/service/converter.dart';
 import 'package:api_bloc_base/src/data/source/local/user_defaults.dart';
@@ -19,8 +20,13 @@ abstract class BaseAuthRepository<T extends BaseProfile>
   BaseResponseConverter<BaseUserResponse, T> get refreshConverter => converter;
 
   RequestResult<BaseUserResponse> internalLogin(BaseAuthParams params);
+  RequestResult<BaseUserResponse> internalRefreshToken(T account);
+  RequestResult<BaseUserResponse> internalRefreshProfile(T account);
+  RequestResult<BaseApiResponse> internalLogout(T account);
 
-  RequestResult<BaseUserResponse> refresh(T account);
+  Future<bool> get _wasSaved async {
+    return (await userDefaults.signedAccount) != null;
+  }
 
   Result<Either<ResponseEntity, T>> login(BaseAuthParams params) {
     final result = internalLogin(params);
@@ -28,34 +34,27 @@ abstract class BaseAuthRepository<T extends BaseProfile>
       result,
       interceptResult: (result) {
         if (result.active == true && params.rememberMe) {
-          userDefaults.setSignedAccount(result);
-          userDefaults.setUserToken(result.accessToken);
+          saveAccount(result);
         }
         print(result.toJson());
       },
     );
   }
 
-  Result<Either<ResponseEntity, T>> autoLogin([T? profile]) {
-    final savedProfile = Future(() async {
-      return await userDefaults.signedAccount;
-    })
+  Result<Either<ResponseEntity, T>> autoLogin() {
+    final savedProfile = Future(() async => await userDefaults.signedAccount)
         .catchError((e, s) => null)
         .then<Either<ResponseEntity, T>>((savedAccount) {
-      final save = savedAccount != null;
-      final account = savedAccount ?? profile;
-      if (account is T) {
-        final operation = refresh(account);
+      if (savedAccount is T) {
+        final operation = internalRefreshToken(savedAccount);
         final result = handleFullResponse<BaseUserResponse, T>(operation,
             converter: refreshConverter);
-        return result.resultFuture.then((value) {
-          value.forEach((r) {
-            if (r.active == true && save) {
-              userDefaults.setSignedAccount(r);
-              userDefaults.setUserToken(r.accessToken);
-            }
+        return result.resultFuture.then((value) async {
+          return value
+              .fold((l) => Left(RefreshFailure(l.message, savedAccount)), (r) {
+            checkSave(r);
+            return Right(r);
           });
-          return value.leftMap((l) => RefreshFailure(l.message, account));
         });
       }
       return Left(NoAccountSavedFailure(noAccountSavedInError));
@@ -63,13 +62,41 @@ abstract class BaseAuthRepository<T extends BaseProfile>
     return Result(resultFuture: savedProfile);
   }
 
-  Result<ResponseEntity> saveProfileIfShouldBeRemembered(T profile) {
+  Result<Either<ResponseEntity, T>> refreshToken(T profile) {
+    final operation = internalRefreshToken(profile);
+    final result = handleFullResponse<BaseUserResponse, T>(operation,
+        converter: refreshConverter);
+    final future =
+        result.resultFuture.then<Either<ResponseEntity, T>>((value) async {
+      return value.fold((l) => Left(RefreshFailure(l.message, profile)), (r) {
+        checkSave(r);
+        return Right(r);
+      });
+    });
+    return Result(resultFuture: future);
+  }
+
+  Result<Either<ResponseEntity, T>> refreshProfile(T profile) {
+    final operation = internalRefreshProfile(profile);
+    final result = handleFullResponse<BaseUserResponse, T>(operation,
+        converter: refreshConverter);
+    final future =
+        result.resultFuture.then<Either<ResponseEntity, T>>((value) async {
+      return value.fold((l) => Left(RefreshFailure(l.message, profile)), (r) {
+        r = r.updateToken(profile.userToken) as T;
+        checkSave(r);
+        return Right(r);
+      });
+    });
+    return Result(resultFuture: future);
+  }
+
+  Result<ResponseEntity> saveProfileIfRemembered(T profile) {
     final Future<ResponseEntity> savedProfile =
-        userDefaults.signedAccount.then<ResponseEntity>((oldProfile) async {
-      if (oldProfile is T) {
+        _wasSaved.then<ResponseEntity>((wasSaved) async {
+      if (wasSaved) {
         if (profile.active == true) {
-          userDefaults.setSignedAccount(profile);
-          userDefaults.setUserToken(profile.accessToken);
+          saveAccount(profile);
         }
       }
       return Success();
@@ -78,9 +105,7 @@ abstract class BaseAuthRepository<T extends BaseProfile>
   }
 
   Result<ResponseEntity> offlineSignOut() {
-    final one = userDefaults.setSignedAccount(null);
-    final two = userDefaults.setUserToken(null);
-    final result = Future.wait([one, two]).then<ResponseEntity>((value) {
+    final result = saveAccount(null).then<ResponseEntity>((value) {
       return Success();
     }).catchError((e, s) {
       print(e);
@@ -90,5 +115,23 @@ abstract class BaseAuthRepository<T extends BaseProfile>
     return Result(resultFuture: result);
   }
 
-  Result<ResponseEntity> logout(T account);
+  Result<ResponseEntity> signOut(T account) {
+    final result = internalLogout(account);
+    return handleApiResponse(result, interceptData: (_) {
+      saveAccount(null);
+    });
+  }
+
+  Future<void> checkSave(T account) async {
+    final wasSaved = await _wasSaved;
+    if (account.active == true && wasSaved) {
+      saveAccount(account);
+    }
+  }
+
+  Future<void> saveAccount(T? account) {
+    final one = userDefaults.setSignedAccount(account);
+    final two = userDefaults.setUserToken(account?.accessToken);
+    return Future.wait([one, two]);
+  }
 }
