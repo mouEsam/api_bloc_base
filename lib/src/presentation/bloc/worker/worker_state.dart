@@ -20,6 +20,8 @@ class LoadingState<T> extends WorkerState<T> implements Loading {}
 class ErrorState<T> extends WorkerState<T> implements Error {
   final ResponseEntity response;
 
+  String? get message => response.message;
+
   const ErrorState(this.response);
 
   @override

@@ -83,7 +83,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
     return result;
   }
 
-  Result<Either<ResponseEntity, T>> login(Credentials params);
+  Result<Either<ResponseEntity, T>> login(Credentials credentials);
 
   Result<ResponseEntity> changePassword(String oldPassword, String password);
 
