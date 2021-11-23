@@ -21,7 +21,7 @@ abstract class BaseProfile extends Entity {
   BaseProfile updateToken(UserToken newToken);
 
   @override
-  List<Object?> get props;
+  get props => [userToken, active];
 
   Map<String, dynamic> toJson();
 }
