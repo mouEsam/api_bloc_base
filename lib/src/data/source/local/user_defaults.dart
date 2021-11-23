@@ -9,7 +9,7 @@ class UserDefaults {
   const UserDefaults(this.profileFactory);
 }
 
-extension UserToken on UserDefaults {
+extension UserTokenUtils on UserDefaults {
   static const _USER_TOKEN = 'user_token';
   Future<void> setUserToken(String? userToken) {
     if (userToken == null) {
@@ -24,7 +24,7 @@ extension UserToken on UserDefaults {
   }
 }
 
-extension SignedInAccount on UserDefaults {
+extension SignedInAccountUtils on UserDefaults {
   static const _SIGNED_ACCOUNT = 'signed_in_account';
   Future<void> setSignedAccount(BaseProfile? profile) {
     print('saving account $profile');
