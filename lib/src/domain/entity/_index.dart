@@ -5,3 +5,4 @@ export "enum.dart";
 export "localized_string.dart";
 export "paginated_input.dart";
 export "response_entity.dart";
+export 'token.dart';
