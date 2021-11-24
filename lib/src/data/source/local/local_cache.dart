@@ -12,11 +12,16 @@ class LocalCache {
   const LocalCache._(this.db);
 
   static Future<LocalCache> create() async {
-    DatabaseFactory dbFactory =
-        UniversalPlatform.isWeb ? databaseFactoryWeb : databaseFactoryIo;
-    final directory = await getApplicationDocumentsDirectory();
-    Database db =
-        await dbFactory.openDatabase('${directory.path}/cache/$dbPath');
+    Database db = await _createDatabase();
     return LocalCache._(db);
+  }
+
+  static Future<Database> _createDatabase() async {
+    if (UniversalPlatform.isWeb) {
+      return databaseFactoryWeb.openDatabase('cache/$dbPath');
+    } else {
+      final directory = await getApplicationDocumentsDirectory();
+      return databaseFactoryIo.openDatabase('${directory.path}/cache/$dbPath');
+    }
   }
 }

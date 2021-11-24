@@ -17,9 +17,11 @@ abstract class Sailor {
 }
 
 abstract class SailorBloc extends BaseCubit<NavigationState> implements Sailor {
-  final GlobalKey<NavigatorState> navKey = GlobalKey();
+  static const _localHost = "localhost";
 
+  final GlobalKey<NavigatorState> navKey = GlobalKey();
   String get mainHost;
+  String get localHost => _localHost;
   String get internalInitialRoute;
   String get internalMainRoute;
 
@@ -106,7 +108,9 @@ abstract class SailorBloc extends BaseCubit<NavigationState> implements Sailor {
   Future<void> handleUri(Uri link) async {
     if (link.host.isNotEmpty &&
         link.host != mainHost &&
+        link.host != localHost &&
         await launcher.canLaunch(link.toString())) {
+      debugPrint("Launching $link");
       await launcher.launch(link.toString());
       return;
     }

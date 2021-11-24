@@ -8,20 +8,18 @@ class StadiumIndicator extends Decoration {
 
   @override
   BoxPainter createBoxPainter([VoidCallback? onChanged]) {
-    return _SolidIndicatorPainter(this, onChanged);
+    return _StadiumIndicatorPainter(this, onChanged);
   }
 }
 
-class _SolidIndicatorPainter extends BoxPainter {
+class _StadiumIndicatorPainter extends BoxPainter {
   final StadiumIndicator decoration;
 
-  _SolidIndicatorPainter(this.decoration, VoidCallback? onChanged)
-      : assert(decoration != null),
-        super(onChanged);
+  _StadiumIndicatorPainter(this.decoration, VoidCallback? onChanged)
+      : super(onChanged);
 
   @override
   void paint(Canvas canvas, Offset offset, ImageConfiguration configuration) {
-    assert(configuration != null);
     assert(configuration.size != null);
 
     final Rect rect = offset & configuration.size!;
