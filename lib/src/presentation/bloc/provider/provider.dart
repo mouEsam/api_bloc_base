@@ -8,6 +8,7 @@ import 'package:api_bloc_base/src/presentation/bloc/base/listenable_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/listener_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/sources_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
 import 'package:async/async.dart' as async;
 import 'package:dartz/dartz.dart';
 import 'package:rxdart/rxdart.dart';
@@ -21,6 +22,7 @@ export 'state.dart';
 class ProviderBloc<Data> extends StatefulBloc<Data, ProviderState<Data>>
     with
         ProviderMixin<Data>,
+        TrafficLightsMixin<ProviderState<Data>>,
         LifecycleMixin<ProviderState<Data>>,
         ListenableMixin<ProviderState<Data>>,
         IndependenceMixin<Data, Data, ProviderState<Data>>,

@@ -4,6 +4,7 @@ import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/listener_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/sources_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/state.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/visibility_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/worker/worker_bloc.dart';
 import 'package:async/async.dart' as async;
@@ -17,6 +18,7 @@ export 'worker_state.dart';
 
 abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
     with
+        TrafficLightsMixin<WorkerState<Output>>,
         ListenerMixin<WorkerState<Output>>,
         VisibilityMixin<WorkerState<Output>>,
         SourcesMixin<Input, Output, WorkerState<Output>> {

@@ -1,7 +1,9 @@
 library api_bloc_base;
 
+export 'package:bloc/bloc.dart';
 export 'package:dio/dio.dart';
 export 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
+export 'package:flutter_bloc/flutter_bloc.dart';
 export 'package:sembast/blob.dart';
 export 'package:sembast/sembast.dart';
 export 'package:sembast/sembast_io.dart';

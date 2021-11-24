@@ -5,9 +5,9 @@ import '../base/stateful_bloc.dart';
 import 'worker_mixin.dart';
 import 'worker_state.dart';
 
-abstract class WorkerBloc<Output>
-    extends StatefulBloc<Output, WorkerState<Output>> with WorkerMixin<Output> {
-  WorkerState<Output> get initialState => LoadedState(currentData);
+class WorkerBloc<Output> extends StatefulBloc<Output, WorkerState<Output>>
+    with WorkerMixin<Output> {
+  WorkerState<Output> get initialState => createLoadedState(currentData);
 
   WorkerBloc.work(Output currentData) : super(LoadingState()) {
     this.currentData = currentData;
@@ -33,6 +33,10 @@ abstract class WorkerBloc<Output>
 
   void clear() {
     _output = null;
+  }
+
+  void setData(Output event) {
+    currentData = event;
   }
 
   WorkerState<Output> createLoadingState() {

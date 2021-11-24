@@ -1,9 +1,7 @@
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
 
-abstract class StatefulBloc<Data, State> extends BaseCubit<State>
-    with TrafficLightsMixin<State> {
+abstract class StatefulBloc<Data, State> extends BaseCubit<State> {
   StatefulBloc(State initialState) : super(initialState);
 
   String get defaultErrorMessage => "Error in ${this.runtimeType}";
