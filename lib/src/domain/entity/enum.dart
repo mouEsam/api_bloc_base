@@ -48,3 +48,7 @@ abstract class Enum<E extends core.Enum> extends Entity {
 mixin ClosedEnumMixin<E extends core.Enum> on Enum<E> {
   E get value => super.requireValue;
 }
+
+extension EnumName on core.Enum {
+  String get name => EnumToString.convertToString(this);
+}
