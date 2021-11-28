@@ -9,9 +9,6 @@ abstract class Entity extends Equatable {
   @JsonKey(ignore: true)
   get stringify => true;
 
-  @JsonKey(ignore: true)
-  List<String>? get serverSuccessMessages => null;
-
   @override
   List<Object?> get props => _props;
 }
