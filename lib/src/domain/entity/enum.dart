@@ -16,7 +16,7 @@ abstract class Enum<E extends core.Enum> extends Entity {
 
   Enum(E value)
       : _value = value,
-        _name = EnumToString.convertToString(value);
+        _name = value.name;
 
   Enum.fromString(String value, List<E> values, bool allowUnknown) {
     _init(values, value, allowUnknown);
