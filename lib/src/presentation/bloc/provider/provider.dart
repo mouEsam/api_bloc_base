@@ -124,13 +124,4 @@ class ProviderBloc<Data> extends StatefulBloc<Data, ProviderState<Data>>
   void injectInputState(BlocState input) {
     _input.add(input);
   }
-
-  void trafficLightsChanged(bool green) {
-    if (green) {
-      resumeSources();
-    } else {
-      pauseSources();
-    }
-    super.trafficLightsChanged(green);
-  }
 }

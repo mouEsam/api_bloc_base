@@ -1,32 +1,51 @@
 import 'dart:async';
 
 import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/provider.dart';
 import 'package:collection/collection.dart';
 import 'package:dartz/dartz.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'listener_mixin.dart';
 import 'state.dart';
 
 mixin SourcesMixin<Input, Output, State>
-    on StatefulBloc<Output, State>, ListenerMixin<State> {
+    on
+        StatefulBloc<Output, State>,
+        TrafficLightsMixin<State>,
+        ListenerMixin<State> {
   late final List<ProviderBloc> providers;
   late final List<Stream<ProviderState>> sources;
   late final StreamSubscription _dataSubscription;
 
+  final ValueNotifier<bool> listeningToSources = ValueNotifier(true);
+
   Stream<BlocState> get inputStream;
+
+  @override
+  get trafficLights => super.trafficLights..addAll([listeningToSources]);
   @override
   get subscriptions => super.subscriptions..addAll([_dataSubscription]);
 
   void handleSourcesOutput(BlocState event);
 
   void pauseSources() {
-    _dataSubscription.pause();
+    listeningToSources.value = false;
   }
 
   void resumeSources() {
-    _dataSubscription.resume();
+    listeningToSources.value = true;
+  }
+
+  @mustCallSuper
+  void trafficLightsChanged(bool green) {
+    if (green) {
+      _dataSubscription.resume();
+    } else {
+      _dataSubscription.pause();
+    }
   }
 
   @override

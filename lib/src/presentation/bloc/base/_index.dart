@@ -1,4 +1,5 @@
 export 'base_bloc.dart';
+export 'dependence_mixin.dart';
 export 'form_mixin.dart';
 export 'independence_mixin.dart';
 export 'initializable.dart';
