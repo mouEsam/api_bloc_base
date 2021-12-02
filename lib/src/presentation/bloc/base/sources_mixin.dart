@@ -54,7 +54,11 @@ mixin SourcesMixin<Input, Output, State>
     super.init();
   }
 
+  bool _init = false;
   void setupStreams() {
+    if (_init) return;
+    _init = true;
+    print(this.runtimeType);
     providers.forEach((element) => element.addListener(this));
     final newSources = [...sources, ...providers.map((e) => e.stream)];
     _dataSubscription = inputStream

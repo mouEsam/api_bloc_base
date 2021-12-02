@@ -14,7 +14,10 @@ mixin OnceListenerMixin<Data> on WorkerBloc<Data> {
     super.init();
   }
 
+  bool _init = false;
   void setUpSourcesListeners() {
+    if (_init) return;
+    _init = true;
     _subs = streamSources.map((type, value) => MapEntry(
         type,
         value

@@ -62,7 +62,10 @@ mixin ListenableDependenceMixin<InputParameter, Input, Output, State>
     super.init();
   }
 
+  bool _init = false;
   void setupListenablesDependence() {
+    if (_init) return;
+    _init = true;
     listenableSources.forEach((element) => element.addListener(this));
     final List<Stream<BlocState>> newSources = [
       ...listenableStreams,

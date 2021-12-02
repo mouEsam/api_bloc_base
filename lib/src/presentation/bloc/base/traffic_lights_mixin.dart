@@ -23,7 +23,10 @@ mixin TrafficLightsMixin<State> on BaseCubit<State>, Initializable {
     super.init();
   }
 
+  bool _init = false;
   void setupTrafficLights() {
+    if (_init) return;
+    _init = true;
     isGreen.value = trafficLightsValue;
     isGreen.addListener(_alert);
     _singleTrafficLights = Listenable.merge(trafficLights);

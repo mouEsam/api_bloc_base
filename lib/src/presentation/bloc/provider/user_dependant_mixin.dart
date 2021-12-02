@@ -35,7 +35,10 @@ mixin UserDependantProviderMixin<Data, Profile extends BaseProfile>
     super.init();
   }
 
+  bool _init = false;
   void setupUserListener() {
+    if (_init) return;
+    _init = true;
     _subscription = userBloc.userStream.distinct().listen(
       (user) {
         final newToken = user?.accessToken;

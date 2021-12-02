@@ -4,6 +4,7 @@ export 'disposer.dart';
 export 'dots_indicator.dart';
 export 'go_up_fab.dart';
 export 'loading_more.dart';
+export 'mixins/_index.dart';
 export 'page_slider.dart';
 export 'rounded_indicator.dart';
 export 'stadium_indicator.dart';

@@ -75,8 +75,6 @@ class ProviderBloc<Data> extends StatefulBloc<Data, ProviderState<Data>>
     }
   }
 
-  void init() {}
-
   void setupInitialData(Data? initialDate) {
     if (initialDate is Data) {
       injectInput(initialDate);

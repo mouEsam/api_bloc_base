@@ -59,11 +59,13 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
 
   void init() {
     super.init();
-    setupStreams();
     setupOutputStream();
   }
 
+  bool _init = false;
   void setupOutputStream() {
+    if (_init) return;
+    _init = true;
     _outputSubscription = outputStream.listen(emitState, onError: handleError);
   }
 

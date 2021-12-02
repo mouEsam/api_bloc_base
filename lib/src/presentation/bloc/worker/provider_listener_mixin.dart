@@ -19,7 +19,10 @@ mixin ProviderListenerMixin<Input, Output> on ListenerBloc<Input, Output> {
     super.init();
   }
 
+  bool _init = false;
   void setupProviderListener() {
+    if (_init) return;
+    _init = true;
     provider.addListener(this);
     _blocSubscription =
         provider.stream.listen(injectInputState, onError: handleProviderError);

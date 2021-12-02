@@ -5,8 +5,6 @@ import 'listener_mixin.dart';
 import 'traffic_lights_mixin.dart';
 
 mixin ListenableMixin<State> on TrafficLightsMixin<State> {
-  late bool lastTrafficLightsValue;
-
   bool get canRunWithoutListeners;
 
   late final ValueNotifier<bool> _canRunWithoutListeners =

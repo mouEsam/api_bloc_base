@@ -19,7 +19,10 @@ mixin UserDependantMixin<Input, Output, State>
     super.init();
   }
 
+  bool _init = false;
   void setUpUserListener() {
+    if (_init) return;
+    _init = true;
     _userSubscription = userBloc.userStream.listen(
       (user) {
         final newToken = user?.accessToken;
