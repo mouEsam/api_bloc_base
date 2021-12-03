@@ -6,6 +6,7 @@ import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.da
 import 'package:api_bloc_base/src/utils/box.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
+import 'package:listenable_stream/listenable_stream.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'independence_mixin.dart';
@@ -14,7 +15,7 @@ import 'state.dart';
 
 export 'state.dart';
 
-mixin ListenableDependenceMixin<InputParameter, Input, Output, State>
+mixin ParametersDependenceMixin<InputParameter, Input, Output, State>
     on
         StatefulBloc<Output, State>,
         TrafficLightsMixin<State>,
@@ -26,54 +27,58 @@ mixin ListenableDependenceMixin<InputParameter, Input, Output, State>
   set inputParameter(InputParameter? inputParameter) =>
       _inputParameter.data = inputParameter;
 
-  final ValueNotifier<bool> listeningToListenables = ValueNotifier(true);
+  final ValueNotifier<bool> listeningToParametersSources = ValueNotifier(true);
 
-  late final List<ListenableMixin<BlocState>> listenableSources;
-  late final List<Stream<BlocState>> listenableStreams;
+  late final List<ListenableMixin<BlocState>> listenableParametersSources;
+  late final List<Stream<BlocState>> listenableParametersStreams;
 
-  late final StreamSubscription _streamSourceSubscription;
+  late final StreamSubscription _streamParametersSubscription;
+
+  // @override
+  // get trafficLights => super.trafficLights..addAll([listeningToListenables]);
 
   @override
-  get trafficLights => super.trafficLights..addAll([listeningToListenables]);
-  @override
-  get subscriptions => super.subscriptions..addAll([_streamSourceSubscription]);
+  get subscriptions =>
+      super.subscriptions..addAll([_streamParametersSubscription]);
 
-  void pauseListenables() {
-    listeningToListenables.value = false;
+  void pauseParametersListenables() {
+    listeningToParametersSources.value = false;
   }
 
-  void resumeListenables() {
-    listeningToListenables.value = true;
+  void resumeParametersListenables() {
+    listeningToParametersSources.value = true;
   }
 
   @mustCallSuper
   void trafficLightsChanged(bool green) {
     if (green) {
-      _streamSourceSubscription.resume();
+      _streamParametersSubscription.resume();
     } else {
-      _streamSourceSubscription.pause();
+      _streamParametersSubscription.pause();
     }
     super.trafficLightsChanged(green);
   }
 
   @override
   void init() {
-    setupListenablesDependence();
+    setupListenableParametersDependence();
     super.init();
   }
 
   bool _init = false;
-  void setupListenablesDependence() {
+  void setupListenableParametersDependence() {
     if (_init) return;
     _init = true;
-    listenableSources.forEach((element) => element.addListener(this));
+    listenableParametersSources.forEach((element) => element.addListener(this));
     final List<Stream<BlocState>> newSources = [
-      ...listenableStreams,
-      ...listenableSources.map((e) => e.stream)
+      ...listenableParametersStreams,
+      ...listenableParametersSources.map((e) => e.stream)
     ];
-    _streamSourceSubscription =
-        CombineLatestStream<BlocState, List<BlocState>>(newSources, (a) => a)
-            .map((event) {
+    _streamParametersSubscription = listeningToParametersSources
+        .toValueStream(replayValue: true)
+        .where((event) => event)
+        .switchMap((value) => CombineLatestStream(newSources, (a) => a))
+        .map((event) {
       Error? errorState =
           event.firstWhereOrNull((element) => element is Error) as Error?;
       if (errorState != null) {
@@ -110,7 +115,8 @@ mixin ListenableDependenceMixin<InputParameter, Input, Output, State>
 
   @override
   Future<void> close() {
-    listenableSources.forEach((element) => element.removeListener(this));
+    listenableParametersSources
+        .forEach((element) => element.removeListener(this));
     return super.close();
   }
 }
