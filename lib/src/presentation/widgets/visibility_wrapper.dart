@@ -4,25 +4,26 @@ import 'package:visibility_detector/visibility_detector.dart';
 
 class VisibilityWrapper extends StatelessWidget {
   final Widget child;
-  final VisibilityMixin visibilityDetector;
-  final void Function() loadMore;
+  final VisibilityMixin? visibilityDetector;
+  final ValueChanged<double>? onVisibilityChanged;
 
   const VisibilityWrapper(
-      {Key? key,
+      {required Key key,
       required this.child,
-      required this.visibilityDetector,
-      required this.loadMore})
+      this.visibilityDetector,
+      this.onVisibilityChanged})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return VisibilityDetector(
-      key: ObjectKey(visibilityDetector),
+      key: key!,
       onVisibilityChanged: (VisibilityInfo info) {
+        onVisibilityChanged?.call(info.visibleFraction);
         if (info.visibleFraction > 0.0) {
-          visibilityDetector.setVisible(false);
+          visibilityDetector?.setVisible(false);
         } else {
-          visibilityDetector.setVisible(true);
+          visibilityDetector?.setVisible(true);
         }
       },
       child: child,

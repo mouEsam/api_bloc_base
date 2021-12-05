@@ -11,4 +11,5 @@ export 'rounded_indicator.dart';
 export 'stadium_indicator.dart';
 export 'value_listener.dart';
 export 'visibility_wrapper.dart';
+export 'visibility_builder.dart';
 export 'widget_animator.dart';
