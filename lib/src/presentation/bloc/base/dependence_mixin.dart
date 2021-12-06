@@ -100,6 +100,7 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output, State>
   void handleListenablesOutput(BlocState event) {
     if (event is Loaded<InputParameter>) {
       inputParameter = event.data;
+      clean();
       fetchData();
     } else {
       inputParameter = null;

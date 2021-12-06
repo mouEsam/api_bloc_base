@@ -31,7 +31,7 @@ class WorkerBloc<Output> extends StatefulBloc<Output, WorkerState<Output>>
     emitCurrent();
   }
 
-  void clear() {
+  void clean() {
     _output = null;
   }
 

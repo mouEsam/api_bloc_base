@@ -124,15 +124,15 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
   }
 
   @override
-  void clear() {
-    super.clear();
+  void clean() {
+    super.clean();
     _currentPage = startPage;
     paginatedData = empty;
     lastInput = null;
   }
 
   void reset() {
-    clear();
+    clean();
     fetchData(refresh: false);
   }
 

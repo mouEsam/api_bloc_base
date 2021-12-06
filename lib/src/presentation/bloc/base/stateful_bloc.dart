@@ -24,6 +24,8 @@ abstract class StatefulBloc<Data, State> extends BaseCubit<State> {
     return Failure(extractErrorMessage(e));
   }
 
+  void clean();
+
   void emitState(State state);
 
   void emitLoading() {

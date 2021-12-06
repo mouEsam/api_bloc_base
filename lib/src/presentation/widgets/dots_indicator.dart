@@ -24,7 +24,8 @@ class DotsIndicator extends AnimatedWidget {
   static const double _kDotSpacing = 12.0;
 
   Widget _buildDot(int index) {
-    final page = this.page ?? 0.0;
+    final controller = listenable is PageController ? (listenable as PageController) : null;
+    final page = controller?.page ?? this.page ?? 0.0;
     final selected = index == page.round();
     final color = this.color ?? Colors.white.withAlpha(200);
     final selectedColor = this.selectedColor ?? Colors.white;
