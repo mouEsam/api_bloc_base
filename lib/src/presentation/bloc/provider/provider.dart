@@ -9,6 +9,7 @@ import 'package:api_bloc_base/src/presentation/bloc/base/listener_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/sources_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/work.dart';
 import 'package:async/async.dart' as async;
 import 'package:dartz/dartz.dart';
 import 'package:rxdart/rxdart.dart';
@@ -81,8 +82,10 @@ class ProviderBloc<Data> extends StatefulBloc<Data, ProviderState<Data>>
     }
   }
 
-  void handleSourcesOutput(BlocState input) {
-    emitState(input);
+  void handleSourcesOutput(Work input) {
+    if (!input.isCancelled) {
+      emitState(input.state);
+    }
   }
 
   void clean() {

@@ -6,6 +6,7 @@ import 'package:api_bloc_base/src/presentation/bloc/base/sources_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/state.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/visibility_mixin.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/work.dart';
 import 'package:api_bloc_base/src/presentation/bloc/worker/worker_bloc.dart';
 import 'package:async/async.dart' as async;
 import 'package:flutter/foundation.dart';
@@ -24,13 +25,19 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
         SourcesMixin<Input, Output, WorkerState<Output>> {
   late final StreamSubscription _outputSubscription;
 
-  final _inputSubject = StreamController<BlocState>.broadcast();
-  Stream<BlocState> get inputStream => _inputSubject.stream.shareValue();
-  StreamSink<BlocState> get _inputSink => _inputSubject.sink;
+  final _inputSubject = StreamController<Work>.broadcast();
+  Stream<BlocState> get inputStream => _inputSubject.stream
+      .shareValue()
+      .where((event) => !event.isCancelled)
+      .map((event) => event.state);
+  StreamSink<Work> get _inputSink => _inputSubject.sink;
 
-  final _outputSubject = StreamController<BlocState>.broadcast();
-  Stream<BlocState> get outputStream => _outputSubject.stream.shareValue();
-  StreamSink<BlocState> get _outputSink => _outputSubject.sink;
+  final _outputSubject = StreamController<Work>.broadcast();
+  Stream<BlocState> get outputStream => _outputSubject.stream
+      .shareValue()
+      .where((event) => !event.isCancelled)
+      .map((event) => event.state);
+  StreamSink<Work> get _outputSink => _outputSubject.sink;
 
   Stream<provider.ProviderState<Output>> get providerStream =>
       async.LazyStream(() => stream
@@ -92,76 +99,95 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
   }
 
   @mustCallSuper
-  void handleSourcesOutput(event) {
+  handleSourcesOutput(work) async {
+    final state = work.state;
     late final BlocState outputState;
-    if (event is Loaded<Input>) {
+    if (state is Loaded<Input>) {
       try {
-        final input = convertInput(event.data);
-        final output = convertInputToOutput(input);
-        final newOutput = convertOutput(output);
+        final input = await convertInput(state.data);
+        final output = await convertInputToOutput(input);
+        final newOutput = await convertOutput(output);
         outputState = Loaded<Output>(newOutput);
       } catch (e, s) {
         outputState = Error(Failure(extractErrorMessage(e)));
       }
     } else {
-      outputState = event;
+      outputState = state;
     }
-    handleOutputState(outputState);
+    handleOutputState(work.changeState(outputState));
   }
 
-  Output convertInputToOutput(Input input);
+  FutureOr<Output> convertInputToOutput(Input input);
 
   @mustCallSuper
-  void handleOutputState(BlocState event) {
-    injectOutputState(event);
+  void handleOutputState(Work event) {
+    injectOutputWork(event);
   }
 
-  Input convertInput(Input input) {
+  FutureOr<Input> convertInput(Input input) {
     return input;
   }
 
-  Output convertOutput(Output output) {
+  FutureOr<Output> convertOutput(Output output) {
     return output;
   }
 
-  void injectInput(Input input) {
-    injectInputState(Loaded(input));
+  FutureOr<void> injectInput(Input input) async {
+    await injectInputState(Loaded(input));
   }
 
-  void injectInputState(BlocState input) {
+  FutureOr<void> injectInputState(BlocState state) async {
+    final work = Work.start(state);
+    lastWork = work;
+    await injectInputWork(work);
+  }
+
+  FutureOr<void> injectInputWork(Work input) async {
+    final state = input.state;
     if (!_inputSubject.isClosed) {
-      if (input is Loaded<Input>) {
-        handleInputToInject(input.data);
-        input = Loaded(convertInputToInject(input.data));
+      lastWork = input;
+      if (state is Loaded<Input>) {
+        await handleInputToInject(state.data);
+        input =
+            input.changeState(Loaded(await convertInputToInject(state.data)));
       }
       _inputSink.add(input);
     }
   }
 
-  void handleInputToInject(Input input) {}
+  FutureOr<void> handleInputToInject(Input input) {}
 
-  Input convertInputToInject(Input input) {
+  FutureOr<Input> convertInputToInject(Input input) {
     return input;
   }
 
-  void injectOutput(Output output) {
-    injectOutputState(Loaded(output));
+  FutureOr<void> injectOutput(Output output) async {
+    await injectOutputState(Loaded(output));
   }
 
   @mustCallSuper
-  void injectOutputState(BlocState output) {
+  Future<void> injectOutputState(BlocState state) async {
+    final work = Work.start(state);
+    lastWork = work;
+    await injectOutputWork(work);
+  }
+
+  @mustCallSuper
+  Future<void> injectOutputWork(Work output) async {
+    final state = output.state;
     if (!_outputSubject.isClosed) {
-      if (output is Loaded<Output>) {
-        handleOutputToInject(output.data);
-        output = Loaded(convertOutputToInject(output.data));
+      if (state is Loaded<Output>) {
+        await handleOutputToInject(state.data);
+        output =
+            output.changeState(Loaded(await convertOutputToInject(state.data)));
       }
       _outputSink.add(output);
     }
   }
 
-  void handleOutputToInject(Output output) {}
+  FutureOr<void> handleOutputToInject(Output output) {}
 
-  Output convertOutputToInject(Output output) {
+  FutureOr<Output> convertOutputToInject(Output output) {
     return output;
   }
 }

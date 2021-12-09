@@ -10,6 +10,7 @@ import 'package:rxdart/rxdart.dart';
 
 import 'listener_mixin.dart';
 import 'state.dart';
+import 'work.dart';
 
 mixin SourcesMixin<Input, Output, State>
     on
@@ -21,6 +22,19 @@ mixin SourcesMixin<Input, Output, State>
   late final StreamSubscription _dataSubscription;
 
   final ValueNotifier<bool> listeningToSources = ValueNotifier(true);
+  final throttleWindowDuration = Duration(milliseconds: 200);
+
+  Work? _lastWork;
+  Work? get lastWork {
+    return _lastWork;
+  }
+
+  set lastWork(Work? work) {
+    if (work != _lastWork) {
+      _lastWork?.cancel();
+    }
+    _lastWork = work;
+  }
 
   Stream<BlocState> get inputStream;
 
@@ -29,7 +43,7 @@ mixin SourcesMixin<Input, Output, State>
   @override
   get subscriptions => super.subscriptions..addAll([_dataSubscription]);
 
-  void handleSourcesOutput(BlocState event);
+  FutureOr<void> handleSourcesOutput(Work event);
 
   void pauseSources() {
     listeningToSources.value = false;
@@ -63,43 +77,51 @@ mixin SourcesMixin<Input, Output, State>
     final newSources = [...sources, ...providers.map((e) => e.stream)];
     _dataSubscription = inputStream
         .switchMap<Tuple2<BlocState, List<ProviderState<dynamic>>>>((event) {
-      if (newSources.isEmpty || event is Loading || event is Error) {
-        return Stream.value(Tuple2(event, []));
-      } else {
-        return CombineLatestStream<ProviderState<dynamic>,
-                Tuple2<BlocState, List<ProviderState<dynamic>>>>(
-            newSources, (a) => Tuple2(event, a));
-      }
-    }).map((event) {
-      var mainEvent = event.value1;
-      if (mainEvent is Loading || mainEvent is Error) {
-        return mainEvent;
-      }
-      mainEvent = mainEvent as Loaded<Input>;
-      ProviderError? errorState =
-          event.value2.firstWhereOrNull((element) => element is ProviderError)
+          if (newSources.isEmpty || event is Loading || event is Error) {
+            return Stream.value(Tuple2(event, []));
+          } else {
+            return CombineLatestStream<ProviderState<dynamic>,
+                    Tuple2<BlocState, List<ProviderState<dynamic>>>>(
+                newSources, (a) => Tuple2(event, a));
+          }
+        })
+        .throttleTime(throttleWindowDuration, trailing: true)
+        .asyncMap((event) async {
+          final work = Work.start(Loading());
+          lastWork = work;
+          var mainEvent = event.value1;
+          if (mainEvent is Loading || mainEvent is Error) {
+            return work.changeState(mainEvent);
+          }
+          mainEvent = mainEvent as Loaded<Input>;
+          ProviderError? errorState = event.value2
+                  .firstWhereOrNull((element) => element is ProviderError)
               as ProviderError<dynamic>?;
-      if (errorState != null) {
-        return Error(errorState.response);
-      } else if (event.value2.any((element) => element is ProviderLoading)) {
-        return Loading();
-      } else {
-        final result = combineDataWithSources(mainEvent.data,
-            event.value2.map((e) => (e as ProviderLoaded).data).toList());
-        return Loaded<Input>(result);
-      }
-    }).listen((event) {
-      handleSourcesOutput(event);
-    }, onError: handleSourcesError);
+          if (errorState != null) {
+            return work.changeState(Error(errorState.response));
+          } else if (event.value2
+              .any((element) => element is ProviderLoading)) {
+            return work.changeState(Loading());
+          } else {
+            final result = await combineDataWithSources(mainEvent.data,
+                event.value2.map((e) => (e as ProviderLoaded).data).toList());
+            return work.changeState(Loaded<Input>(result));
+          }
+        })
+        .where((event) => !event.isCancelled)
+        .listen((event) {
+          handleSourcesOutput(event);
+        }, onError: handleSourcesError);
   }
 
   void handleSourcesError(e, s) {
     print(e);
     print(s);
-    handleSourcesOutput(Error(createFailure(e)));
+    lastWork = Work.start(Error(createFailure(e)));
+    handleSourcesOutput(_lastWork!);
   }
 
-  Input combineDataWithSources(Input data, List<dynamic> map) {
+  FutureOr<Input> combineDataWithSources(Input data, List<dynamic> map) {
     return data;
   }
 
