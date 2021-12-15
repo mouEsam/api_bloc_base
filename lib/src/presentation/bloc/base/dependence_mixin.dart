@@ -15,7 +15,8 @@ import 'state.dart';
 
 export 'state.dart';
 
-mixin ParametersDependenceMixin<InputParameter, Input, Output, State>
+mixin ParametersDependenceMixin<InputParameter, Input, Output,
+        State extends BlocState>
     on
         StatefulBloc<Output, State>,
         TrafficLightsMixin<State>,

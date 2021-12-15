@@ -52,6 +52,7 @@ class ProviderBloc<Data> extends StatefulBloc<Data, ProviderState<Data>>
   final BehaviorSubject<Data?> _dataSubject = BehaviorSubject<Data?>();
   var _dataFuture = Completer<Data?>();
   var _stateFuture = Completer<ProviderState<Data>>();
+  bool get hasData => latestData != null;
   Data? get latestData => _dataSubject.valueOrNull;
 
   Stream<Data?> get dataStream =>
@@ -116,6 +117,7 @@ class ProviderBloc<Data> extends StatefulBloc<Data, ProviderState<Data>>
       _stateFuture = Completer<ProviderState<Data>>();
     }
     _stateFuture.complete(state);
+    super.handleState(state);
   }
 
   void injectInput(Data input) {

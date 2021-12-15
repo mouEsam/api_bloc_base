@@ -3,10 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
-import 'package:api_bloc_base/api_bloc_base.dart';
-import 'package:api_bloc_base/src/data/model/remote/params/params.dart';
-import 'package:api_bloc_base/src/data/model/remote/params/query_params.dart';
-import 'package:api_bloc_base/src/data/model/remote/params/upload_file.dart';
+import 'package:api_bloc_base/src/data/model/_index.dart';
 import 'package:api_bloc_base/src/data/service/dio_flutter_transformer.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
@@ -125,15 +122,16 @@ class BaseRestClient {
       options = createCacheOptions(
           cacheOptions: options ?? _cacheOptions, cachePolicy: cachePolicy);
     }
-    extra.addAll(options?.toExtra() ?? <String, dynamic>{});
-    final qParameters =
-        queryParams?.getQueryParams() ?? <String, dynamic>{};
-    if (queryParameters != null) {
-      qParameters.addAll(queryParameters);
+    if (options != null) {
+      extra.addAll(options.toExtra());
     }
-    print(qParameters);
-    qParameters.removeWhere((k, v) => v == null);
-    qParameters.forEach((key, value) {
+    queryParameters ??= <String, dynamic>{};
+    if (queryParams != null) {
+      queryParameters.addAll(queryParams.getQueryParams());
+    }
+    print(queryParameters);
+    queryParameters.removeWhere((k, v) => v == null);
+    queryParameters.forEach((key, value) {
       if (value is List) {
         value.removeWhere((element) => element == null);
       }
@@ -218,7 +216,7 @@ class BaseRestClient {
     if (mockedResult == null) {
       dio.options.baseUrl = newBaseUrl;
       result = dio.request(path,
-          queryParameters: qParameters,
+          queryParameters: queryParameters,
           cancelToken: cancelToken,
           onReceiveProgress: _progressListener,
           onSendProgress: _progressListener,

@@ -143,7 +143,7 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
     } else {
       _currentPage = null;
     }
-    if (!hasValue || safeData == null) {
+    if (!hasData || safeData == null) {
       super.handleErrorState(errorState);
     } else {
       emit(ErrorGettingNextPageState<Output>(currentData, errorState.response));
@@ -152,7 +152,7 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
 
   @override
   void handleLoadingState(loadingState) {
-    if (!hasValue || safeData == null) {
+    if (!hasData || safeData == null) {
       super.handleLoadingState(loadingState);
     } else {
       emit(LoadingNextPageState<Output>(currentData));

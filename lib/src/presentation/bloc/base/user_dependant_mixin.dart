@@ -1,10 +1,9 @@
 import 'dart:async';
 
-import 'package:api_bloc_base/api_bloc_base.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/independence_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/user/base_user_bloc.dart';
 
-mixin UserDependantMixin<Input, Output, State>
+mixin UserDependantMixin<Input, Output, State extends BlocState>
     on IndependenceMixin<Input, Output, State> {
   BaseUserBloc get userBloc;
   String? authToken;

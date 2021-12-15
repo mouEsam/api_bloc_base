@@ -12,7 +12,7 @@ import 'state.dart';
 
 export 'state.dart';
 
-mixin IndependenceMixin<Input, Output, State>
+mixin IndependenceMixin<Input, Output, State extends BlocState>
     on
         StatefulBloc<Output, State>,
         TrafficLightsMixin<State>,
@@ -25,6 +25,7 @@ mixin IndependenceMixin<Input, Output, State>
 
   bool get enableRefresh;
   bool get enableRetry;
+  bool get forceRefresh => false;
 
   StreamSubscription<Input>? _streamSourceSubscription;
 
@@ -35,13 +36,10 @@ mixin IndependenceMixin<Input, Output, State>
 
   Timer? _timer;
 
-  void onChange(change) {
-    super.onChange(change);
+  @mustCallSuper
+  void handleState(State state) {
     setupTimer();
-    handleState(change.nextState);
   }
-
-  void handleState(State state) {}
 
   @mustCallSuper
   Future<void> fetchData({bool refresh = false}) async {
@@ -94,8 +92,9 @@ mixin IndependenceMixin<Input, Output, State>
         _timer?.cancel();
         _timer = Timer(retryInterval!, fetchData);
       }
-    } else if (state is Loaded<Output> && enableRefresh) {
-      if (refreshInterval != null) {
+    } else if (state is Loaded<Output> && enableRefresh && hasData) {
+      if (refreshInterval != null &&
+          (forceRefresh || _streamSourceSubscription == null)) {
         _timer?.cancel();
         _timer = Timer.periodic(refreshInterval!, (_) => refreshData());
       }

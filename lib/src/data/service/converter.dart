@@ -118,4 +118,14 @@ abstract class BaseModelConverter<Input, Output>
         <Output>[];
     return result;
   }
+
+  Map<String, Output> convertMap(Map<String, Input?>? initialData) {
+    final entries = initialData
+            ?.entries
+            .map((entry) => MapEntry(entry.key, convertSingle(entry.value)))
+            .whereType<MapEntry<String, Output>>()
+            .toList() ??
+        <MapEntry<String, Output>>[];
+    return Map.fromEntries(entries);
+  }
 }

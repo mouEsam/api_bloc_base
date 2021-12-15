@@ -6,6 +6,8 @@ abstract class StatefulBloc<Data, State> extends BaseCubit<State> {
 
   String get defaultErrorMessage => "Error in ${this.runtimeType}";
 
+  bool get hasData;
+
   String extractErrorMessage(e) {
     try {
       return e.response;

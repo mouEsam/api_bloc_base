@@ -23,7 +23,7 @@ class WorkerBloc<Output> extends StatefulBloc<Output, WorkerState<Output>>
 
   Box<Output>? _output;
 
-  bool get hasValue => _output != null;
+  bool get hasData => _output != null;
   Output get currentData => _output!.data;
   Output? get safeData => _output?.nullableData;
   set currentData(Output data) {

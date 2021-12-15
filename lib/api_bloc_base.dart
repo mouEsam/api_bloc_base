@@ -9,14 +9,7 @@ export 'package:sembast/sembast.dart';
 export 'package:sembast/sembast_io.dart';
 export 'package:sembast/timestamp.dart';
 
-export 'src/data/model/_index.dart';
-export 'src/data/repository/auth_repository.dart';
-export 'src/data/repository/base_repository.dart';
-export 'src/data/service/converter.dart';
-export 'src/data/service/dummy_converter.dart';
-export 'src/data/source/local/local_cache.dart';
-export 'src/data/source/local/user_defaults.dart';
-export 'src/data/source/remote/base_rest_client.dart';
+export 'src/data/_index.dart';
 export 'src/domain/entity/_index.dart';
 export 'src/presentation/bloc/base/_index.dart';
 export 'src/presentation/bloc/provider/_index.dart';
