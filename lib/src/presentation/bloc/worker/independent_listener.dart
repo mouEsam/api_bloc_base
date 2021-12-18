@@ -5,6 +5,7 @@ import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/independence_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/lifecycle_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/listenable_mixin.dart';
+import 'package:api_bloc_base/src/presentation/bloc/provider/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/lifecycle_observer.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/provider.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/state.dart';
@@ -28,18 +29,18 @@ abstract class IndependentListener<Input, Output>
 
   IndependentListener(
       {List<Stream<ProviderState>> sources = const [],
-      List<ProviderBloc> providers = const [],
+      List<ProviderMixin> providers = const [],
       this.singleDataSource,
       this.streamDataSource,
       this.appLifecycleObserver,
       this.enableRefresh = true,
       this.enableRetry = true,
       this.canRunWithoutListeners = true,
-      bool getOnCreate = true,
+      bool fetchOnCreate = true,
       Output? currentData})
       : super(sources, providers, currentData: currentData) {
-    if (getOnCreate) {
-      fetchData();
+    if (fetchOnCreate) {
+      beginFetching();
     }
   }
 }

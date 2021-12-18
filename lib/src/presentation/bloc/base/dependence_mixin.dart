@@ -112,7 +112,7 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output,
   void handleListenablesError(e, s) {
     print(e);
     print(s);
-    injectInputState(Error(createFailure(e)));
+    injectInputState(Error(createFailure(e, s)));
   }
 
   @override

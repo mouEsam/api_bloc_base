@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:api_bloc_base/src/data/repository/auth_repository.dart';
 import 'package:api_bloc_base/src/data/repository/base_repository.dart';
 import 'package:api_bloc_base/src/domain/entity/_index.dart';
-import 'package:api_bloc_base/src/domain/entity/base_profile.dart';
-import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/state.dart'
     as provider;

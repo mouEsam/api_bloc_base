@@ -30,6 +30,7 @@ abstract class BaseCubit<State> extends Cubit<State> implements Initializable {
   void onChange(change) {
     super.onChange(change);
     stateChanged(change.nextState);
+    print("${this.runtimeType} emitting ${change.nextState}");
   }
 
   void stateChanged(State nextState) {}

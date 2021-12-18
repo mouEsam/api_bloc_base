@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
+import 'package:api_bloc_base/src/presentation/bloc/provider/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/provider.dart';
 import 'package:collection/collection.dart';
 import 'package:dartz/dartz.dart';
@@ -17,7 +19,7 @@ mixin SourcesMixin<Input, Output, State>
         StatefulBloc<Output, State>,
         TrafficLightsMixin<State>,
         ListenerMixin<State> {
-  late final List<ProviderBloc> providers;
+  late final List<ProviderMixin> providers;
   late final List<Stream<ProviderState>> sources;
   late final StreamSubscription _dataSubscription;
 
@@ -60,6 +62,7 @@ mixin SourcesMixin<Input, Output, State>
     } else {
       _dataSubscription.pause();
     }
+    super.trafficLightsChanged(green);
   }
 
   @override
@@ -73,7 +76,9 @@ mixin SourcesMixin<Input, Output, State>
     if (_init) return;
     _init = true;
     print(this.runtimeType);
-    providers.forEach((element) => element.addListener(this));
+    providers
+        .whereType<ListenableMixin>()
+        .forEach((element) => element.addListener(this));
     final newSources = [...sources, ...providers.map((e) => e.stream)];
     _dataSubscription = inputStream
         .switchMap<Tuple2<BlocState, List<ProviderState<dynamic>>>>((event) {
@@ -117,7 +122,7 @@ mixin SourcesMixin<Input, Output, State>
   void handleSourcesError(e, s) {
     print(e);
     print(s);
-    lastWork = Work.start(Error(createFailure(e)));
+    lastWork = Work.start(Error(createFailure(e, s)));
     handleSourcesOutput(_lastWork!);
   }
 
@@ -127,7 +132,9 @@ mixin SourcesMixin<Input, Output, State>
 
   @override
   Future<void> close() {
-    providers.forEach((element) => element.removeListener(this));
+    providers
+        .whereType<ListenableMixin>()
+        .forEach((element) => element.removeListener(this));
     return super.close();
   }
 }

@@ -1,10 +1,9 @@
 import 'dart:async';
 
 import 'package:api_bloc_base/api_bloc_base.dart';
-import 'package:api_bloc_base/src/presentation/bloc/worker/worker_bloc.dart';
 import 'package:rxdart/rxdart.dart';
 
-mixin OnceListenerMixin<Data> on WorkerBloc<Data> {
+mixin OnceListenerMixin<Data> on WorkerMixin<Data> {
   Map<Type, Stream> get streamSources;
   Map<Type, int> _wasCalled = {};
   Map<Type, StreamSubscription> _subs = {};
@@ -24,14 +23,17 @@ mixin OnceListenerMixin<Data> on WorkerBloc<Data> {
             .where((event) => event != null)
             .doOnData((event) => _wasCalled[type] ??= 1)
             .where((event) => (_wasCalled[type] ?? 1) > 0)
-            .map((event) {
-          _wasCalled[type] = _wasCalled[type]! - 1;
-          return event;
-        }).listen((event) => handleSourceData(type, event))));
+            .listen((event) {
+          final listened = handleSourceData(type, event);
+          if (listened) {
+            _wasCalled[type] = _wasCalled[type]! - 1;
+          }
+        })));
   }
 
-  void handleSourceData(Type type, event) {
+  bool handleSourceData(Type type, event) {
     print("$type loaded");
+    return true;
   }
 
   @override

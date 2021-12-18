@@ -8,7 +8,9 @@ abstract class StatefulBloc<Data, State> extends BaseCubit<State> {
 
   bool get hasData;
 
-  String extractErrorMessage(e) {
+  String extractErrorMessage(e, [s]) {
+    print(e);
+    print(s);
     try {
       return e.response;
     } catch (_) {
@@ -19,14 +21,14 @@ abstract class StatefulBloc<Data, State> extends BaseCubit<State> {
   void handleError(e, s) {
     print(e);
     print(s);
-    emitError(createFailure(e));
+    emitError(createFailure(e, s));
   }
 
-  Failure createFailure(e) {
-    return Failure(extractErrorMessage(e));
+  Failure createFailure(e, [s]) {
+    return Failure(extractErrorMessage(e, s));
   }
 
-  void clean();
+  void clean() {}
 
   void emitState(State state);
 

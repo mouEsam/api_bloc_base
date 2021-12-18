@@ -18,6 +18,8 @@ abstract class BaseAuthRepository<T extends BaseProfile>
   String get noAccountSavedInError;
 
   BaseResponseConverter<BaseUserResponse, T> get refreshConverter => converter;
+  BaseResponseConverter<BaseUserResponse, T> get autoLoginConverter =>
+      converter;
 
   RequestResult<BaseUserResponse> internalLogin(BaseAuthParams params);
   RequestResult<BaseUserResponse> internalRefreshToken(T account);
@@ -38,6 +40,7 @@ abstract class BaseAuthRepository<T extends BaseProfile>
         }
         print(result.toJson());
       },
+      converter: converter,
     );
   }
 
@@ -48,7 +51,7 @@ abstract class BaseAuthRepository<T extends BaseProfile>
       if (savedAccount is T) {
         final operation = internalRefreshToken(savedAccount);
         final result = handleFullResponse<BaseUserResponse, T>(operation,
-            converter: converter);
+            converter: autoLoginConverter);
         return result.resultFuture.then((value) async {
           return value
               .fold((l) => Left(RefreshFailure(l.message, savedAccount)), (r) {

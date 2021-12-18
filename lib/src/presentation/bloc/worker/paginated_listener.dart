@@ -15,20 +15,22 @@ abstract class PaginatedListener<Paginated extends PaginatedInput<Output>,
     with PaginationMixin<Paginated, Output> {
   PaginatedListener(
       {List<Stream<ProviderState>> sources = const [],
+      List<ProviderBloc> providers = const [],
       Result<Either<ResponseEntity, Paginated>>? singleDataSource,
       Either<ResponseEntity, Stream<Paginated>>? streamDataSource,
       LifecycleObserver? appLifecycleObserver,
       bool enableRefresh = true,
       bool enableRetry = true,
-      bool getOnCreate = true,
+      bool fetchOnCreate = true,
       Output? currentData})
       : super(
             sources: sources,
+            providers: providers,
             singleDataSource: singleDataSource,
             streamDataSource: streamDataSource,
             appLifecycleObserver: appLifecycleObserver,
             enableRefresh: enableRefresh,
             enableRetry: enableRetry,
-            getOnCreate: getOnCreate,
+            fetchOnCreate: fetchOnCreate,
             currentData: currentData);
 }

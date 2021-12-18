@@ -12,10 +12,11 @@ mixin TrafficLightsMixin<State> on BaseCubit<State>, Initializable {
 
   @override
   get notifiers => super.notifiers..addAll([...trafficLights, isGreen]);
-  bool get trafficLightsValue =>
-      trafficLights.every((element) => element.value);
+  bool get _trafficLightsValue {
+    return trafficLights.every((element) => element.value);
+  }
 
-  void trafficLightsChanged(bool green);
+  void trafficLightsChanged(bool green) {}
 
   @override
   void init() {
@@ -27,7 +28,7 @@ mixin TrafficLightsMixin<State> on BaseCubit<State>, Initializable {
   void setupTrafficLights() {
     if (_init) return;
     _init = true;
-    isGreen.value = trafficLightsValue;
+    isGreen.value = _trafficLightsValue;
     isGreen.addListener(_alert);
     _singleTrafficLights = Listenable.merge(trafficLights);
     _singleTrafficLights.addListener(_changed);
@@ -38,7 +39,7 @@ mixin TrafficLightsMixin<State> on BaseCubit<State>, Initializable {
   }
 
   void _changed() {
-    isGreen.value = trafficLightsValue;
+    isGreen.value = _trafficLightsValue;
   }
 
   @override

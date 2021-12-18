@@ -2,19 +2,21 @@ import 'dart:async';
 
 import 'package:api_bloc_base/src/data/repository/base_repository.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:rxdart/rxdart.dart';
-import '../base/state.dart';
 
+import '../base/state.dart';
 import 'state.dart';
 
-mixin ProviderMixin<Data> on BaseCubit<ProviderState<Data>> {
+mixin ProviderMixin<Data> on BaseCubit<ProviderState<Data>>
+    implements Refreshable {
   @mustCallSuper
   Future<void> fetchData({bool refresh = false});
   Future<void> refreshData();
-  void injectInput(Data input);
+  Future<void> refetchData();
   void clean();
 
   ProviderState<Data> createLoadingState() {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:api_bloc_base/src/data/repository/base_repository.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/listenable_mixin.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/refreshable.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
 import 'package:dartz/dartz.dart';
@@ -16,7 +17,10 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     on
         StatefulBloc<Output, State>,
         TrafficLightsMixin<State>,
-        ListenableMixin<State> {
+        ListenableMixin<State>
+    implements Refreshable {
+  final ValueNotifier<bool> _canFetchData = ValueNotifier(false);
+  final ValueNotifier<bool> _alreadyFetchedData = ValueNotifier(false);
   final Duration? refreshInterval = Duration(seconds: 30);
   final Duration? retryInterval = Duration(seconds: 30);
 
@@ -32,7 +36,12 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   @override
   get subscriptions => super.subscriptions..addAll([_streamSourceSubscription]);
   @override
-  get timers => [_timer];
+  get trafficLights => super.trafficLights..addAll([_canFetchData]);
+  @override
+  get notifiers =>
+      super.notifiers..addAll([_canFetchData, _alreadyFetchedData]);
+  @override
+  get timers => super.timers..addAll([_timer]);
 
   Timer? _timer;
 
@@ -41,20 +50,41 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     setupTimer();
   }
 
+  void beginFetching() {
+    _canFetchData.value = true;
+  }
+
   @mustCallSuper
   Future<void> fetchData({bool refresh = false}) async {
+    if (!_canFetchData.value) {
+      _canFetchData.value = true;
+    }
+    if (!_alreadyFetchedData.value) {
+      _alreadyFetchedData.value = true;
+    }
     if (!refresh) {
       emitLoading();
     }
-    final singleSource = this.singleDataSource;
-    final streamSource = this.streamDataSource;
     if (lastTrafficLightsValue) {
+      final singleSource = this.singleDataSource;
+      final streamSource = this.streamDataSource;
+      print("$runtimeType fetchData");
       if (singleSource != null) {
         await _handleSingleSource(singleSource, refresh);
       } else if (streamSource != null) {
         _handleStreamSource(streamSource);
       }
     }
+  }
+
+  void clean() {
+    _alreadyFetchedData.value = false;
+    super.clean();
+  }
+
+  Future<void> refetchData() {
+    clean();
+    return fetchData(refresh: false);
   }
 
   Future<void> refreshData() {
@@ -106,8 +136,12 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
 
   @mustCallSuper
   void trafficLightsChanged(bool green) {
+    print("$runtimeType $green trafficLightsChanged");
     if (green) {
       _streamSourceSubscription?.resume();
+      if (!_alreadyFetchedData.value) {
+        fetchData();
+      }
       setupTimer();
     } else {
       _streamSourceSubscription?.pause();

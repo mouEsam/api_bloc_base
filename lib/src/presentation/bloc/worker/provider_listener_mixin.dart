@@ -1,14 +1,16 @@
 import 'dart:async';
 
-import 'package:api_bloc_base/src/presentation/bloc/provider/provider.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
+import 'package:api_bloc_base/src/presentation/bloc/provider/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/worker/listener_bloc.dart';
 
 import '../base/state.dart';
 
-mixin ProviderListenerMixin<Input, Output> on ListenerBloc<Input, Output> {
+mixin ProviderListenerMixin<Input, Output> on ListenerBloc<Input, Output>
+    implements Refreshable {
   late final StreamSubscription _blocSubscription;
 
-  ProviderBloc<Input> get provider;
+  ProviderMixin<Input> get provider;
 
   @override
   get subscriptions => super.subscriptions..addAll([_blocSubscription]);
@@ -23,7 +25,9 @@ mixin ProviderListenerMixin<Input, Output> on ListenerBloc<Input, Output> {
   void setupProviderListener() {
     if (_init) return;
     _init = true;
-    provider.addListener(this);
+    if (provider is ListenableMixin) {
+      (provider as ListenableMixin).addListener(this);
+    }
     _blocSubscription =
         provider.stream.listen(injectInputState, onError: handleProviderError);
   }
@@ -31,12 +35,22 @@ mixin ProviderListenerMixin<Input, Output> on ListenerBloc<Input, Output> {
   void handleProviderError(e, s) {
     print(e);
     print(s);
-    injectInputState(Error(createFailure(e)));
+    injectInputState(Error(createFailure(e, s)));
+  }
+
+  FutureOr<void> refreshData() {
+    return provider.refreshData();
+  }
+
+  FutureOr<void> refetchData() {
+    return provider.refetchData();
   }
 
   @override
   Future<void> close() {
-    provider.removeListener(this);
+    if (provider is ListenableMixin) {
+      (provider as ListenableMixin).removeListener(this);
+    }
     return super.close();
   }
 }

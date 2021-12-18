@@ -106,7 +106,7 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
       _currentPage = currentPage + 1;
       final nextData = paginatedData.data[_currentPage!];
       if (nextData != null) {
-        setData(nextData);
+        emitData(nextData);
         emitCurrent();
       } else {
         fetchData(refresh: true);
@@ -118,7 +118,7 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
     if (canGoBack) {
       _currentPage = _currentPage! - 1;
       final previousData = paginatedData.data[_currentPage!]!;
-      setData(previousData);
+      emitData(previousData);
       emitCurrent();
     }
   }

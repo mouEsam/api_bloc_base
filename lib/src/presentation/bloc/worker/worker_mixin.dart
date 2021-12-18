@@ -8,8 +8,8 @@ import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 
-import 'worker_state.dart';
 import '../base/state.dart';
+import 'worker_state.dart';
 
 mixin WorkerMixin<Output> on StatefulBloc<Output, WorkerState<Output>> {
   static const _DEFAULT_OPERATION = '_DEFAULT_OPERATION';
@@ -25,13 +25,13 @@ mixin WorkerMixin<Output> on StatefulBloc<Output, WorkerState<Output>> {
     if (state is Loading) {
       emitLoading();
     } else if (state is Loaded<Output>) {
-      setData(state.data);
+      emitData(state.data);
     } else if (state is Error) {
       emitError(state.response);
     }
   }
 
-  void setData(Output event);
+  void emitData(Output event);
 
   void emitCurrent() {
     emitLoaded(currentData);
