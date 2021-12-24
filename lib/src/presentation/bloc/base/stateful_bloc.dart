@@ -1,7 +1,10 @@
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
 
-abstract class StatefulBloc<Data, State> extends BaseCubit<State> {
+import '_index.dart';
+
+abstract class StatefulBloc<Data, State extends BlocState>
+    extends BaseCubit<State> {
   StatefulBloc(State initialState) : super(initialState);
 
   String get defaultErrorMessage => "Error in ${this.runtimeType}";

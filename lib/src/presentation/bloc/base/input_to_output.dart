@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import 'work.dart';
 
-mixin InputToOutput<Input, Output, State>
+mixin InputToOutput<Input, Output, State extends BlocState>
     on SourcesMixin<Input, Output, State> {
   bool get isSinkClosed;
   StreamSink<Work> get inputSink;

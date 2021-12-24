@@ -1,5 +1,7 @@
+import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/input_to_output.dart';
 
-mixin SameInputOutputMixin<Data, State> on InputToOutput<Data, Data, State> {
+mixin SameInputOutputMixin<Data, State extends BlocState>
+    on InputToOutput<Data, Data, State> {
   Data convertInputToOutput(Data input) => input;
 }

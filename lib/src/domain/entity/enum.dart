@@ -51,4 +51,10 @@ mixin ClosedEnumMixin<E extends core.Enum> on Enum<E> {
 
 extension EnumName on core.Enum {
   String get name => EnumToString.convertToString(this);
+  String get key => name;
+  String get shortName => '${key}_SHORT';
+}
+
+extension EnumUtils<E extends core.Enum> on Enum<E>? {
+  bool equals(E value) => this?.value == value;
 }

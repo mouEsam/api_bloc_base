@@ -14,7 +14,7 @@ import 'listener_mixin.dart';
 import 'state.dart';
 import 'work.dart';
 
-mixin SourcesMixin<Input, Output, State>
+mixin SourcesMixin<Input, Output, State extends BlocState>
     on
         StatefulBloc<Output, State>,
         TrafficLightsMixin<State>,
