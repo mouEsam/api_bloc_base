@@ -42,8 +42,17 @@ abstract class BaseRepository {
       late ResponseEntity responseEntity;
       if (data != null) {
         if (_converter.hasData(data)) {
-          interceptData?.call(data);
-          result = _converter.convert(data);
+          try {
+            interceptData?.call(data);
+            result = _converter.convert(data);
+          } catch (e, s) {
+            print(e);
+            print(s);
+            responseEntity = ConversionFailure(
+              defaultError,
+              data.runtimeType,
+            );
+          }
         } else {
           responseEntity = _converter.response(data)!;
         }
