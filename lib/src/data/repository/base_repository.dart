@@ -30,7 +30,7 @@ abstract class BaseRepository {
     void Function(T)? interceptData,
     void Function(S)? interceptResult,
     FutureOr<S> Function(S data)? dataConverter,
-    FutureOr<S> Function()? failureRecovery,
+    FutureOr<S> Function(ResponseEntity failure)? failureRecovery,
   }) {
     final _converter = converter ??
         (this.converter as BaseResponseConverter<BaseApiResponse, S>);
@@ -39,13 +39,19 @@ abstract class BaseRepository {
         result.resultFuture.then<z.Either<ResponseEntity, S>>((value) async {
       final data = value.data;
       S? result;
+      late ResponseEntity responseEntity;
       if (data != null) {
         if (_converter.hasData(data)) {
           interceptData?.call(data);
           result = _converter.convert(data);
-        } else if (failureRecovery != null) {
-          result = await failureRecovery();
+        } else {
+          responseEntity = _converter.response(data)!;
         }
+      } else {
+        responseEntity = Failure(defaultError);
+      }
+      if (result == null && failureRecovery != null) {
+        result = await failureRecovery(responseEntity);
       }
       if (result != null) {
         if (dataConverter != null) {
@@ -54,8 +60,9 @@ abstract class BaseRepository {
           } catch (e, s) {
             print(e);
             print(s);
-            return z.Left<ResponseEntity, S>(Failure(
+            return z.Left<ResponseEntity, S>(ConversionFailure(
               defaultError,
+              result.runtimeType,
             ));
           }
         }
@@ -64,32 +71,29 @@ abstract class BaseRepository {
       } else {
         print(data.runtimeType);
         print(data);
-        return z.Left<ResponseEntity, S>(_converter.response(data!)!);
+        return z.Left<ResponseEntity, S>(responseEntity);
       }
     }).catchError((e, s) async {
       print("Exception caught");
       print(e);
       print(s);
-      if (e is DioError && e.type == DioErrorType.cancel) {
-        return z.Left<ResponseEntity, S>(
-          Cancellation(),
-        );
+      late ResponseEntity failure;
+      if (e is DioError) {
+        if (e.type == DioErrorType.cancel) {
+          failure = Cancellation();
+        } else {
+          failure = InternetFailure(internetError, e);
+        }
+      } else {
+        failure = Failure(defaultError);
       }
       if (failureRecovery != null) {
-        final result = await failureRecovery();
+        final result = await failureRecovery(failure);
         if (result != null) {
           return z.Right<ResponseEntity, S>(result);
         }
       }
-      if (e is DioError) {
-        return z.Left<ResponseEntity, S>(
-          InternetFailure(internetError, e),
-        );
-      } else {
-        return z.Left<ResponseEntity, S>(
-          Failure(defaultError),
-        );
-      }
+      return z.Left<ResponseEntity, S>(failure);
     });
     return Result<z.Either<ResponseEntity, S>>(
         cancelToken: cancelToken,

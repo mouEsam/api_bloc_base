@@ -29,6 +29,16 @@ class Failure extends ResponseEntity {
   List<Object?> get props => [...super.props, this.errors];
 }
 
+class ConversionFailure extends Failure {
+  final Type convertedType;
+  const ConversionFailure(String message, this.convertedType,
+      [BaseErrors? errors])
+      : super(message, errors);
+
+  @override
+  List<Object?> get props => [...super.props, this.convertedType];
+}
+
 class InternetFailure extends Failure {
   final DioError dioError;
   int? get statusCode => dioError.response?.statusCode;
