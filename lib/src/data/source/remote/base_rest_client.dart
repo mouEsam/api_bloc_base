@@ -170,7 +170,9 @@ class BaseRestClient {
               } else if (entry.value is List) {
                 final list = entry.value as List;
                 list.where((e) => e != null).forEach((value) =>
-                    _data.fields.add(MapEntry(entry.key, jsonEncode(value))));
+                    _data.fields.add(MapEntry(entry.key, value is String ? value : jsonEncode(value))));
+              } else if (entry.value is String) {
+                _data.fields.add(MapEntry(entry.key, entry.value));
               } else {
                 _data.fields.add(MapEntry(entry.key, jsonEncode(entry.value)));
               }
