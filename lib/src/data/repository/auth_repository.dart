@@ -53,8 +53,8 @@ abstract class BaseAuthRepository<T extends BaseProfile>
         final result = handleFullResponse<BaseUserResponse, T>(operation,
             converter: autoLoginConverter);
         return result.resultFuture.then((value) async {
-          return value
-              .fold((l) => Left(RefreshFailure(l.message, savedAccount)), (r) {
+          return value.fold((l) => Left(handleReAuthFailure(l, savedAccount)),
+              (r) {
             checkSave(r);
             return Right(r);
           });
@@ -71,7 +71,7 @@ abstract class BaseAuthRepository<T extends BaseProfile>
         converter: converter);
     final future =
         result.resultFuture.then<Either<ResponseEntity, T>>((value) async {
-      return value.fold((l) => Left(RefreshFailure(l.message, profile)), (r) {
+      return value.fold((l) => Left(handleReAuthFailure(l, profile)), (r) {
         checkSave(r);
         return Right(r);
       });
@@ -85,13 +85,22 @@ abstract class BaseAuthRepository<T extends BaseProfile>
         converter: refreshConverter);
     final future =
         result.resultFuture.then<Either<ResponseEntity, T>>((value) async {
-      return value.fold((l) => Left(RefreshFailure(l.message, profile)), (r) {
+      return value.fold((l) => Left(handleReAuthFailure(l, profile)), (r) {
         r = r.updateToken(profile.userToken) as T;
         checkSave(r);
         return Right(r);
       });
     });
     return Result(resultFuture: future);
+  }
+
+  ResponseEntity handleReAuthFailure(ResponseEntity responseEntity,
+      [T? oldAccount]) {
+    if (oldAccount != null) {
+      return RefreshFailure(responseEntity.message, oldAccount);
+    } else {
+      return responseEntity;
+    }
   }
 
   Result<ResponseEntity> saveProfileIfRemembered(T profile) {

@@ -31,6 +31,7 @@ class Failure extends ResponseEntity {
 
 class InternetFailure extends Failure {
   final DioError dioError;
+  int? get statusCode => dioError.response?.statusCode;
   const InternetFailure(String message, this.dioError, [BaseErrors? errors])
       : super(message, errors);
 

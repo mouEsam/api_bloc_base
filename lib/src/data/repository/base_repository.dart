@@ -112,10 +112,12 @@ abstract class BaseRepository {
       print("Exception caught");
       print(e);
       print(s);
-      if (e is DioError && e.type == DioErrorType.cancel) {
-        return Cancellation();
-      } else if (e is DioError) {
-        return InternetFailure(internetError, e);
+      if (e is DioError) {
+        if (e.type == DioErrorType.cancel) {
+          return Cancellation();
+        } else {
+          return InternetFailure(internetError, e);
+        }
       } else {
         return Failure(defaultError);
       }
@@ -140,14 +142,16 @@ abstract class BaseRepository {
       print("Exception caught");
       print(e);
       print(s);
-      if (e is DioError && e.type == DioErrorType.cancel) {
-        return z.Left<ResponseEntity, S>(
-          Cancellation(),
-        );
-      } else if (e is DioError) {
-        return z.Left<ResponseEntity, S>(
-          InternetFailure(internetError, e),
-        );
+      if (e is DioError) {
+        if (e.type == DioErrorType.cancel) {
+          return z.Left<ResponseEntity, S>(
+            Cancellation(),
+          );
+        } else {
+          return z.Left<ResponseEntity, S>(
+            InternetFailure(internetError, e),
+          );
+        }
       } else {
         return z.Left<ResponseEntity, S>(
           Failure(defaultError),

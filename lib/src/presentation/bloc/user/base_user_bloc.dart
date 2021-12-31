@@ -59,11 +59,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
   Future<Either<ResponseEntity, T>> refreshToken() async {
     final result = await authRepository.refreshToken(currentUser!).resultFuture;
     result.fold((l) {
-      if (l is RefreshFailure<T>) {
-        handleFailedRefresh(l.oldProfile, true);
-      } else {
-        handleUser(null);
-      }
+      handleReAuthFailure(l);
     }, (user) => handleUser(user));
     return result;
   }
@@ -72,13 +68,17 @@ abstract class BaseUserBloc<T extends BaseProfile>
     final result =
         await authRepository.refreshProfile(currentUser!).resultFuture;
     result.fold((l) {
-      if (l is RefreshFailure<T>) {
-        handleFailedRefresh(l.oldProfile, true);
-      } else {
-        handleUser(null);
-      }
+      handleReAuthFailure(l);
     }, (user) => handleUser(user));
     return result;
+  }
+
+  void handleReAuthFailure(ResponseEntity response) {
+    if (response is RefreshFailure<T>) {
+      handleFailedRefresh(response.oldProfile, true);
+    } else {
+      handleUser(null);
+    }
   }
 
   Result<Either<ResponseEntity, T>> login(Credentials credentials);
