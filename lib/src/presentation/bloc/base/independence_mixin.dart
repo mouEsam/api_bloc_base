@@ -68,7 +68,6 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     if (lastTrafficLightsValue) {
       final singleSource = this.singleDataSource;
       final streamSource = this.streamDataSource;
-      print("$runtimeType fetchData");
       if (singleSource != null) {
         await _handleSingleSource(singleSource, refresh);
       } else if (streamSource != null) {
@@ -117,6 +116,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   }
 
   void setupTimer() {
+    print("setupTimer ${enableRetry} ${enableRefresh} ${state}");
     if (state is Error && enableRetry) {
       if (retryInterval != null) {
         _timer?.cancel();

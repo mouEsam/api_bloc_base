@@ -11,9 +11,15 @@ mixin LifecycleMixin<State> on TrafficLightsMixin<State>
 
   get trafficLights => super.trafficLights..add(isAppGreen);
 
+  init() {
+    appLifecycleObserver?.addListener(this);
+    super.init();
+  }
+
   @override
   void onResume() {
     isAppGreen.value = true;
+    print(trafficLights.map((e) => e.value).toList());
     onAppState(true);
   }
 
@@ -30,4 +36,10 @@ mixin LifecycleMixin<State> on TrafficLightsMixin<State>
   void onInactive() {}
 
   void onAppState(bool isActive) {}
+
+  @override
+  Future<void> close() {
+    appLifecycleObserver?.removeListener(this);
+    return super.close();
+  }
 }
