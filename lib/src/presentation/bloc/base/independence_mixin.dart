@@ -21,7 +21,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     implements Refreshable {
   final ValueNotifier<bool> _canFetchData = ValueNotifier(false);
   final ValueNotifier<bool> _alreadyFetchedData = ValueNotifier(false);
-  final ValueNotifier<bool> needsToRefresh = ValueNotifier(false);
+  final ValueNotifier<bool> _needsToRefresh = ValueNotifier(false);
   final Duration? refreshInterval = Duration(seconds: 30);
   final Duration? retryInterval = Duration(seconds: 30);
 
@@ -39,7 +39,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   get trafficLights => super.trafficLights..addAll([_canFetchData]);
   @override
   get notifiers => super.notifiers
-    ..addAll([needsToRefresh, _canFetchData, _alreadyFetchedData]);
+    ..addAll([_needsToRefresh, _canFetchData, _alreadyFetchedData]);
   @override
   get timers => super.timers..addAll([_timer]);
 
@@ -137,6 +137,18 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   void injectInput(Input input);
   void injectInputState(BlocState input);
 
+  void markNeedsRefresh() {
+    _needsToRefresh.value = true;
+    if (lastTrafficLightsValue) {
+      _performMarkedRefresh();
+    }
+  }
+
+  void _performMarkedRefresh() {
+    _needsToRefresh.value = false;
+    refreshData();
+  }
+
   @mustCallSuper
   void trafficLightsChanged(bool green) {
     print("$runtimeType $green trafficLightsChanged");
@@ -144,9 +156,8 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
       _streamSourceSubscription?.resume();
       if (!_alreadyFetchedData.value) {
         fetchData();
-      } else if (needsToRefresh.value) {
-        needsToRefresh.value = false;
-        refreshData();
+      } else if (_needsToRefresh.value) {
+        _performMarkedRefresh();
       }
       setupTimer();
     } else {

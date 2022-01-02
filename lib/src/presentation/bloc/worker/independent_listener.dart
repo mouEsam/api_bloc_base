@@ -26,6 +26,7 @@ abstract class IndependentListener<Input, Output>
   final bool enableRefresh;
   final bool enableRetry;
   final bool canRunWithoutListeners;
+  final bool refreshOnAppActive;
 
   IndependentListener(
       {List<Stream<ProviderState>> sources = const [],
@@ -36,11 +37,20 @@ abstract class IndependentListener<Input, Output>
       this.enableRefresh = true,
       this.enableRetry = true,
       this.canRunWithoutListeners = true,
+      this.refreshOnAppActive = true,
       bool fetchOnCreate = true,
       Output? currentData})
       : super(sources, providers, currentData: currentData) {
     if (fetchOnCreate) {
       beginFetching();
     }
+  }
+
+  @override
+  void onAppState(bool isActive) {
+    if (isActive && refreshOnAppActive) {
+      markNeedsRefresh();
+    }
+    super.onAppState(isActive);
   }
 }
