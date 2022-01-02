@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:api_bloc_base/src/data/model/remote/params/auth_params.dart';
 import 'package:api_bloc_base/src/data/model/remote/response/base_api_response.dart';
 import 'package:api_bloc_base/src/data/model/remote/response/base_user_response.dart';
@@ -145,5 +147,45 @@ abstract class BaseAuthRepository<T extends BaseProfile>
     final one = userDefaults.setSignedAccount(account);
     final two = userDefaults.setUserToken(account?.accessToken);
     return Future.wait([one, two]);
+  }
+
+  Result<ResponseEntity> requireUser(
+      FutureOr<ResponseEntity> Function(T user) action) {
+    return withUser((savedAccount) {
+      if (savedAccount is T) {
+        return action(savedAccount);
+      }
+      return NoAccountSavedFailure(noAccountSavedInError);
+    });
+  }
+
+  Result<ResponseEntity> withUser(
+      FutureOr<ResponseEntity> Function(T? user) action) {
+    final savedProfile = Future(() async => await userDefaults.signedAccount)
+        .catchError((e, s) => null)
+        .then<ResponseEntity>((savedAccount) {
+      return action(savedAccount as T?);
+    });
+    return Result(resultFuture: savedProfile);
+  }
+
+  Result<Either<ResponseEntity, D>> dataRequireUser<D>(
+      FutureOr<Either<ResponseEntity, D>> Function(T user) action) {
+    return dataWithUser((savedAccount) {
+      if (savedAccount is T) {
+        return action(savedAccount);
+      }
+      return Left(NoAccountSavedFailure(noAccountSavedInError));
+    });
+  }
+
+  Result<Either<ResponseEntity, D>> dataWithUser<D>(
+      FutureOr<Either<ResponseEntity, D>> Function(T? user) action) {
+    final savedProfile = Future(() async => await userDefaults.signedAccount)
+        .catchError((e, s) => null)
+        .then<Either<ResponseEntity, D>>((savedAccount) {
+      return action(savedAccount as T?);
+    });
+    return Result(resultFuture: savedProfile);
   }
 }
