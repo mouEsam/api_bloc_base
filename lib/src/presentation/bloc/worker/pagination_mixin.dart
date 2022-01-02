@@ -44,7 +44,7 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
 
   int? _currentPage;
 
-  int get currentPage => _currentPage ?? startPage;
+  int get currentPage => _currentPage ?? paginatedData.currentPage;
   int get lastPage => paginatedData.data.keys.fold(
       startPage, ((previousValue, element) => max(previousValue, element)));
 
@@ -107,7 +107,7 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
 
   Future<void> next() async {
     if (canGoForward) {
-      _currentPage = currentPage + 1;
+      _currentPage = paginatedData.currentPage + 1;
       final nextData = paginatedData.data[_currentPage!];
       if (nextData != null) {
         emitData(nextData);
@@ -120,7 +120,7 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
 
   Future<void> back() async {
     if (canGoBack) {
-      _currentPage = _currentPage! - 1;
+      _currentPage = paginatedData.currentPage - 1;
       final previousData = paginatedData.data[_currentPage!]!;
       emitData(previousData);
       emitCurrent();
@@ -130,7 +130,7 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
   @override
   void clean() {
     super.clean();
-    _currentPage = startPage;
+    _currentPage = null;
     paginatedData = empty;
     lastInput = null;
   }
@@ -142,11 +142,7 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
 
   @override
   void handleErrorState(errorState) {
-    if (currentPage != startPage) {
-      _currentPage = _currentPage! - 1;
-    } else {
-      _currentPage = null;
-    }
+    _currentPage = null;
     if (!hasData || safeData == null) {
       super.handleErrorState(errorState);
     } else {
