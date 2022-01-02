@@ -37,7 +37,6 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
         ListenerBloc<Paginated, Output>,
         IndependenceMixin<Paginated, Output, WorkerState<Output>> {
   static const int startPage = 1;
-
   PaginatedOutput<Output> get empty =>
       const PaginatedOutput({}, false, startPage, null);
 
@@ -69,11 +68,7 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
 
   @override
   Output convertInputToOutput(input) {
-    return input.input;
-  }
-
-  @override
-  convertOutputToInject(newData) {
+    final newData = input.input;
     final isThereMore = canGetMore(newData);
     final map = paginatedData.data;
     final newMap = Map.of(map);
