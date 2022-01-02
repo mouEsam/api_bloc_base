@@ -137,10 +137,9 @@ abstract class ProviderBloc<Input, Output>
 
   @override
   void onAppState(bool isActive) {
-    print("Refreshing tttttt");
     if (isActive && refreshOnAppActive) {
       needsToRefresh.value = true;
     }
-    return super.onAppState(isActive);
+    super.onAppState(isActive);
   }
 }

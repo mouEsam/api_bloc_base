@@ -19,13 +19,11 @@ mixin LifecycleMixin<State> on TrafficLightsMixin<State>
   @override
   void onResume() {
     onAppState(true);
-    isAppGreen.value = true;
   }
 
   @override
   void onPause() {
     onAppState(false);
-    isAppGreen.value = false;
   }
 
   @override
@@ -34,7 +32,10 @@ mixin LifecycleMixin<State> on TrafficLightsMixin<State>
   @override
   void onInactive() {}
 
-  void onAppState(bool isActive) {}
+  @mustCallSuper
+  void onAppState(bool isActive) {
+    isAppGreen.value = isActive;
+  }
 
   @override
   close() {
