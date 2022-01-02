@@ -23,6 +23,7 @@ abstract class UserDependantProvider<Input, Output, Profile extends BaseProfile>
     bool enableRefresh = true,
     bool enableRetry = true,
     bool canRunWithoutListeners = true,
+    bool refreshOnAppActive = true,
     bool fetchOnCreate = true,
   }) : super(
           initialInput: initialInput,
@@ -33,6 +34,7 @@ abstract class UserDependantProvider<Input, Output, Profile extends BaseProfile>
           providers: providers,
           enableRefresh: enableRefresh,
           enableRetry: enableRetry,
+          refreshOnAppActive: refreshOnAppActive,
           canRunWithoutListeners: canRunWithoutListeners,
           fetchOnCreate: fetchOnCreate,
         );

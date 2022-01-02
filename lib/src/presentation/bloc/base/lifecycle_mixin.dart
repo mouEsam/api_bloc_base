@@ -18,14 +18,14 @@ mixin LifecycleMixin<State> on TrafficLightsMixin<State>
 
   @override
   void onResume() {
-    isAppGreen.value = true;
     onAppState(true);
+    isAppGreen.value = true;
   }
 
   @override
   void onPause() {
-    isAppGreen.value = false;
     onAppState(false);
+    isAppGreen.value = false;
   }
 
   @override

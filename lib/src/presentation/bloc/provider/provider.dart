@@ -46,6 +46,8 @@ abstract class ProviderBloc<Input, Output>
   final bool enableRetry;
   final bool canRunWithoutListeners;
 
+  final bool refreshOnAppActive;
+
   final _inputSubject = StreamController<Work>.broadcast();
   Stream<BlocState> get inputStream => _inputSubject.stream
       .shareValue()
@@ -79,6 +81,7 @@ abstract class ProviderBloc<Input, Output>
     this.enableRefresh = true,
     this.enableRetry = true,
     this.canRunWithoutListeners = true,
+    this.refreshOnAppActive = true,
     bool fetchOnCreate = true,
   }) : super(ProviderLoading()) {
     setupInitialData(initialInput);
@@ -130,5 +133,14 @@ abstract class ProviderBloc<Input, Output>
     if (!output.isCancelled) {
       emitState(output.state);
     }
+  }
+
+  @override
+  void onAppState(bool isActive) {
+    print("Refreshing tttttt");
+    if (isActive && refreshOnAppActive) {
+      needsToRefresh.value = true;
+    }
+    return super.onAppState(isActive);
   }
 }

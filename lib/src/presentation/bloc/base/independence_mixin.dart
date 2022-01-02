@@ -21,6 +21,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     implements Refreshable {
   final ValueNotifier<bool> _canFetchData = ValueNotifier(false);
   final ValueNotifier<bool> _alreadyFetchedData = ValueNotifier(false);
+  final ValueNotifier<bool> needsToRefresh = ValueNotifier(false);
   final Duration? refreshInterval = Duration(seconds: 30);
   final Duration? retryInterval = Duration(seconds: 30);
 
@@ -29,7 +30,6 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
 
   bool get enableRefresh;
   bool get enableRetry;
-  bool get forceRefresh => false;
 
   StreamSubscription<Input>? _streamSourceSubscription;
 
@@ -38,8 +38,8 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   @override
   get trafficLights => super.trafficLights..addAll([_canFetchData]);
   @override
-  get notifiers =>
-      super.notifiers..addAll([_canFetchData, _alreadyFetchedData]);
+  get notifiers => super.notifiers
+    ..addAll([needsToRefresh, _canFetchData, _alreadyFetchedData]);
   @override
   get timers => super.timers..addAll([_timer]);
 
@@ -116,15 +116,18 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   }
 
   void setupTimer() {
-    print("setupTimer ${enableRetry} ${enableRefresh} ${state}");
     if (state is Error && enableRetry) {
       if (retryInterval != null) {
         _timer?.cancel();
         _timer = Timer(retryInterval!, fetchData);
       }
-    } else if (state is Loaded<Output> && enableRefresh && hasData) {
-      if (refreshInterval != null &&
-          (forceRefresh || _streamSourceSubscription == null)) {
+    } else if (state is Loaded<Output> &&
+        enableRefresh &&
+        hasData &&
+        _canFetchData.value) {
+      if (refreshInterval != null) {
+        print(
+            "setupTimer ${enableRetry} ${enableRefresh} ${state.runtimeType}");
         _timer?.cancel();
         _timer = Timer.periodic(refreshInterval!, (_) => refreshData());
       }
@@ -141,6 +144,9 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
       _streamSourceSubscription?.resume();
       if (!_alreadyFetchedData.value) {
         fetchData();
+      } else if (needsToRefresh.value) {
+        needsToRefresh.value = false;
+        refreshData();
       }
       setupTimer();
     } else {

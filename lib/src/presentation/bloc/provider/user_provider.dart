@@ -14,7 +14,11 @@ class SimpleUserProvider<UserType extends BaseProfile>
 
   SimpleUserProvider(this.userBloc, LifecycleObserver appLifecycleObserver)
       : super(
+          refreshOnAppActive: false,
           fetchOnCreate: true,
+          enableRetry: false,
+          enableRefresh: false,
+          canRunWithoutListeners: true,
           streamDataSource: Right(userBloc.userStream.whereType<UserType>()),
           appLifecycleObserver: appLifecycleObserver,
         );
