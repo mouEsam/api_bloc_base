@@ -60,7 +60,8 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
 
   @override
   void handleInputToInject(event) {
-    if (currentPage == event.currentPage) {
+    final index = lastInput?.currentPage ?? 0;
+    if (index < event.currentPage) {
       lastInput = event;
     }
     super.handleInputToInject(event);
