@@ -67,15 +67,23 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
   }
 
   @override
-  Output convertInputToOutput(input) {
+  handleInjectedInput(input) {
     final newData = input.input;
     final isThereMore = canGetMore(newData);
     final map = paginatedData.data;
     final newMap = Map.of(map);
     newMap[currentPage] = newData;
-    paginatedData =
-        PaginatedOutput(newMap, isThereMore, currentPage, lastInput?.nextUrl);
-    return newData;
+    paginatedData = PaginatedOutput(
+      newMap,
+      isThereMore,
+      currentPage,
+      lastInput?.nextUrl,
+    );
+  }
+
+  @override
+  convertInputToOutput(input) {
+    return input.input;
   }
 
   bool canGetMore(Output newData) {

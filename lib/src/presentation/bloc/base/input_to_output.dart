@@ -46,6 +46,7 @@ mixin InputToOutput<Input, Output, State extends BlocState>
     late final BlocState outputState;
     if (state is Loaded<Input>) {
       try {
+        await handleInjectedInput(state.data);
         final input = await convertInput(state.data);
         final output = await convertInputToOutput(input);
         final newOutput = await convertOutput(output);
@@ -58,6 +59,8 @@ mixin InputToOutput<Input, Output, State extends BlocState>
     }
     handleOutputState(work.changeState(outputState));
   }
+
+  FutureOr<void> handleInjectedInput(Input input) {}
 
   FutureOr<Output> convertInputToOutput(Input input);
 
