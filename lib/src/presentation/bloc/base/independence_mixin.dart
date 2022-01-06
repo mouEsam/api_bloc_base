@@ -128,8 +128,6 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
         hasData &&
         _canFetchData.value) {
       if (refreshInterval != null) {
-        print(
-            "setupTimer ${enableRetry} ${enableRefresh} ${state.runtimeType}");
         _timer?.cancel();
         _timer = Timer.periodic(refreshInterval!, (_) => refreshData());
       }
@@ -165,7 +163,6 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
 
   @mustCallSuper
   void trafficLightsChanged(bool green) {
-    print("$runtimeType $green trafficLightsChanged");
     if (green) {
       _streamSourceSubscription?.resume();
       if (!_alreadyFetchedData.value) {

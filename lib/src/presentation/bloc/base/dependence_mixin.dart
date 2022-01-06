@@ -28,14 +28,15 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output,
       _inputParameter.data = inputParameter;
 
   final ValueNotifier<bool> listeningToParametersSources = ValueNotifier(true);
+  final ValueNotifier<bool> _parameterIsReady = ValueNotifier(false);
 
   late final List<ListenableMixin<BlocState>> listenableParametersSources;
   late final List<Stream<BlocState>> listenableParametersStreams;
 
   late final StreamSubscription _streamParametersSubscription;
 
-  // @override
-  // get trafficLights => super.trafficLights..addAll([listeningToListenables]);
+  @override
+  get trafficLights => super.trafficLights..addAll([_parameterIsReady]);
 
   @override
   get subscriptions =>
@@ -49,15 +50,15 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output,
     listeningToParametersSources.value = true;
   }
 
-  @mustCallSuper
-  void trafficLightsChanged(bool green) {
-    if (green) {
-      _streamParametersSubscription.resume();
-    } else {
-      _streamParametersSubscription.pause();
-    }
-    super.trafficLightsChanged(green);
-  }
+  // @mustCallSuper
+  // void trafficLightsChanged(bool green) {
+  //   if (green) {
+  //     _streamParametersSubscription.resume();
+  //   } else {
+  //     _streamParametersSubscription.pause();
+  //   }
+  //   super.trafficLightsChanged(green);
+  // }
 
   @override
   void init() {
@@ -100,9 +101,11 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output,
   void handleListenablesOutput(BlocState event) {
     if (event is Loaded<InputParameter>) {
       inputParameter = event.data;
+      _parameterIsReady.value = true;
       markNeedsRefetch();
     } else {
       inputParameter = null;
+      _parameterIsReady.value = false;
       injectInputState(event);
     }
   }
@@ -110,7 +113,7 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output,
   void handleListenablesError(e, s) {
     print(e);
     print(s);
-    injectInputState(Error(createFailure(e, s)));
+    handleListenablesOutput(Error(createFailure(e, s)));
   }
 
   @override
