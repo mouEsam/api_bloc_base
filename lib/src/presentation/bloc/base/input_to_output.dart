@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:api_bloc_base/src/domain/entity/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
 import 'package:flutter/foundation.dart';
 
@@ -53,7 +52,7 @@ mixin InputToOutput<Input, Output, State extends BlocState>
         await handleConvertedOutput(output);
         outputState = Loaded<Output>(newOutput);
       } catch (e, s) {
-        outputState = Error(Failure(extractErrorMessage(e, s)));
+        outputState = Error(createFailure(e, s));
       }
     } else {
       outputState = state;
@@ -95,11 +94,14 @@ mixin InputToOutput<Input, Output, State extends BlocState>
   Future<void> injectOutputWork(Work output) async {
     final state = output.state;
     if (state is Loaded<Output>) {
-      await handleOutputToInject(state.data);
-      output =
-          output.changeState(Loaded(await convertOutputToInject(state.data)));
+      try {
+        await handleOutputToInject(state.data);
+        output =
+            output.changeState(Loaded(await convertOutputToInject(state.data)));
+      } catch (e, s) {
+        output = output.changeState(Error(createFailure(e, s)));
+      }
     }
-
     handleOutput(output);
   }
 

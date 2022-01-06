@@ -1,11 +1,19 @@
 import 'package:api_bloc_base/src/presentation/bloc/base/state.dart';
 
 class Work {
-  BlocState state;
+  BlocState _state;
+
+  BlocState get state =>
+      cancellationState._isCancelled ? throw CancellationError() : _state;
+
+  set state(BlocState state) {
+    _state = state;
+  }
+
   final CancellationState cancellationState;
 
-  Work._(this.state, this.cancellationState);
-  Work.start(this.state) : cancellationState = CancellationState._();
+  Work._(this._state, this.cancellationState);
+  Work.start(this._state) : cancellationState = CancellationState._();
 
   void cancel() {
     cancellationState._isCancelled = true;
@@ -24,3 +32,5 @@ class CancellationState {
 
   CancellationState._([this._isCancelled = false]);
 }
+
+class CancellationError implements Exception {}

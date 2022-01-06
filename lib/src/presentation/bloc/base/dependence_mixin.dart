@@ -11,7 +11,6 @@ import 'package:rxdart/rxdart.dart';
 
 import 'independence_mixin.dart';
 import 'listener_mixin.dart';
-import 'state.dart';
 
 export 'state.dart';
 
