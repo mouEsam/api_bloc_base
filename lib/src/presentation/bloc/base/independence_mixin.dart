@@ -22,6 +22,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   final ValueNotifier<bool> _canFetchData = ValueNotifier(false);
   final ValueNotifier<bool> _alreadyFetchedData = ValueNotifier(false);
   final ValueNotifier<bool> _needsToRefresh = ValueNotifier(false);
+  final ValueNotifier<bool> _needsToRefetch = ValueNotifier(false);
   final Duration? refreshInterval = Duration(seconds: 30);
   final Duration? retryInterval = Duration(seconds: 30);
 
@@ -39,7 +40,8 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   get trafficLights => super.trafficLights..addAll([_canFetchData]);
   @override
   get notifiers => super.notifiers
-    ..addAll([_needsToRefresh, _canFetchData, _alreadyFetchedData]);
+    ..addAll(
+        [_needsToRefresh, _needsToRefetch, _canFetchData, _alreadyFetchedData]);
   @override
   get timers => super.timers..addAll([_timer]);
 
@@ -137,6 +139,18 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   void injectInput(Input input);
   void injectInputState(BlocState input);
 
+  void markNeedsRefetch() {
+    _needsToRefetch.value = true;
+    if (lastTrafficLightsValue) {
+      _performMarkedRefetch();
+    }
+  }
+
+  void _performMarkedRefetch() {
+    _needsToRefetch.value = false;
+    refetchData();
+  }
+
   void markNeedsRefresh() {
     _needsToRefresh.value = true;
     if (lastTrafficLightsValue) {
@@ -156,6 +170,8 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
       _streamSourceSubscription?.resume();
       if (!_alreadyFetchedData.value) {
         fetchData();
+      } else if (_needsToRefetch.value) {
+        _performMarkedRefetch();
       } else if (_needsToRefresh.value) {
         _performMarkedRefresh();
       }
