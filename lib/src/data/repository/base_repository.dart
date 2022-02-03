@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:rxdart/rxdart.dart';
 import 'package:api_bloc_base/src/data/model/remote/response/base_api_response.dart';
 import 'package:api_bloc_base/src/data/service/converter.dart';
 import 'package:api_bloc_base/src/data/source/remote/base_rest_client.dart';
