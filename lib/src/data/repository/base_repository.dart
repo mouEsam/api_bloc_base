@@ -14,8 +14,15 @@ class Result<T> {
 
   const Result({this.cancelToken, required this.resultFuture, this.progress});
 
-  Result<S> chain<S>(Result<S> Function(T) secondFactory) {
+  Result<S> chain<S>(Result<S> Function(T value) secondFactory) {
     return ChainedResult<T, S>(this, secondFactory);
+  }
+
+  Result<S> next<S>(FutureOr<S> Function(T value) secondFactory) {
+    return chain<S>((value) {
+      final future = secondFactory(value);
+      return Result(resultFuture: Future.value(future));
+    });
   }
 }
 
@@ -47,8 +54,8 @@ class ChainedResult<S, T> extends CompletableResult<T> {
     });
   }
 
-  get cancelToken => second?.cancelToken ?? first.cancelToken;
-  get progress => second?.progress ?? first.progress;
+  get cancelToken => second != null ? second?.cancelToken : first.cancelToken;
+  get progress => second != null ? second?.progress : first.progress;
 }
 
 extension FutureResult<T> on Future<T> {
@@ -57,21 +64,15 @@ extension FutureResult<T> on Future<T> {
   }
 
   Result<S> result<S>(FutureOr<S> Function(T value) nextProcess) {
-    final newFuture = this.then((value) => nextProcess(value));
-    return Result(resultFuture: newFuture);
+    return Result(resultFuture: this).next(nextProcess);
   }
 
   Result<S> next<S>(Result<S> Function(T value) nextProcess) {
-    final newFuture = this.then((value) => nextProcess(value).resultFuture);
-    return Result(resultFuture: newFuture);
+    return Result(resultFuture: this).chain(nextProcess);
   }
 
   Result<S> chain<S>(Result<S> nextProcess) {
-    final newFuture = this.then((value) => nextProcess.resultFuture);
-    return Result(
-        resultFuture: newFuture,
-        cancelToken: nextProcess.cancelToken,
-        progress: nextProcess.progress?.defaultIfEmpty(0.0));
+    return Result(resultFuture: this).chain((_) => nextProcess);
   }
 }
 
