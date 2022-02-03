@@ -102,16 +102,12 @@ abstract class BaseAuthRepository<T extends BaseProfile>
   }
 
   Result<ResponseEntity> saveProfileIfRemembered(T profile) {
-    final Future<ResponseEntity> savedProfile =
-        _wasSaved.then<ResponseEntity>((wasSaved) async {
-      if (wasSaved) {
-        if (profile.active == true) {
-          saveAccount(profile);
-        }
+    return requireUser((user) {
+      if (profile.active) {
+        saveAccount(profile);
       }
       return Success();
-    }).catchError((e, s) => NoAccountSavedFailure(noAccountSavedInError));
-    return Result(resultFuture: savedProfile);
+    });
   }
 
   Result<ResponseEntity> offlineSignOut() {
@@ -133,8 +129,7 @@ abstract class BaseAuthRepository<T extends BaseProfile>
   }
 
   Future<void> checkSave(T account) async {
-    final wasSaved = await _wasSaved;
-    if (account.active == true && wasSaved) {
+    if (account.active == true && await _wasSaved) {
       saveAccount(account);
     }
   }
