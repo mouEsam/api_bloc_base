@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:api_bloc_base/src/data/repository/_index.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'package:api_bloc_base/src/data/model/_index.dart';
@@ -10,6 +11,8 @@ import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+
+typedef RequestResult<T> = Result<Response<T>>;
 
 enum RequestBodyType {
   FormData,
@@ -269,9 +272,9 @@ class BaseRestClient {
     });
     response.whenComplete(() => progressController.close());
     return RequestResult(
-      cancelToken,
-      response,
-      progressController.stream
+      cancelToken: cancelToken,
+      resultFuture: response,
+      progress: progressController.stream
           .asBroadcastStream(onCancel: (sub) => sub.cancel()),
     );
   }
@@ -365,39 +368,12 @@ class BaseRestClient {
         .then((value) => value as Response<ResponseBody?>);
     response.whenComplete(() => progressController.close());
     return RequestResult(
-      cancelToken,
-      response,
-      progressController.stream
+      cancelToken:cancelToken,
+      resultFuture: response,
+      progress: progressController.stream
           .asBroadcastStream(onCancel: (sub) => sub.cancel()),
     );
   }
-}
-
-class RequestResult<T> {
-  final CancelToken? cancelToken;
-  final Future<Response<T>> resultFuture;
-  final Stream<double>? progress;
-
-  const RequestResult(this.cancelToken, this.resultFuture, this.progress);
-}
-
-extension FutureRequest<T> on Future<T> {
-
-  RequestResult<S> request<S>(FutureOr<Response<S>> Function(T value) nextProcess) {
-    final newFuture = this.then<Response<S>>((value) => nextProcess(value));
-    return RequestResult(null, newFuture, null);
-  }
-
-  RequestResult<S> thenRequest<S>(RequestResult<S> Function(T value) nextProcess) {
-    final newFuture = this.then((value) => nextProcess(value).resultFuture);
-    return RequestResult(null, newFuture, null);
-  }
-
-  RequestResult<S> chainRequest<S>(RequestResult<S> nextProcess) {
-    final newFuture = this.then((value) => nextProcess.resultFuture);
-    return RequestResult( nextProcess.cancelToken, newFuture, nextProcess.progress?.defaultIfEmpty(0.0));
-  }
-
 }
 
 class CustomTransformer extends DefaultTransformer {
