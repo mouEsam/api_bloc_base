@@ -47,9 +47,10 @@ mixin InputToOutput<Input, Output, State extends BlocState>
       try {
         await handleInjectedInput(state.data);
         final input = await convertInput(state.data);
+        await handleConvertedInput(input);
         final output = await convertInputToOutput(input);
         final newOutput = await convertOutput(output);
-        await handleConvertedOutput(output);
+        await handleConvertedOutput(newOutput);
         outputState = Loaded<Output>(newOutput);
       } catch (e, s) {
         if (e is CancellationError) {
@@ -66,6 +67,7 @@ mixin InputToOutput<Input, Output, State extends BlocState>
 
   FutureOr<void> handleInjectedInput(Input input) {}
   FutureOr<void> handleConvertedOutput(Output output) {}
+  FutureOr<void> handleConvertedInput(Input output) {}
 
   FutureOr<Output> convertInputToOutput(Input input);
 

@@ -84,6 +84,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   }
 
   Future<void> refetchData() {
+    print("called refetchData");
     clean();
     return fetchData(refresh: false);
   }

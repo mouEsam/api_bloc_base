@@ -138,11 +138,6 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
     lastInput = null;
   }
 
-  void reset() {
-    clean();
-    fetchData(refresh: false);
-  }
-
   @override
   void handleErrorState(errorState) {
     _currentPage = null;
