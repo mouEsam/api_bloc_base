@@ -52,7 +52,11 @@ mixin InputToOutput<Input, Output, State extends BlocState>
         await handleConvertedOutput(output);
         outputState = Loaded<Output>(newOutput);
       } catch (e, s) {
-        outputState = Error(createFailure(e, s));
+        if (e is CancellationError) {
+          return;
+        } else {
+          outputState = Error(createFailure(e, s));
+        }
       }
     } else {
       outputState = state;
@@ -99,7 +103,11 @@ mixin InputToOutput<Input, Output, State extends BlocState>
         output =
             output.changeState(Loaded(await convertOutputToInject(state.data)));
       } catch (e, s) {
-        output = output.changeState(Error(createFailure(e, s)));
+        if (e is CancellationError) {
+          return;
+        } else {
+          output = output.changeState(Error(createFailure(e, s)));
+        }
       }
     }
     handleOutput(output);
