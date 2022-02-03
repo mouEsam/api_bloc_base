@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:rxdart/rxdart.dart';
 
 import 'package:api_bloc_base/src/data/model/_index.dart';
 import 'package:api_bloc_base/src/data/service/dio_flutter_transformer.dart';
@@ -378,6 +379,25 @@ class RequestResult<T> {
   final Stream<double>? progress;
 
   const RequestResult(this.cancelToken, this.resultFuture, this.progress);
+}
+
+extension FutureRequest<T> on Future<T> {
+
+  RequestResult<S> request<S>(FutureOr<Response<S>> Function(T value) nextProcess) {
+    final newFuture = this.then<Response<S>>((value) => nextProcess(value));
+    return RequestResult(null, newFuture, null);
+  }
+
+  RequestResult<S> thenRequest<S>(RequestResult<S> Function(T value) nextProcess) {
+    final newFuture = this.then((value) => nextProcess(value).resultFuture);
+    return RequestResult(null, newFuture, null);
+  }
+
+  RequestResult<S> chainRequest<S>(RequestResult<S> nextProcess) {
+    final newFuture = this.then((value) => nextProcess.resultFuture);
+    return RequestResult( nextProcess.cancelToken, newFuture, nextProcess.progress?.defaultIfEmpty(0.0));
+  }
+
 }
 
 class CustomTransformer extends DefaultTransformer {
