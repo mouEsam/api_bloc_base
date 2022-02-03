@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:rxdart/rxdart.dart';
 import 'package:api_bloc_base/src/data/model/remote/response/base_api_response.dart';
 import 'package:api_bloc_base/src/data/service/converter.dart';
 import 'package:api_bloc_base/src/data/source/remote/base_rest_client.dart';
@@ -13,6 +13,29 @@ class Result<T> {
   final Stream<double>? progress;
 
   const Result({this.cancelToken, required this.resultFuture, this.progress});
+}
+
+extension FutureResult<T> on Future<T> {
+
+  Future<T?> get maybe {
+    return this.catchError((e,s) {}).then<T?>((value) => value);
+  }
+
+  Result<S> result<S>(FutureOr<S> Function(T value) nextProcess) {
+    final newFuture = this.then((value) => nextProcess(value));
+    return Result(resultFuture: newFuture);
+  }
+
+  Result<S> next<S>(Result<S> Function(T value) nextProcess) {
+    final newFuture = this.then((value) => nextProcess(value).resultFuture);
+    return Result(resultFuture: newFuture);
+  }
+
+  Result<S> chain<S>(Result<S> nextProcess) {
+    final newFuture = this.then((value) => nextProcess.resultFuture);
+    return Result(resultFuture: newFuture, cancelToken: nextProcess.cancelToken, progress: nextProcess.progress?.defaultIfEmpty(0.0));
+  }
+
 }
 
 abstract class BaseRepository {

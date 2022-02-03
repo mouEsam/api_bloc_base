@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:rxdart/rxdart.dart';
 
 import 'package:api_bloc_base/src/data/model/remote/params/auth_params.dart';
 import 'package:api_bloc_base/src/data/model/remote/response/base_api_response.dart';
@@ -47,53 +48,48 @@ abstract class BaseAuthRepository<T extends BaseProfile>
   }
 
   Result<Either<ResponseEntity, T>> autoLogin() {
-    final savedProfile = Future(() async => await userDefaults.signedAccount)
-        .catchError((e, s) => null)
-        .then<Either<ResponseEntity, T>>((savedAccount) {
-      if (savedAccount is T) {
-        final operation = internalRefreshToken(savedAccount);
-        final result = handleFullResponse<BaseUserResponse, T>(operation,
-            converter: autoLoginConverter);
-        return result.resultFuture.then((value) async {
-          return value.fold((l) => Left(handleReAuthFailure(l, savedAccount)),
-              (r) {
-            checkSave(r);
-            return Right(r);
-          });
-        });
-      }
-      return Left(NoAccountSavedFailure(noAccountSavedInError));
+    return dataRequireUser<T>((savedAccount) {
+      final operation = internalRefreshToken(savedAccount);
+      final result = handleFullResponse<BaseUserResponse, T>(operation,
+          converter: autoLoginConverter);
+      return result.resultFuture.then((value) async {
+        return value.fold((l) => Left(handleReAuthFailure(l, savedAccount)),
+                (r) {
+              checkSave(r);
+              return Right(r);
+            });
+      });
     });
-    return Result(resultFuture: savedProfile);
   }
 
   Result<Either<ResponseEntity, T>> refreshToken(T profile) {
-    final operation = internalRefreshToken(profile);
-    final result = handleFullResponse<BaseUserResponse, T>(operation,
-        converter: converter);
-    final future =
-        result.resultFuture.then<Either<ResponseEntity, T>>((value) async {
-      return value.fold((l) => Left(handleReAuthFailure(l, profile)), (r) {
-        checkSave(r);
-        return Right(r);
+    return dataRequireUser<T>((savedAccount) {
+      final operation = internalRefreshToken(savedAccount);
+      final result = handleFullResponse<BaseUserResponse, T>(operation,
+          converter: autoLoginConverter);
+      return result.resultFuture.then<Either<ResponseEntity, T>>((value) async {
+        return value.fold((l) => Left(handleReAuthFailure(l, savedAccount)),
+                (r) {
+              checkSave(r);
+              return Right(r);
+            });
       });
     });
-    return Result(resultFuture: future);
   }
 
   Result<Either<ResponseEntity, T>> refreshProfile(T profile) {
-    final operation = internalRefreshProfile(profile);
-    final result = handleFullResponse<BaseUserResponse, T>(operation,
-        converter: refreshConverter);
-    final future =
-        result.resultFuture.then<Either<ResponseEntity, T>>((value) async {
-      return value.fold((l) => Left(handleReAuthFailure(l, profile)), (r) {
-        r = r.updateToken(profile.userToken) as T;
-        checkSave(r);
-        return Right(r);
+    return dataRequireUser<T>((savedAccount) {
+      final operation = internalRefreshProfile(savedAccount);
+      final result = handleFullResponse<BaseUserResponse, T>(operation,
+          converter: autoLoginConverter);
+      return result.resultFuture.then<Either<ResponseEntity, T>>((value) async {
+        return value.fold((l) => Left(handleReAuthFailure(l, savedAccount)),
+                (r) {
+              checkSave(r);
+              return Right(r);
+            });
       });
     });
-    return Result(resultFuture: future);
   }
 
   ResponseEntity handleReAuthFailure(ResponseEntity responseEntity,
@@ -151,7 +147,7 @@ abstract class BaseAuthRepository<T extends BaseProfile>
 
   Result<ResponseEntity> requireUser(
       FutureOr<ResponseEntity> Function(T user) action) {
-    return withUser((savedAccount) {
+    return userDefaults.signedAccount.maybe.result((savedAccount) {
       if (savedAccount is T) {
         return action(savedAccount);
       }
@@ -159,19 +155,16 @@ abstract class BaseAuthRepository<T extends BaseProfile>
     });
   }
 
-  Result<ResponseEntity> withUser(
-      FutureOr<ResponseEntity> Function(T? user) action) {
-    final savedProfile = Future(() async => await userDefaults.signedAccount)
-        .catchError((e, s) => null)
-        .then<ResponseEntity>((savedAccount) {
+  Result<D> withUser<D>(
+      FutureOr<D> Function(T? user) action) {
+    return userDefaults.signedAccount.maybe.result((savedAccount) {
       return action(savedAccount as T?);
     });
-    return Result(resultFuture: savedProfile);
   }
 
   Result<Either<ResponseEntity, D>> dataRequireUser<D>(
       FutureOr<Either<ResponseEntity, D>> Function(T user) action) {
-    return dataWithUser((savedAccount) {
+    return userDefaults.signedAccount.maybe.result((savedAccount) {
       if (savedAccount is T) {
         return action(savedAccount);
       }
@@ -181,11 +174,6 @@ abstract class BaseAuthRepository<T extends BaseProfile>
 
   Result<Either<ResponseEntity, D>> dataWithUser<D>(
       FutureOr<Either<ResponseEntity, D>> Function(T? user) action) {
-    final savedProfile = Future(() async => await userDefaults.signedAccount)
-        .catchError((e, s) => null)
-        .then<Either<ResponseEntity, D>>((savedAccount) {
-      return action(savedAccount as T?);
-    });
-    return Result(resultFuture: savedProfile);
+    return withUser(action);
   }
 }
