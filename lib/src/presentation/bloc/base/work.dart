@@ -27,6 +27,12 @@ class Work {
     this.state = state;
     return this;
   }
+
+  void throwIfCancelled() {
+    if (cancellationState._isCancelled) {
+      throw CancellationError();
+    }
+  }
 }
 
 class CancellationState {

@@ -43,14 +43,22 @@ mixin InputToOutput<Input, Output, State extends BlocState>
   void handleSourcesOutput(work) async {
     final state = work.state;
     late final BlocState outputState;
+    void throwIfCancelled() => work.throwIfCancelled();
     if (state is Loaded<Input>) {
       try {
+        throwIfCancelled();
         await handleInjectedInput(state.data);
+        throwIfCancelled();
         final input = await convertInput(state.data);
+        throwIfCancelled();
         await handleConvertedInput(input);
+        throwIfCancelled();
         final output = await convertInputToOutput(input);
+        throwIfCancelled();
         final newOutput = await convertOutput(output);
+        throwIfCancelled();
         await handleConvertedOutput(newOutput);
+        throwIfCancelled();
         outputState = Loaded<Output>(newOutput);
       } catch (e, s) {
         if (e is CancellationError) {
@@ -102,8 +110,9 @@ mixin InputToOutput<Input, Output, State extends BlocState>
     if (state is Loaded<Output>) {
       try {
         await handleOutputToInject(state.data);
-        output =
-            output.changeState(Loaded(await convertOutputToInject(state.data)));
+        output.throwIfCancelled();
+        final newOutput = await convertOutputToInject(state.data);
+        output = output.changeState(Loaded(newOutput));
       } catch (e, s) {
         if (e is CancellationError) {
           return;
