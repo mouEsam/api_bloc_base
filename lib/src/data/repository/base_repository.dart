@@ -13,12 +13,47 @@ class Result<T> {
   final Stream<double>? progress;
 
   const Result({this.cancelToken, required this.resultFuture, this.progress});
+
+  Result<S> chain<S>(Result<S> Function(T) secondFactory) {
+    return ChainedResult<T, S>(this, secondFactory);
+  }
+}
+
+class CompletableResult<T> extends Result<T> {
+  final Completer<T> _completer;
+
+  CompletableResult(this._completer,
+      {CancelToken? cancelToken, Stream<double>? progress})
+      : super(
+            resultFuture: _completer.future,
+            cancelToken: cancelToken,
+            progress: progress);
+
+  bool get isCompleted => _completer.isCompleted;
+}
+
+class ChainedResult<S, T> extends CompletableResult<T> {
+  final Result<S> first;
+  Result<T>? second;
+
+  ChainedResult(this.first, Result<T> Function(S) secondFactory)
+      : super(Completer()) {
+    first.resultFuture.then((value) {
+      final _second = secondFactory(value);
+      _completer.complete(_second.resultFuture);
+      second = _second;
+    }, onError: (e, s) {
+      _completer.completeError(e, s);
+    });
+  }
+
+  get cancelToken => second?.cancelToken ?? first.cancelToken;
+  get progress => second?.progress ?? first.progress;
 }
 
 extension FutureResult<T> on Future<T> {
-
   Future<T?> get maybe {
-    return this.catchError((e,s) {}).then<T?>((value) => value);
+    return this.catchError((e, s) {}).then<T?>((value) => value);
   }
 
   Result<S> result<S>(FutureOr<S> Function(T value) nextProcess) {
@@ -33,9 +68,11 @@ extension FutureResult<T> on Future<T> {
 
   Result<S> chain<S>(Result<S> nextProcess) {
     final newFuture = this.then((value) => nextProcess.resultFuture);
-    return Result(resultFuture: newFuture, cancelToken: nextProcess.cancelToken, progress: nextProcess.progress?.defaultIfEmpty(0.0));
+    return Result(
+        resultFuture: newFuture,
+        cancelToken: nextProcess.cancelToken,
+        progress: nextProcess.progress?.defaultIfEmpty(0.0));
   }
-
 }
 
 abstract class BaseRepository {
