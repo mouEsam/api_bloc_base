@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'package:rxdart/rxdart.dart';
 
+import 'package:api_bloc_base/src/data/_index.dart';
 import 'package:api_bloc_base/src/data/model/remote/params/auth_params.dart';
 import 'package:api_bloc_base/src/data/model/remote/response/base_api_response.dart';
 import 'package:api_bloc_base/src/data/model/remote/response/base_user_response.dart';
@@ -54,10 +54,10 @@ abstract class BaseAuthRepository<T extends BaseProfile>
           converter: autoLoginConverter);
       return result.resultFuture.then((value) async {
         return value.fold((l) => Left(handleReAuthFailure(l, savedAccount)),
-                (r) {
-              checkSave(r);
-              return Right(r);
-            });
+            (r) {
+          checkSave(r);
+          return Right(r);
+        });
       });
     });
   }
@@ -69,10 +69,10 @@ abstract class BaseAuthRepository<T extends BaseProfile>
           converter: autoLoginConverter);
       return result.resultFuture.then<Either<ResponseEntity, T>>((value) async {
         return value.fold((l) => Left(handleReAuthFailure(l, savedAccount)),
-                (r) {
-              checkSave(r);
-              return Right(r);
-            });
+            (r) {
+          checkSave(r);
+          return Right(r);
+        });
       });
     });
   }
@@ -84,10 +84,10 @@ abstract class BaseAuthRepository<T extends BaseProfile>
           converter: autoLoginConverter);
       return result.resultFuture.then<Either<ResponseEntity, T>>((value) async {
         return value.fold((l) => Left(handleReAuthFailure(l, savedAccount)),
-                (r) {
-              checkSave(r);
-              return Right(r);
-            });
+            (r) {
+          checkSave(r);
+          return Right(r);
+        });
       });
     });
   }
@@ -150,8 +150,7 @@ abstract class BaseAuthRepository<T extends BaseProfile>
     });
   }
 
-  Result<D> withUser<D>(
-      FutureOr<D> Function(T? user) action) {
+  Result<D> withUser<D>(FutureOr<D> Function(T? user) action) {
     return userDefaults.signedAccount.maybe.result((savedAccount) {
       return action(savedAccount as T?);
     });

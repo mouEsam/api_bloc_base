@@ -1,7 +1,7 @@
 import 'dart:async';
 
+import 'package:api_bloc_base/src/data/_index.dart';
 import 'package:api_bloc_base/src/data/model/remote/response/base_api_response.dart';
-import 'package:api_bloc_base/src/data/repository/base_repository.dart';
 import 'package:api_bloc_base/src/domain/entity/entity.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';

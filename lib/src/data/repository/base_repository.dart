@@ -1,79 +1,12 @@
 import 'dart:async';
+
+import 'package:api_bloc_base/src/data/_index.dart';
 import 'package:api_bloc_base/src/data/model/remote/response/base_api_response.dart';
 import 'package:api_bloc_base/src/data/service/converter.dart';
 import 'package:api_bloc_base/src/data/source/remote/base_rest_client.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:dartz/dartz.dart' as z;
 import 'package:dio/dio.dart';
-
-class Result<T> {
-  final CancelToken? cancelToken;
-  final Future<T> resultFuture;
-  final Stream<double>? progress;
-
-  const Result({this.cancelToken, required this.resultFuture, this.progress});
-
-  Result<S> chain<S>(Result<S> Function(T value) secondFactory) {
-    return ChainedResult<T, S>(this, secondFactory);
-  }
-
-  Result<S> next<S>(FutureOr<S> Function(T value) secondFactory) {
-    return chain<S>((value) {
-      final future = secondFactory(value);
-      return Result(resultFuture: Future.value(future));
-    });
-  }
-}
-
-class CompletableResult<T> extends Result<T> {
-  final Completer<T> _completer;
-
-  CompletableResult(this._completer,
-      {CancelToken? cancelToken, Stream<double>? progress})
-      : super(
-            resultFuture: _completer.future,
-            cancelToken: cancelToken,
-            progress: progress);
-
-  bool get isCompleted => _completer.isCompleted;
-}
-
-class ChainedResult<S, T> extends CompletableResult<T> {
-  final Result<S> first;
-  Result<T>? second;
-
-  ChainedResult(this.first, Result<T> Function(S) secondFactory)
-      : super(Completer()) {
-    first.resultFuture.then((value) {
-      final _second = secondFactory(value);
-      _completer.complete(_second.resultFuture);
-      second = _second;
-    }, onError: (e, s) {
-      _completer.completeError(e, s);
-    });
-  }
-
-  get cancelToken => second != null ? second?.cancelToken : first.cancelToken;
-  get progress => second != null ? second?.progress : first.progress;
-}
-
-extension FutureResult<T> on Future<T> {
-  Future<T?> get maybe {
-    return this.catchError((e, s) {}).then<T?>((value) => value);
-  }
-
-  Result<S> result<S>(FutureOr<S> Function(T value) nextProcess) {
-    return Result(resultFuture: this).next(nextProcess);
-  }
-
-  Result<S> next<S>(Result<S> Function(T value) nextProcess) {
-    return Result(resultFuture: this).chain(nextProcess);
-  }
-
-  Result<S> chain<S>(Result<S> nextProcess) {
-    return Result(resultFuture: this).chain((_) => nextProcess);
-  }
-}
 
 abstract class BaseRepository {
   const BaseRepository();
