@@ -3,8 +3,6 @@ import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/worker/_index.dart';
 
-import 'user_dependant_state.dart';
-
 mixin UserDependantWorkerMixin<Input, Output, Profile extends BaseProfile>
     on
         LifecycleMixin<WorkerState<Output>>,

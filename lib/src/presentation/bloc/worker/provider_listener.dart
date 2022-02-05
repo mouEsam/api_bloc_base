@@ -1,8 +1,6 @@
 import 'dart:async';
 
 import 'package:api_bloc_base/src/presentation/bloc/provider/_index.dart';
-import 'package:api_bloc_base/src/presentation/bloc/provider/provider.dart';
-import 'package:api_bloc_base/src/presentation/bloc/provider/state.dart';
 import 'package:api_bloc_base/src/presentation/bloc/worker/listener_bloc.dart';
 
 import 'provider_listener_mixin.dart';

@@ -12,7 +12,15 @@ abstract class ListingListener<Input, Output, Filtering extends FilterType>
   final int searchDelayMillis;
 
   ListingListener(
-      List<Stream<ProviderState>> sources, ProviderMixin<Input> provider,
-      {this.searchDelayMillis = 1000, Output? currentData})
-      : super(sources, provider, currentData: currentData);
+    List<Stream<ProviderState>> sources,
+    ProviderMixin<Input> provider, {
+    List<ProviderMixin> providers = const [],
+    this.searchDelayMillis = 1000,
+    Output? currentData,
+  }) : super(
+          sources,
+          provider,
+          providers: providers,
+          currentData: currentData,
+        );
 }
