@@ -4,6 +4,7 @@ import 'package:api_bloc_base/src/presentation/bloc/base/input_to_output.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/lifecycle_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/listenable_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/listener_mixin.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/same_input_output_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/sources_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
@@ -11,6 +12,7 @@ import 'package:api_bloc_base/src/presentation/bloc/base/visibility_mixin.dart';
 
 import 'worker_state.dart';
 
+typedef SameInputOutputWorkerMixin<Output> = SameInputOutputMixin<Output, WorkerState<Output>>;
 typedef StatefulWorkerBloc<Output> = StatefulBloc<Output, WorkerState<Output>>;
 typedef LifecycleWorkerMixin<Output> = LifecycleMixin<WorkerState<Output>>;
 typedef TrafficLightsWorkerMixin<Output>

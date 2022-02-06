@@ -1,17 +1,16 @@
 import 'dart:async';
 
 import 'package:api_bloc_base/src/data/_index.dart';
-import 'package:api_bloc_base/src/data/model/remote/response/base_api_response.dart';
 import 'package:api_bloc_base/src/domain/entity/entity.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 
 import '../base/state.dart';
+import '_defs.dart';
 import 'worker_state.dart';
 
-mixin WorkerMixin<Output> on StatefulBloc<Output, WorkerState<Output>> {
+mixin WorkerMixin<Output> on StatefulWorkerBloc<Output> {
   static const _DEFAULT_OPERATION = '_DEFAULT_OPERATION';
 
   String get loading => 'loading';

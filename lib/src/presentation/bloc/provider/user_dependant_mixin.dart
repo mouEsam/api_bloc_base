@@ -4,13 +4,14 @@ import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/independence_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/lifecycle_mixin.dart';
 
+import '_defs.dart';
 import 'provider.dart';
 import 'user_dependant_state.dart';
 
 mixin UserDependantProviderMixin<Input, Output, Profile extends BaseProfile>
     on
         LifecycleMixin<ProviderState<Output>>,
-        IndependenceMixin<Input, Output, ProviderState<Output>>,
+        IndependenceProviderMixin<Input, Output>,
         UserDependantMixin<Input, Output, ProviderState<Output>, Profile> {
   ProviderState<Output> createLoadedState(Output data) {
     return UserDependentProviderLoadedState<Output>(data, lastLogin);

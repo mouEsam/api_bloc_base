@@ -7,8 +7,8 @@ import 'package:api_bloc_base/src/presentation/bloc/worker/_index.dart';
 
 mixin UserDependantWorkerMixin<Input, Output, Profile extends BaseProfile>
     on
-        LifecycleMixin<WorkerState<Output>>,
-        IndependenceMixin<Input, Output, WorkerState<Output>>,
+        LifecycleWorkerMixin<Output>,
+        IndependenceWorkerMixin<Input, Output>,
         UserDependantMixin<Input, Output, WorkerState<Output>, Profile> {
   WorkerState<Output> createLoadedState(Output data) {
     return UserDependentLoadedState<Output>(data, lastLogin);

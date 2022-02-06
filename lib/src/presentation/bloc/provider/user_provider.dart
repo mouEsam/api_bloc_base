@@ -4,12 +4,13 @@ import 'package:api_bloc_base/src/presentation/bloc/worker/_index.dart';
 import 'package:dartz/dartz.dart';
 import 'package:rxdart/rxdart.dart';
 
+import '_defs.dart';
 import 'lifecycle_observer.dart';
 import 'provider.dart';
 
 class SimpleUserProvider<UserType extends BaseProfile>
     extends ProviderBloc<UserType, UserType>
-    with SameInputOutputMixin<UserType, ProviderState<UserType>> {
+    with SameInputOutputProviderMixin<UserType> {
   final BaseUserBloc<UserType> userBloc;
 
   SimpleUserProvider(this.userBloc, LifecycleObserver appLifecycleObserver)
