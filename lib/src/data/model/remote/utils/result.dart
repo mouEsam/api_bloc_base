@@ -6,10 +6,10 @@ import 'cancel_token.dart';
 
 class Result<T> {
   final CancelToken? cancelToken;
-  final Future<T> resultFuture;
+  final FutureOr<T> value;
   final Stream<double>? progress;
 
-  const Result({this.cancelToken, required this.resultFuture, this.progress});
+  const Result({this.cancelToken, required this.value, this.progress});
 
   Result<S> chain<S>(Result<S> Function(T value) secondFactory) {
     return ChainedResult<T, S>(this, secondFactory);
@@ -18,7 +18,7 @@ class Result<T> {
   Result<S> next<S>(FutureOr<S> Function(T value) secondFactory) {
     return chain<S>((value) {
       final future = secondFactory(value);
-      return Result(resultFuture: Future.value(future));
+      return Result(value: Future.value(future));
     });
   }
 }
@@ -29,7 +29,7 @@ class CompletableResult<T> extends Result<T> {
   CompletableResult(this._completer,
       {CancelToken? cancelToken, Stream<double>? progress})
       : super(
-            resultFuture: _completer.future,
+            value: _completer.future,
             cancelToken: cancelToken,
             progress: progress);
 
@@ -53,9 +53,9 @@ class ChainedResult<S, T> extends CompletableResult<T> {
     if (first.progress != null) {
       _progress.addStream(first.progress!);
     }
-    first.resultFuture.then((value) {
+    Future.value(first.value).then((value) {
       final _second = secondFactory(value);
-      _completer.complete(_second.resultFuture);
+      _completer.complete(_second.value);
       second = _second;
       cancelToken.second = _second.cancelToken;
       if (_second.progress != null) {
@@ -67,20 +67,25 @@ class ChainedResult<S, T> extends CompletableResult<T> {
   }
 }
 
-extension FutureResult<T> on Future<T> {
+extension FutureResult<T> on FutureOr<T> {
+
+  Future<T> get future => Future.value(this);
+
   Future<T?> get maybe {
-    return this.catchError((e, s) {}).then<T?>((value) => value);
+    return future.catchError((e, s) {}).then<T?>((value) => value);
   }
 
+  Result<T> get asResult => Result(value: this);
+
   Result<S> result<S>(FutureOr<S> Function(T value) nextProcess) {
-    return Result(resultFuture: this).next(nextProcess);
+    return Result(value: this).next(nextProcess);
   }
 
   Result<S> next<S>(Result<S> Function(T value) nextProcess) {
-    return Result(resultFuture: this).chain(nextProcess);
+    return Result(value: this).chain(nextProcess);
   }
 
   Result<S> chain<S>(Result<S> nextProcess) {
-    return Result(resultFuture: this).chain((_) => nextProcess);
+    return Result(value: this).chain((_) => nextProcess);
   }
 }

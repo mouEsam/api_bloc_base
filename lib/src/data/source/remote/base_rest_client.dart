@@ -273,7 +273,7 @@ class BaseRestClient {
     response.whenComplete(() => progressController.close());
     return RequestResult(
       cancelToken: cancelToken,
-      resultFuture: response,
+      value: response,
       progress: progressController.stream
           .asBroadcastStream(onCancel: (sub) => sub.cancel()),
     );
@@ -369,7 +369,7 @@ class BaseRestClient {
     response.whenComplete(() => progressController.close());
     return RequestResult(
       cancelToken:cancelToken,
-      resultFuture: response,
+      value: response,
       progress: progressController.stream
           .asBroadcastStream(onCancel: (sub) => sub.cancel()),
     );

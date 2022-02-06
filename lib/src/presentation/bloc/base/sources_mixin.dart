@@ -1,17 +1,12 @@
 import 'dart:async';
 
 import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/_index.dart';
-import 'package:api_bloc_base/src/presentation/bloc/provider/provider.dart';
 import 'package:collection/collection.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:rxdart/rxdart.dart';
 
-import 'listener_mixin.dart';
-import 'state.dart';
 import 'work.dart';
 
 mixin SourcesMixin<Input, Output, State extends BlocState>

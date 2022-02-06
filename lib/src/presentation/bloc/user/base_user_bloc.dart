@@ -45,7 +45,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
     if (!silent) {
       emit(UserLoadingState());
     }
-    final result = await authRepository.autoLogin().resultFuture;
+    final result = await authRepository.autoLogin().value;
     result.fold((l) {
       if (l is RefreshFailure<T>) {
         handleFailedRefresh(l.oldProfile, silent);
@@ -57,7 +57,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
   }
 
   Future<Either<ResponseEntity, T>> refreshToken() async {
-    final result = await authRepository.refreshToken(currentUser!).resultFuture;
+    final result = await authRepository.refreshToken(currentUser!).value;
     result.fold((l) {
       handleReAuthFailure(l);
     }, (user) => handleUser(user));
@@ -66,7 +66,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
 
   Future<Either<ResponseEntity, T>> refreshProfile() async {
     final result =
-        await authRepository.refreshProfile(currentUser!).resultFuture;
+        await authRepository.refreshProfile(currentUser!).value;
     result.fold((l) {
       handleReAuthFailure(l);
     }, (user) => handleUser(user));
@@ -87,7 +87,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
 
   Result<ResponseEntity> signOut() {
     final op = authRepository.signOut(currentUser!);
-    op.resultFuture.then((result) {
+    Future.value(op.value).then((result) {
       if (result is Success ||
           (result is Failure && result is! InternetFailure)) {
         handleUser(null);
@@ -101,7 +101,7 @@ abstract class BaseUserBloc<T extends BaseProfile>
 
   Result<ResponseEntity> offlineSignOut() {
     final op = authRepository.offlineSignOut();
-    op.resultFuture.then((result) {
+    Future.value(op.value).then((result) {
       if (result is Success ||
           (result is Failure && result is! InternetFailure)) {
         handleUser(null);

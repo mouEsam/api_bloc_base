@@ -39,7 +39,7 @@ mixin WorkerMixin<Output> on StatefulBloc<Output, WorkerState<Output>> {
 
   void interceptOperation<S>(Result<Either<ResponseEntity, S>> result,
       {void onSuccess()?, void onFailure()?, void onDate(S data)?}) {
-    result.resultFuture.then((value) {
+    Future.value(result.value).then((value) {
       value.fold((l) {
         if (l is Success) {
           onSuccess?.call();
@@ -55,7 +55,7 @@ mixin WorkerMixin<Output> on StatefulBloc<Output, WorkerState<Output>> {
 
   void interceptResponse(Result<ResponseEntity> result,
       {void onSuccess()?, void onFailure()?}) {
-    result.resultFuture.then((value) {
+    Future.value(result.value).then((value) {
       if (value is Success) {
         onSuccess?.call();
       } else if (value is Failure) {
@@ -90,7 +90,7 @@ mixin WorkerMixin<Output> on StatefulBloc<Output, WorkerState<Output>> {
         cancelToken: result.cancelToken,
         progress: result.progress,
         operationTag: operationTag);
-    final future = await result.resultFuture;
+    final future = await result.value;
     return future.fold<T?>(
       (l) {
         bool? handled = handleResponse?.call(l, operationTag);
@@ -133,7 +133,7 @@ mixin WorkerMixin<Output> on StatefulBloc<Output, WorkerState<Output>> {
         announceLoading: announceLoading,
         emitLoading: emitFailure || emitSuccess,
         operationTag: operationTag);
-    final future = await result.resultFuture;
+    final future = await result.value;
     return handleResponse(future,
         announceFailure: announceFailure,
         emitFailure: emitFailure,

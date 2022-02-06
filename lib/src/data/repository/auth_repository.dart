@@ -52,7 +52,7 @@ abstract class BaseAuthRepository<T extends BaseProfile>
       final operation = internalRefreshToken(savedAccount);
       final result = handleFullResponse<BaseUserResponse, T>(operation,
           converter: autoLoginConverter);
-      return result.resultFuture.then((value) async {
+      return Future.value(result.value).then((value) async {
         return value.fold((l) => Left(handleReAuthFailure(l, savedAccount)),
             (r) {
           checkSave(r);
@@ -67,7 +67,7 @@ abstract class BaseAuthRepository<T extends BaseProfile>
       final operation = internalRefreshToken(savedAccount);
       final result = handleFullResponse<BaseUserResponse, T>(operation,
           converter: autoLoginConverter);
-      return result.resultFuture.then<Either<ResponseEntity, T>>((value) async {
+      return Future.value(result.value).then<Either<ResponseEntity, T>>((value) async {
         return value.fold((l) => Left(handleReAuthFailure(l, savedAccount)),
             (r) {
           checkSave(r);
@@ -82,7 +82,7 @@ abstract class BaseAuthRepository<T extends BaseProfile>
       final operation = internalRefreshProfile(savedAccount);
       final result = handleFullResponse<BaseUserResponse, T>(operation,
           converter: autoLoginConverter);
-      return result.resultFuture.then<Either<ResponseEntity, T>>((value) async {
+      return Future.value(result.value).then<Either<ResponseEntity, T>>((value) async {
         return value.fold((l) => Left(handleReAuthFailure(l, savedAccount)),
             (r) {
           checkSave(r);
@@ -118,7 +118,7 @@ abstract class BaseAuthRepository<T extends BaseProfile>
       print(s);
       return Failure(e.response);
     });
-    return Result(resultFuture: result);
+    return Result(value: result);
   }
 
   Result<ResponseEntity> signOut(T account) {

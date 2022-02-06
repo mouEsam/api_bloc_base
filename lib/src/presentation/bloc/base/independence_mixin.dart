@@ -95,7 +95,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
 
   Future<void> _handleSingleSource(
       Result<Either<ResponseEntity, Input>> singleSource, bool refresh) async {
-    final future = await singleSource.resultFuture;
+    final future = await singleSource.value;
     return future.fold(
       (l) async {
         injectInputState(Error(l));

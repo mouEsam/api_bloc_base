@@ -8,6 +8,7 @@ export 'package:sembast/blob.dart';
 export 'package:sembast/sembast.dart';
 export 'package:sembast/sembast_io.dart';
 export 'package:sembast/timestamp.dart';
+export 'package:listenable_stream/listenable_stream.dart';
 
 export 'src/data/_index.dart';
 export 'src/domain/entity/_index.dart';

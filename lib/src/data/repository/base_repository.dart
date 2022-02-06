@@ -29,7 +29,7 @@ abstract class BaseRepository {
         (this.converter as BaseResponseConverter<BaseApiResponse, S>);
     final cancelToken = result.cancelToken;
     final future =
-        result.resultFuture.then<z.Either<ResponseEntity, S>>((value) async {
+        Future.value(result.value).then<z.Either<ResponseEntity, S>>((value) async {
       final data = value.data;
       S? result;
       late ResponseEntity responseEntity;
@@ -99,7 +99,7 @@ abstract class BaseRepository {
     });
     return Result<z.Either<ResponseEntity, S>>(
         cancelToken: cancelToken,
-        resultFuture: future,
+        value: future,
         progress: result.progress);
   }
 
@@ -110,7 +110,7 @@ abstract class BaseRepository {
   }) {
     final _converter = converter ?? this.converter;
     final cancelToken = result.cancelToken;
-    final future = result.resultFuture.then<ResponseEntity>((value) async {
+    final future = Future.value(result.value).then<ResponseEntity>((value) async {
       final data = value.data!;
       interceptData?.call(data);
       return _converter.response(data)!;
@@ -130,7 +130,7 @@ abstract class BaseRepository {
     });
     return Result<ResponseEntity>(
         cancelToken: cancelToken,
-        resultFuture: future,
+        value: future,
         progress: result.progress);
   }
 
@@ -140,7 +140,7 @@ abstract class BaseRepository {
   }) {
     final cancelToken = result.cancelToken;
     final future =
-        result.resultFuture.then<z.Either<ResponseEntity, S>>((value) async {
+        Future.value(result.value).then<z.Either<ResponseEntity, S>>((value) async {
       final data = value.data;
       interceptResult?.call(data);
       return z.Right<ResponseEntity, S>(data!);
@@ -166,7 +166,7 @@ abstract class BaseRepository {
     });
     return Result<z.Either<ResponseEntity, S>>(
         cancelToken: cancelToken,
-        resultFuture: future,
+        value: future,
         progress: result.progress);
   }
 

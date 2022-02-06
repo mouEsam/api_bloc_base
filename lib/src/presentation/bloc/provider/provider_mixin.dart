@@ -58,7 +58,7 @@ mixin ProviderMixin<Data> on StatefulBloc<Data, ProviderState<Data>>
 
   void interceptOperation<S>(Result<Either<ResponseEntity, S>> result,
       {void onSuccess()?, void onFailure()?, void onDate(S data)?}) {
-    result.resultFuture.then((value) {
+    Future.value(result.value).then((value) {
       value.fold((l) {
         if (l is Success) {
           onSuccess?.call();
@@ -77,7 +77,7 @@ mixin ProviderMixin<Data> on StatefulBloc<Data, ProviderState<Data>>
 
   void interceptResponse(Result<ResponseEntity> result,
       {void onSuccess()?, void onFailure()?}) {
-    result.resultFuture.then((value) {
+    Future.value(result.value).then((value) {
       if (value is Success) {
         onSuccess?.call();
       } else if (value is Failure) {
