@@ -17,7 +17,11 @@ abstract class StatefulBloc<Data, State extends BlocState>
     try {
       return e.response;
     } catch (_) {
-      return defaultErrorMessage;
+      try {
+        return e.message;
+      } catch (_) {
+        return defaultErrorMessage;
+      }
     }
   }
 
@@ -28,6 +32,9 @@ abstract class StatefulBloc<Data, State extends BlocState>
   }
 
   Failure createFailure(e, [s]) {
+    if (e is Failure) {
+      return e;
+    }
     return Failure(extractErrorMessage(e, s));
   }
 

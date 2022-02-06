@@ -12,6 +12,9 @@ import 'state.dart';
 
 mixin ProviderMixin<Data> on StatefulBloc<Data, ProviderState<Data>>
     implements Refreshable {
+  Future<Data?> get dataFuture;
+  Future<ProviderState<Data>> get stateFuture;
+
   @mustCallSuper
   Future<void> fetchData({bool refresh = false});
   Future<void> refreshData();
@@ -84,6 +87,46 @@ mixin ProviderMixin<Data> on StatefulBloc<Data, ProviderState<Data>>
         onFailure?.call();
       }
     });
+  }
+
+  Either<ResponseEntity, Stream<Data>> get asStreamSource {
+    return Right(stream.asyncMap((event) async {
+      late final ProviderState<Data> nextNotLoading;
+      if (event is! ProviderLoading<Data>) {
+        nextNotLoading = event;
+      } else {
+        nextNotLoading = await stream
+            .where((event) => event is! ProviderLoading<Data>)
+            .first;
+      }
+      if (nextNotLoading is ProviderLoaded<Data>) {
+        return nextNotLoading.data;
+      } else if (nextNotLoading is ProviderError<Data>) {
+        throw nextNotLoading.response;
+      } else {
+        throw nextNotLoading;
+      }
+    }));
+  }
+
+  Result<Either<ResponseEntity, Data>> get asSingleSource {
+    return stream.first.then<Either<ResponseEntity, Data>>((event) async {
+      late final ProviderState<Data> nextNotLoading;
+      if (event is! ProviderLoading<Data>) {
+        nextNotLoading = event;
+      } else {
+        nextNotLoading = await stream
+            .where((event) => event is! ProviderLoading<Data>)
+            .first;
+      }
+      if (nextNotLoading is ProviderLoaded<Data>) {
+        return Right(nextNotLoading.data);
+      } else if (nextNotLoading is ProviderError<Data>) {
+        return Left(nextNotLoading.response);
+      } else {
+        return Left(Failure(defaultErrorMessage));
+      }
+    }).asResult;
   }
 
   Stream<ProviderState<Out>> transformStream<Out>(

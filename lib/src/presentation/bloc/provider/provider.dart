@@ -64,6 +64,8 @@ abstract class ProviderBloc<Input, Output>
   final BehaviorSubject<Output?> _dataSubject = BehaviorSubject<Output?>();
   var _dataFuture = Completer<Output?>();
   var _stateFuture = Completer<ProviderState<Output>>();
+  Future<Output?> get dataFuture => _dataFuture.future;
+  Future<ProviderState<Output>> get stateFuture => _stateFuture.future;
   bool get hasData => latestData != null;
   Output? get latestData => _dataSubject.valueOrNull;
 
