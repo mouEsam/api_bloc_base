@@ -14,17 +14,18 @@ import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../provider/provider.dart' as provider;
+import '_defs.dart';
 import 'worker_state.dart';
 
 export 'worker_state.dart';
 
 abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
     with
-        TrafficLightsMixin<WorkerState<Output>>,
-        ListenerMixin<WorkerState<Output>>,
-        VisibilityMixin<WorkerState<Output>>,
-        SourcesMixin<Input, Output, WorkerState<Output>>,
-        InputToOutput<Input, Output, WorkerState<Output>> {
+        TrafficLightsWorkerMixin<Output>,
+        ListenerWorkerMixin<Output>,
+        VisibilityWorkerMixin<Output>,
+        SourcesWorkerMixin<Input, Output>,
+        InputToOutputWorkerMixin<Input, Output> {
   late final StreamSubscription _outputSubscription;
 
   final _inputSubject = StreamController<Work>.broadcast();

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
 import 'package:flutter/foundation.dart';
 
+import 'sources_mixin.dart';
 import 'work.dart';
 
 mixin InputToOutput<Input, Output, State extends BlocState>

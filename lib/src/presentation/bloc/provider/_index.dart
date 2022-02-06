@@ -10,3 +10,4 @@ export 'user_dependant_state.dart';
 export 'user_provider.dart';
 export 'signal_emitter.dart';
 export 'value.dart';
+export '_defs.dart';

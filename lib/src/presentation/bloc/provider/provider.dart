@@ -18,20 +18,20 @@ import 'package:rxdart/rxdart.dart';
 import 'lifecycle_observer.dart';
 import 'provider_mixin.dart';
 import 'state.dart';
+import '_defs.dart';
 
 export 'state.dart';
 
-abstract class ProviderBloc<Input, Output>
-    extends StatefulBloc<Output, ProviderState<Output>>
+abstract class ProviderBloc<Input, Output> extends StatefulProviderBloc<Output>
     with
         ProviderMixin<Output>,
-        TrafficLightsMixin<ProviderState<Output>>,
-        LifecycleMixin<ProviderState<Output>>,
-        ListenableMixin<ProviderState<Output>>,
-        IndependenceMixin<Input, Output, ProviderState<Output>>,
-        ListenerMixin<ProviderState<Output>>,
-        SourcesMixin<Input, Output, ProviderState<Output>>,
-        InputToOutput<Input, Output, ProviderState<Output>> {
+        TrafficLightsProviderMixin<Output>,
+        LifecycleProviderMixin<Output>,
+        ListenableProviderMixin<Output>,
+        IndependenceProviderMixin<Input, Output>,
+        ListenerStateProviderMixin<Output>,
+        SourcesProviderMixin<Input, Output>,
+        InputToOutputProviderMixin<Input, Output> {
   final Duration? refreshInterval = Duration(seconds: 30);
   final Duration? retryInterval = Duration(seconds: 30);
 

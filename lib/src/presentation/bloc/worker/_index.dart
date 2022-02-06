@@ -14,3 +14,4 @@ export 'user_dependant_state.dart';
 export 'worker_bloc.dart';
 export 'worker_mixin.dart';
 export 'worker_state.dart';
+export '_defs.dart';

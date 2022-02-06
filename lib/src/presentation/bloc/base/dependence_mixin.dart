@@ -87,16 +87,14 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output,
       } else if (event.any((element) => element is Loading)) {
         return Loading();
       } else {
-        final result =
-            combineListenablesData(event.map((e) => e as Loaded).toList());
-        return Loaded<InputParameter>(result);
+        return combineListenablesData(event.map((e) => e as Loaded).toList());
       }
     }).listen((event) {
       handleListenablesOutput(event);
     }, onError: handleListenablesError);
   }
 
-  InputParameter combineListenablesData(List<Loaded> listenableData);
+  Loaded combineListenablesData(List<Loaded> listenableData);
 
   void handleListenablesOutput(BlocState event) {
     if (event is Loaded<InputParameter>) {

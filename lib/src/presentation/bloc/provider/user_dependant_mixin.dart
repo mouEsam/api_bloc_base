@@ -1,6 +1,8 @@
 import 'package:api_bloc_base/src/domain/entity/base_profile.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/independence_mixin.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/lifecycle_mixin.dart';
 
 import 'provider.dart';
 import 'user_dependant_state.dart';
