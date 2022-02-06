@@ -11,8 +11,7 @@ import 'package:rxdart/rxdart.dart';
 
 import 'independence_mixin.dart';
 import 'listener_mixin.dart';
-
-export 'state.dart';
+import 'state.dart';
 
 mixin ParametersDependenceMixin<InputParameter, Input, Output,
         State extends BlocState>
@@ -30,8 +29,8 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output,
   final ValueNotifier<bool> listeningToParametersSources = ValueNotifier(true);
   final ValueNotifier<bool> _parameterIsReady = ValueNotifier(false);
 
-  late final List<ListenableMixin<BlocState>> listenableParametersSources;
-  late final List<Stream<BlocState>> listenableParametersStreams;
+  late final List<ListenableMixin<BlocState>> parametersSources = [];
+  late final List<Stream<BlocState>> parametersSourceStreams = [];
 
   late final StreamSubscription _streamParametersSubscription;
 
@@ -70,10 +69,10 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output,
   void setupListenableParametersDependence() {
     if (_init) return;
     _init = true;
-    listenableParametersSources.forEach((element) => element.addListener(this));
+    parametersSources.forEach((element) => element.addListener(this));
     final List<Stream<BlocState>> newSources = [
-      ...listenableParametersStreams,
-      ...listenableParametersSources.map((e) => e.stream)
+      ...parametersSourceStreams,
+      ...parametersSources.map((e) => e.stream)
     ];
     _streamParametersSubscription = listeningToParametersSources
         .toValueStream(replayValue: true)
@@ -87,16 +86,16 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output,
       } else if (event.any((element) => element is Loading)) {
         return Loading();
       } else {
-        return combineListenablesData(event.map((e) => e as Loaded).toList());
+        return combineParametersData(event.map((e) => e as Loaded).toList());
       }
     }).listen((event) {
-      handleListenablesOutput(event);
-    }, onError: handleListenablesError);
+      handleParameterOutput(event);
+    }, onError: handleParameterError);
   }
 
-  Loaded combineListenablesData(List<Loaded> listenableData);
+  BlocState combineParametersData(List<Loaded> listenableData);
 
-  void handleListenablesOutput(BlocState event) {
+  void handleParameterOutput(BlocState event) {
     if (event is Loaded<InputParameter>) {
       inputParameter = event.data;
       _parameterIsReady.value = true;
@@ -108,15 +107,15 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output,
     }
   }
 
-  void handleListenablesError(e, s) {
+  void handleParameterError(e, s) {
     print(e);
     print(s);
-    handleListenablesOutput(Error(createFailure(e, s)));
+    handleParameterOutput(Error(createFailure(e, s)));
   }
 
   @override
   Future<void> close() {
-    listenableParametersSources
+    parametersSources
         .forEach((element) => element.removeListener(this));
     return super.close();
   }

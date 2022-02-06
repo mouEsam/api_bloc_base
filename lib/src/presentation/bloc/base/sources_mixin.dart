@@ -7,8 +7,10 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:rxdart/rxdart.dart';
 
+import 'dependence_mixin.dart';
 import 'listenable_mixin.dart';
 import 'listener_mixin.dart';
+import 'state.dart';
 import 'stateful_bloc.dart';
 import 'traffic_lights_mixin.dart';
 import 'work.dart';

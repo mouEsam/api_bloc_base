@@ -2,6 +2,7 @@ import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
 
 import '_index.dart';
+import 'state.dart';
 
 abstract class StatefulBloc<Data, State extends BlocState>
     extends BaseCubit<State> {

@@ -1,3 +1,4 @@
+import 'package:api_bloc_base/src/presentation/bloc/base/dependence_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/independence_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/input_to_output.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/lifecycle_mixin.dart';
@@ -23,3 +24,4 @@ typedef SourcesWorkerMixin<Input, Output>
 typedef InputToOutputWorkerMixin<Input, Output>
     = InputToOutput<Input, Output, WorkerState<Output>>;
 typedef VisibilityWorkerMixin<Output> = VisibilityMixin<WorkerState<Output>>;
+typedef ParametersDependenceWorkerMixin<ParameterType, Input, Output> = ParametersDependenceMixin<ParameterType, Input, Output, WorkerState<Output>>;

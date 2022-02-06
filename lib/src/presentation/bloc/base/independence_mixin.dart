@@ -11,8 +11,6 @@ import 'package:flutter/cupertino.dart';
 
 import 'state.dart';
 
-export 'state.dart';
-
 mixin IndependenceMixin<Input, Output, State extends BlocState>
     on
         StatefulBloc<Output, State>,

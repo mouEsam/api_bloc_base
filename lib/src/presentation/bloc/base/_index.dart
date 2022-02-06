@@ -1,5 +1,4 @@
 export 'base_bloc.dart';
-export 'dependence_mixin.dart';
 export 'form_mixin.dart';
 export 'initializable.dart';
 export 'once_listener_mixin.dart';
@@ -8,3 +7,5 @@ export 'user_dependant_mixin.dart';
 export 'user_dependant_mixin.dart';
 export 'user_dependant_state.dart';
 export 'visibility_mixin.dart';
+export 'state.dart';
+export 'stateful_bloc.dart';

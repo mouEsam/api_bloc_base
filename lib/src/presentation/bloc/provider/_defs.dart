@@ -1,4 +1,5 @@
 import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/dependence_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/independence_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/input_to_output.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/lifecycle_mixin.dart';
@@ -17,3 +18,4 @@ typedef ListenerStateProviderMixin<Output> = ListenerMixin<ProviderState<Output>
 typedef IndependenceProviderMixin<Input, Output> = IndependenceMixin<Input, Output, ProviderState<Output>>;
 typedef SourcesProviderMixin<Input, Output> = SourcesMixin<Input, Output, ProviderState<Output>>;
 typedef InputToOutputProviderMixin<Input, Output> = InputToOutput<Input, Output, ProviderState<Output>>;
+typedef ParametersDependenceProviderMixin<ParameterType, Input, Output> = ParametersDependenceMixin<ParameterType, Input, Output, ProviderState<Output>>;

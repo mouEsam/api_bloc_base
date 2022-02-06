@@ -5,6 +5,8 @@ import 'package:api_bloc_base/src/presentation/bloc/base/independence_mixin.dart
 import 'package:api_bloc_base/src/presentation/bloc/user/base_user_bloc.dart';
 import 'package:flutter/foundation.dart';
 
+import 'state.dart';
+
 mixin UserDependantMixin<Input, Output, State extends BlocState,
     Profile extends BaseProfile> on IndependenceMixin<Input, Output, State> {
   DateTime? lastLogin;
