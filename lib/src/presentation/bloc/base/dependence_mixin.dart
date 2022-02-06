@@ -41,11 +41,11 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output,
   get subscriptions =>
       super.subscriptions..addAll([_streamParametersSubscription]);
 
-  void pauseParametersListenables() {
+  void pauseParametersSources() {
     listeningToParametersSources.value = false;
   }
 
-  void resumeParametersListenables() {
+  void resumeParametersSources() {
     listeningToParametersSources.value = true;
   }
 
