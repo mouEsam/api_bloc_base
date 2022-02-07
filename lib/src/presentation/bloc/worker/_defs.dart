@@ -1,3 +1,5 @@
+import 'package:api_bloc_base/src/domain/entity/_index.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/dependence_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/independence_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/input_to_output.dart';
@@ -6,13 +8,13 @@ import 'package:api_bloc_base/src/presentation/bloc/base/listenable_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/listener_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/same_input_output_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/sources_mixin.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/visibility_mixin.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/user_dependant_mixin.dart';
 
 import 'worker_state.dart';
 
-typedef SameInputOutputWorkerMixin<Output> = SameInputOutputMixin<Output, WorkerState<Output>>;
+typedef SameInputOutputWorkerMixin<Output>
+    = SameInputOutputMixin<Output, WorkerState<Output>>;
 typedef StatefulWorkerBloc<Output> = StatefulBloc<Output, WorkerState<Output>>;
 typedef LifecycleWorkerMixin<Output> = LifecycleMixin<WorkerState<Output>>;
 typedef TrafficLightsWorkerMixin<Output>
@@ -26,4 +28,8 @@ typedef SourcesWorkerMixin<Input, Output>
 typedef InputToOutputWorkerMixin<Input, Output>
     = InputToOutput<Input, Output, WorkerState<Output>>;
 typedef VisibilityWorkerMixin<Output> = VisibilityMixin<WorkerState<Output>>;
-typedef ParametersDependenceWorkerMixin<ParameterType, Input, Output> = ParametersDependenceMixin<ParameterType, Input, Output, WorkerState<Output>>;
+typedef ParametersDependenceWorkerMixin<ParameterType, Input, Output>
+    = ParametersDependenceMixin<ParameterType, Input, Output,
+        WorkerState<Output>>;
+typedef UserDependantWorkerMixin<Input, Output, Profile extends BaseProfile>
+    = UserDependantMixin<Input, Output, WorkerState<Output>, Profile>;
