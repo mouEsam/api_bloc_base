@@ -68,10 +68,15 @@ class ChainedResult<S, T> extends CompletableResult<T> {
 }
 
 extension FutureResult<T> on FutureOr<T> {
-
   Future<T> get future => Future.value(this);
 
-  Future<T?> get maybe {
+  T? get maybeValue => this is T ? (this as T) : null;
+
+  FutureOr<T?> get maybe {
+    final value = maybeValue;
+    if (value != null) {
+      return value;
+    }
     return future.catchError((e, s) {}).then<T?>((value) => value);
   }
 
