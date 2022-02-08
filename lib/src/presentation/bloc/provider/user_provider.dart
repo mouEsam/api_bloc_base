@@ -8,7 +8,7 @@ import '_defs.dart';
 import 'lifecycle_observer.dart';
 import 'provider.dart';
 
-class SimpleUserProvider<UserType extends BaseProfile>
+class SimpleUserProvider<UserType extends BaseProfile<UserType>>
     extends ProviderBloc<UserType, UserType>
     with SameInputOutputProviderMixin<UserType> {
   final BaseUserBloc<UserType> userBloc;

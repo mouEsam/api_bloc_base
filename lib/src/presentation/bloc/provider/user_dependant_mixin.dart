@@ -7,7 +7,7 @@ import 'provider.dart';
 import 'user_dependant_state.dart';
 
 mixin UserDependantProviderStateMixin<Input, Output,
-        Profile extends BaseProfile>
+        Profile extends BaseProfile<Profile>>
     on
         LifecycleMixin<ProviderState<Output>>,
         IndependenceProviderMixin<Input, Output>,

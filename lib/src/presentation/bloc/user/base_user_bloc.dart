@@ -11,7 +11,7 @@ import 'package:rxdart/rxdart.dart';
 
 import 'base_user_state.dart';
 
-abstract class BaseUserBloc<T extends BaseProfile>
+abstract class BaseUserBloc<T extends BaseProfile<T>>
     extends BaseCubit<UserState> {
   final Duration? refreshInterval;
   final BaseAuthRepository<T> authRepository;

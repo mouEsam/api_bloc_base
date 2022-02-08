@@ -64,7 +64,7 @@ class NoAccountSavedFailure extends Failure {
   get props => [...super.props];
 }
 
-class RefreshFailure<T extends BaseProfile> extends Failure {
+class RefreshFailure<T extends BaseProfile<T>> extends Failure {
   final T oldProfile;
 
   const RefreshFailure(String? message, this.oldProfile, [BaseErrors? errors])

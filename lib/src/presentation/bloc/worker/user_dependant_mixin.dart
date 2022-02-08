@@ -2,7 +2,7 @@ import 'package:api_bloc_base/src/domain/entity/base_profile.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/worker/_index.dart';
 
-mixin UserDependantWorkerStateMixin<Input, Output, Profile extends BaseProfile>
+mixin UserDependantWorkerStateMixin<Input, Output, Profile extends BaseProfile<Profile>>
     on
         LifecycleWorkerMixin<Output>,
         IndependenceWorkerMixin<Input, Output>,

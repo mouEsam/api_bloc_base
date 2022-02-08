@@ -33,5 +33,5 @@ typedef InputToOutputProviderMixin<Input, Output>
 typedef ParametersDependenceProviderMixin<ParameterType, Input, Output>
     = ParametersDependenceMixin<ParameterType, Input, Output,
         ProviderState<Output>>;
-typedef UserDependantProviderMixin<Input, Output, Profile extends BaseProfile>
+typedef UserDependantProviderMixin<Input, Output, Profile extends BaseProfile<Profile>>
     = UserDependantMixin<Input, Output, ProviderState<Output>, Profile>;

@@ -1,18 +1,10 @@
 import 'dart:async';
 
 import 'package:api_bloc_base/src/data/_index.dart';
-import 'package:api_bloc_base/src/data/model/remote/params/auth_params.dart';
-import 'package:api_bloc_base/src/data/model/remote/response/base_api_response.dart';
-import 'package:api_bloc_base/src/data/model/remote/response/base_user_response.dart';
-import 'package:api_bloc_base/src/data/service/converter.dart';
-import 'package:api_bloc_base/src/data/source/local/user_defaults.dart';
-import 'package:api_bloc_base/src/data/source/remote/base_rest_client.dart';
 import 'package:api_bloc_base/src/domain/entity/_index.dart';
 import 'package:dartz/dartz.dart';
 
-import 'base_repository.dart';
-
-abstract class BaseAuthRepository<T extends BaseProfile>
+abstract class BaseAuthRepository<T extends BaseProfile<T>>
     extends BaseRepository {
   final UserDefaults userDefaults;
   final BaseResponseConverter<BaseUserResponse, T> converter;
@@ -63,33 +55,37 @@ abstract class BaseAuthRepository<T extends BaseProfile>
   }
 
   Result<Either<ResponseEntity, T>> refreshToken(T profile) {
-    return dataRequireUser<T>((savedAccount) {
-      final operation = internalRefreshToken(savedAccount);
-      final result = handleFullResponse<BaseUserResponse, T>(operation,
-          converter: autoLoginConverter);
-      return Future.value(result.value).then<Either<ResponseEntity, T>>((value) async {
-        return value.fold((l) => Left(handleReAuthFailure(l, savedAccount)),
-            (r) {
+    final operation = internalRefreshToken(profile);
+    final result = handleFullResponse<BaseUserResponse, T>(operation,
+        converter: autoLoginConverter);
+    return result.next(
+      (value) => value.fold(
+        (l) => Left(handleReAuthFailure(l, profile)),
+        (r) {
           checkSave(r);
           return Right(r);
-        });
-      });
-    });
+        },
+      ),
+    );
   }
 
   Result<Either<ResponseEntity, T>> refreshProfile(T profile) {
-    return dataRequireUser<T>((savedAccount) {
-      final operation = internalRefreshProfile(savedAccount);
-      final result = handleFullResponse<BaseUserResponse, T>(operation,
-          converter: autoLoginConverter);
-      return Future.value(result.value).then<Either<ResponseEntity, T>>((value) async {
-        return value.fold((l) => Left(handleReAuthFailure(l, savedAccount)),
-            (r) {
+    final operation = internalRefreshProfile(profile);
+    final result = handleFullResponse(operation, converter: autoLoginConverter)
+        .next((value) => value.map(
+              (r) => r.updateToken(
+                profile.userToken,
+              ),
+            ));
+    return result.next(
+      (value) => value.fold(
+        (l) => Left(handleReAuthFailure(l, profile)),
+        (r) {
           checkSave(r);
           return Right(r);
-        });
-      });
-    });
+        },
+      ),
+    );
   }
 
   ResponseEntity handleReAuthFailure(ResponseEntity responseEntity,

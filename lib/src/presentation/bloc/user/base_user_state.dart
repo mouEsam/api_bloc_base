@@ -18,7 +18,7 @@ class UserLoadingState extends UserState {
   List<Object> get props => [];
 }
 
-abstract class BaseSignedInState<T extends BaseProfile> extends UserState {
+abstract class BaseSignedInState<T extends BaseProfile<T>> extends UserState {
   final T userAccount;
 
   const BaseSignedInState(this.userAccount);
@@ -33,7 +33,7 @@ class SignedOutState extends UserState {
   const SignedOutState();
 }
 
-class TokenRefreshFailedState<T extends BaseProfile> extends SignedOutState {
+class TokenRefreshFailedState<T extends BaseProfile<T>> extends SignedOutState {
   final T oldAccount;
 
   TokenRefreshFailedState(this.oldAccount) : super();

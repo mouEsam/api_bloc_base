@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'state.dart';
 
 mixin UserDependantMixin<Input, Output, State extends BlocState,
-    Profile extends BaseProfile> on IndependenceMixin<Input, Output, State> {
+    Profile extends BaseProfile<Profile>> on IndependenceMixin<Input, Output, State> {
   DateTime? lastLogin;
   BaseUserBloc<Profile> get userBloc;
   Profile? get safeCurrentUser => userBloc.currentUser;

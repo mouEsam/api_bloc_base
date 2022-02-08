@@ -3,7 +3,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 import 'entity.dart';
 
-abstract class BaseProfile extends Entity {
+abstract class BaseProfile<T extends BaseProfile<T>> extends Entity {
   const BaseProfile({
     required this.userToken,
     required this.active,
@@ -18,7 +18,7 @@ abstract class BaseProfile extends Entity {
   @JsonKey(ignore: true)
   String get accessToken => userToken.accessToken;
 
-  BaseProfile updateToken(UserToken newToken);
+  T updateToken(UserToken newToken);
 
   @override
   get props => [userToken, active];

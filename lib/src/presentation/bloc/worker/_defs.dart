@@ -31,5 +31,5 @@ typedef VisibilityWorkerMixin<Output> = VisibilityMixin<WorkerState<Output>>;
 typedef ParametersDependenceWorkerMixin<ParameterType, Input, Output>
     = ParametersDependenceMixin<ParameterType, Input, Output,
         WorkerState<Output>>;
-typedef UserDependantWorkerMixin<Input, Output, Profile extends BaseProfile>
+typedef UserDependantWorkerMixin<Input, Output, Profile extends BaseProfile<Profile>>
     = UserDependantMixin<Input, Output, WorkerState<Output>, Profile>;

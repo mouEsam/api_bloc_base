@@ -4,7 +4,7 @@ import 'package:api_bloc_base/src/presentation/bloc/provider/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/user/base_user_bloc.dart';
 import 'package:dartz/dartz.dart';
 
-abstract class UserDependantProvider<Input, Output, Profile extends BaseProfile>
+abstract class UserDependantProvider<Input, Output, Profile extends BaseProfile<Profile>>
     extends ProviderBloc<Input, Output>
     with
         UserDependantProviderMixin<Input, Output, Profile>,
