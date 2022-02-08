@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 class ValueListener<T> extends StatelessWidget {
-  final ValueNotifier<T> value;
+  final ValueListenable<T> value;
   final Widget? child;
   final ValueWidgetBuilder<T> builder;
   final bool isSliver;
