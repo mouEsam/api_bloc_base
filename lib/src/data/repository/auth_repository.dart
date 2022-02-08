@@ -71,7 +71,7 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
 
   Result<Either<ResponseEntity, T>> refreshProfile(T profile) {
     final operation = internalRefreshProfile(profile);
-    final result = handleFullResponse(operation, converter: autoLoginConverter)
+    final result = handleFullResponse(operation, converter: refreshConverter)
         .next((value) => value.map(
               (r) => r.updateToken(
                 profile.userToken,
