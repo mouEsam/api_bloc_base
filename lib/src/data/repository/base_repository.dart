@@ -1,12 +1,27 @@
 import 'dart:async';
 
 import 'package:api_bloc_base/src/data/_index.dart';
-import 'package:api_bloc_base/src/data/model/remote/response/base_api_response.dart';
-import 'package:api_bloc_base/src/data/service/converter.dart';
-import 'package:api_bloc_base/src/data/source/remote/base_rest_client.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:dartz/dartz.dart' as z;
 import 'package:dio/dio.dart';
+
+class RequestConversionOperation<T extends BaseApiResponse, S> {
+  final RequestResult<T> result;
+  BaseResponseConverter<T, S>? converter;
+  FutureOr<S> Function(S data)? dataConverter;
+  void Function(T)? interceptData;
+  void Function(S)? interceptResult;
+  FutureOr<S> Function(ResponseEntity failure)? failureRecovery;
+
+  RequestConversionOperation(
+    this.result, {
+    this.converter,
+    this.dataConverter,
+    this.interceptData,
+    this.interceptResult,
+    this.failureRecovery,
+  });
+}
 
 abstract class BaseRepository {
   const BaseRepository();
@@ -15,6 +30,19 @@ abstract class BaseRepository {
 
   String get defaultError => 'Error';
   String get internetError => 'Internet Error';
+
+  Result<z.Either<ResponseEntity, S>>
+      handleResponseOperation<T extends BaseApiResponse, S>(
+          RequestConversionOperation<T, S> operation) {
+    return handleFullResponse(
+      operation.result,
+      converter: operation.converter,
+      interceptData: operation.interceptData,
+      interceptResult: operation.interceptResult,
+      dataConverter: operation.dataConverter,
+      failureRecovery: operation.failureRecovery,
+    );
+  }
 
   Result<z.Either<ResponseEntity, S>>
       handleFullResponse<T extends BaseApiResponse, S>(
@@ -28,8 +56,8 @@ abstract class BaseRepository {
     final _converter = converter ??
         (this.converter as BaseResponseConverter<BaseApiResponse, S>);
     final cancelToken = result.cancelToken;
-    final future =
-        Future.value(result.value).then<z.Either<ResponseEntity, S>>((value) async {
+    final future = Future.value(result.value)
+        .then<z.Either<ResponseEntity, S>>((value) async {
       final data = value.data;
       S? result;
       late ResponseEntity responseEntity;
@@ -98,9 +126,7 @@ abstract class BaseRepository {
       return z.Left<ResponseEntity, S>(failure);
     });
     return Result<z.Either<ResponseEntity, S>>(
-        cancelToken: cancelToken,
-        value: future,
-        progress: result.progress);
+        cancelToken: cancelToken, value: future, progress: result.progress);
   }
 
   Result<ResponseEntity> handleApiResponse<T extends BaseApiResponse>(
@@ -110,7 +136,8 @@ abstract class BaseRepository {
   }) {
     final _converter = converter ?? this.converter;
     final cancelToken = result.cancelToken;
-    final future = Future.value(result.value).then<ResponseEntity>((value) async {
+    final future =
+        Future.value(result.value).then<ResponseEntity>((value) async {
       final data = value.data!;
       interceptData?.call(data);
       return _converter.response(data)!;
@@ -129,9 +156,7 @@ abstract class BaseRepository {
       }
     });
     return Result<ResponseEntity>(
-        cancelToken: cancelToken,
-        value: future,
-        progress: result.progress);
+        cancelToken: cancelToken, value: future, progress: result.progress);
   }
 
   Result<z.Either<ResponseEntity, S>> handleOperation<S>(
@@ -139,8 +164,8 @@ abstract class BaseRepository {
     void Function(S?)? interceptResult,
   }) {
     final cancelToken = result.cancelToken;
-    final future =
-        Future.value(result.value).then<z.Either<ResponseEntity, S>>((value) async {
+    final future = Future.value(result.value)
+        .then<z.Either<ResponseEntity, S>>((value) async {
       final data = value.data;
       interceptResult?.call(data);
       return z.Right<ResponseEntity, S>(data!);
@@ -165,9 +190,7 @@ abstract class BaseRepository {
       }
     });
     return Result<z.Either<ResponseEntity, S>>(
-        cancelToken: cancelToken,
-        value: future,
-        progress: result.progress);
+        cancelToken: cancelToken, value: future, progress: result.progress);
   }
 
   FutureOr<z.Either<Failure, T>> tryWork<T>(FutureOr<T> work(),

@@ -16,9 +16,12 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
   BaseResponseConverter<BaseUserResponse, T> get autoLoginConverter =>
       converter;
 
-  RequestResult<BaseUserResponse> internalLogin(BaseAuthParams params);
-  RequestResult<BaseUserResponse> internalRefreshToken(T account);
-  RequestResult<BaseUserResponse> internalRefreshProfile(T account);
+  RequestConversionOperation<BaseUserResponse, T> internalLogin(
+      BaseAuthParams params);
+  RequestConversionOperation<BaseUserResponse, T> internalRefreshToken(
+      T account);
+  RequestConversionOperation<BaseUserResponse, T> internalRefreshProfile(
+      T account);
   RequestResult<BaseApiResponse> internalLogout(T account);
 
   Future<bool> get _wasSaved async {
@@ -26,65 +29,54 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
   }
 
   Result<Either<ResponseEntity, T>> login(BaseAuthParams params) {
-    final result = internalLogin(params);
-    return handleFullResponse<BaseUserResponse, T>(
-      result,
-      interceptResult: (result) {
-        if (result.active == true && params.rememberMe) {
-          saveAccount(result);
-        }
-        print(result.toJson());
-      },
-      converter: converter,
-    );
+    final operation = internalLogin(params);
+    final result = operation.result;
+    operation.converter ??= converter;
+    operation.interceptResult = (user) {
+      operation.interceptResult?.call(user);
+      if (user.active == true && params.rememberMe) {
+        saveAccount(user);
+      }
+    };
+    return handleResponseOperation<BaseUserResponse, T>(operation);
   }
 
   Result<Either<ResponseEntity, T>> autoLogin() {
     return dataRequireUser<T>((savedAccount) {
       final operation = internalRefreshToken(savedAccount);
-      final result = handleFullResponse<BaseUserResponse, T>(operation,
-          converter: autoLoginConverter);
-      return Future.value(result.value).then((value) async {
-        return value.fold((l) => Left(handleReAuthFailure(l, savedAccount)),
-            (r) {
-          checkSave(r);
-          return Right(r);
-        });
-      });
+      operation.converter ??= autoLoginConverter;
+      operation.interceptResult = (user) {
+        operation.interceptResult?.call(user);
+        checkSave(user);
+      };
+      final result = handleResponseOperation<BaseUserResponse, T>(operation);
+      return result.next((value) =>
+          value.leftMap((l) => handleReAuthFailure(l, savedAccount)));
     });
   }
 
   Result<Either<ResponseEntity, T>> refreshToken(T profile) {
     final operation = internalRefreshToken(profile);
-    final result = handleFullResponse<BaseUserResponse, T>(operation,
-        converter: autoLoginConverter);
+    operation.converter ??= autoLoginConverter;
+    operation.interceptResult = (user) {
+      operation.interceptResult?.call(user);
+      checkSave(user);
+    };
+    final result = handleResponseOperation<BaseUserResponse, T>(operation);
     return result.next(
-      (value) => value.fold(
-        (l) => Left(handleReAuthFailure(l, profile)),
-        (r) {
-          checkSave(r);
-          return Right(r);
-        },
-      ),
+      (value) => value.leftMap((l) => handleReAuthFailure(l, profile)),
     );
   }
 
   Result<Either<ResponseEntity, T>> refreshProfile(T profile) {
     final operation = internalRefreshProfile(profile);
-    final result = handleFullResponse(operation, converter: refreshConverter)
-        .next((value) => value.map(
-              (r) => r.updateToken(
-                profile.userToken,
-              ),
-            ));
+    operation.converter ??= refreshConverter;
+    operation.dataConverter ??= (r) => r.updateToken(
+          profile.userToken,
+        );
+    final result = handleResponseOperation(operation);
     return result.next(
-      (value) => value.fold(
-        (l) => Left(handleReAuthFailure(l, profile)),
-        (r) {
-          checkSave(r);
-          return Right(r);
-        },
-      ),
+      (value) => value.leftMap((l) => handleReAuthFailure(l, profile)),
     );
   }
 
@@ -102,7 +94,7 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
       if (profile.active) {
         saveAccount(profile);
       }
-      return Success();
+      return Success().asResult;
     });
   }
 
@@ -114,14 +106,17 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
       print(s);
       return Failure(e.response);
     });
-    return Result(value: result);
+    return result.asResult;
   }
 
   Result<ResponseEntity> signOut(T account) {
-    final result = internalLogout(account);
-    return handleApiResponse(result, interceptData: (_) {
-      saveAccount(null);
-    });
+    final operation = internalLogout(account);
+    return handleApiResponse(
+      operation,
+      interceptData: (_) {
+        saveAccount(null);
+      },
+    );
   }
 
   Future<void> checkSave(T account) async {
@@ -137,33 +132,33 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
   }
 
   Result<ResponseEntity> requireUser(
-      FutureOr<ResponseEntity> Function(T user) action) {
-    return userDefaults.signedAccount.maybe.result((savedAccount) {
+      Result<ResponseEntity> Function(T user) action) {
+    return userDefaults.signedAccount.maybe.next((savedAccount) {
       if (savedAccount is T) {
         return action(savedAccount);
       }
-      return NoAccountSavedFailure(noAccountSavedInError);
+      return Result(value: NoAccountSavedFailure(noAccountSavedInError));
     });
   }
 
-  Result<D> withUser<D>(FutureOr<D> Function(T? user) action) {
-    return userDefaults.signedAccount.maybe.result((savedAccount) {
+  Result<D> withUser<D>(Result<D> Function(T? user) action) {
+    return userDefaults.signedAccount.maybe.next((savedAccount) {
       return action(savedAccount as T?);
     });
   }
 
   Result<Either<ResponseEntity, D>> dataRequireUser<D>(
-      FutureOr<Either<ResponseEntity, D>> Function(T user) action) {
-    return userDefaults.signedAccount.maybe.result((savedAccount) {
+      Result<Either<ResponseEntity, D>> Function(T user) action) {
+    return userDefaults.signedAccount.maybe.next((savedAccount) {
       if (savedAccount is T) {
         return action(savedAccount);
       }
-      return Left(NoAccountSavedFailure(noAccountSavedInError));
+      return Result(value: Left(NoAccountSavedFailure(noAccountSavedInError)));
     });
   }
 
   Result<Either<ResponseEntity, D>> dataWithUser<D>(
-      FutureOr<Either<ResponseEntity, D>> Function(T? user) action) {
+      Result<Either<ResponseEntity, D>> Function(T? user) action) {
     return withUser(action);
   }
 }
