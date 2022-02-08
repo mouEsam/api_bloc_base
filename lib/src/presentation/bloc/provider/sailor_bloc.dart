@@ -49,6 +49,7 @@ abstract class SailorBloc extends BaseCubit<NavigationState> implements Sailor {
         .asBroadcastStream(onCancel: (c) => c.cancel());
     _sub = initialized
         .switchMap((value) => combinedStream)
+        .asyncMap((event) async => event)
         .whereType<NavigationState>()
         .listen(emit);
     initialized.switchMap((value) => this.stream).listen(_handleState);
@@ -134,7 +135,7 @@ abstract class SailorBloc extends BaseCubit<NavigationState> implements Sailor {
     }
   }
 
-  NavigationState? generateNavigationState(List events);
+  FutureOr<NavigationState>? generateNavigationState(List events);
 
   Future<T?> pushDestructively<T>(String routeName) async {
     final key = await ensureInitialized();
