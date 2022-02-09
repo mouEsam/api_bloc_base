@@ -9,7 +9,10 @@ abstract class ProviderListener<Input, Output>
     with ProviderListenerMixin<Input, Output> {
   final ProviderMixin<Input> provider;
 
-  ProviderListener(List<Stream<ProviderState>> sources, this.provider,
-      {List<ProviderMixin> providers = const [], Output? currentData})
-      : super(sources, providers, currentData: currentData);
+  ProviderListener(
+    this.provider, {
+    List<Stream<ProviderState>> sources = const [],
+    List<ProviderMixin> providers = const [],
+    Output? currentData,
+  }) : super(sources, providers, currentData: currentData);
 }

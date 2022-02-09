@@ -4,13 +4,15 @@ import 'package:api_bloc_base/src/data/_index.dart';
 import 'package:api_bloc_base/src/domain/entity/_index.dart';
 import 'package:dartz/dartz.dart';
 
+import 'user_tools.dart';
+
+
 abstract class BaseAuthRepository<T extends BaseProfile<T>>
-    extends BaseRepository {
+    extends BaseRepository with UserProfileUtilsMixin<T> {
   final UserDefaults userDefaults;
   final BaseResponseConverter<BaseUserResponse, T> converter;
 
   const BaseAuthRepository(this.converter, this.userDefaults);
-  String get noAccountSavedInError;
 
   BaseResponseConverter<BaseUserResponse, T> get refreshConverter => converter;
   BaseResponseConverter<BaseUserResponse, T> get autoLoginConverter =>
@@ -23,10 +25,6 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
   RequestConversionOperation<BaseUserResponse, T> internalRefreshProfile(
       T account);
   RequestResult<BaseApiResponse> internalLogout(T account);
-
-  Future<bool> get _wasSaved async {
-    return (await userDefaults.signedAccount) != null;
-  }
 
   Result<Either<ResponseEntity, T>> login(BaseAuthParams params) {
     final operation = internalLogin(params);
@@ -119,46 +117,5 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
     );
   }
 
-  Future<void> checkSave(T account) async {
-    if (account.active == true && await _wasSaved) {
-      saveAccount(account);
-    }
-  }
 
-  Future<void> saveAccount(T? account) {
-    final one = userDefaults.setSignedAccount(account);
-    final two = userDefaults.setUserToken(account?.accessToken);
-    return Future.wait([one, two]);
-  }
-
-  Result<ResponseEntity> requireUser(
-      Result<ResponseEntity> Function(T user) action) {
-    return userDefaults.signedAccount.maybe.next((savedAccount) {
-      if (savedAccount is T) {
-        return action(savedAccount);
-      }
-      return Result(value: NoAccountSavedFailure(noAccountSavedInError));
-    });
-  }
-
-  Result<D> withUser<D>(Result<D> Function(T? user) action) {
-    return userDefaults.signedAccount.maybe.next((savedAccount) {
-      return action(savedAccount as T?);
-    });
-  }
-
-  Result<Either<ResponseEntity, D>> dataRequireUser<D>(
-      Result<Either<ResponseEntity, D>> Function(T user) action) {
-    return userDefaults.signedAccount.maybe.next((savedAccount) {
-      if (savedAccount is T) {
-        return action(savedAccount);
-      }
-      return Result(value: Left(NoAccountSavedFailure(noAccountSavedInError)));
-    });
-  }
-
-  Result<Either<ResponseEntity, D>> dataWithUser<D>(
-      Result<Either<ResponseEntity, D>> Function(T? user) action) {
-    return withUser(action);
-  }
 }

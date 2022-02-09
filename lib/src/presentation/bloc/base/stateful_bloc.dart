@@ -1,8 +1,6 @@
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
 
 import '_index.dart';
-import 'state.dart';
 
 abstract class StatefulBloc<Data, State extends BlocState>
     extends BaseCubit<State> {
@@ -31,6 +29,15 @@ abstract class StatefulBloc<Data, State extends BlocState>
     print(s);
     emitError(createFailure(e, s));
   }
+
+  @override
+  void stateChanged(State nextState) {
+    if (nextState is Loaded<Data>) {
+      onDataEmitted(nextState.data);
+    }
+  }
+
+  void onDataEmitted(Data data) {}
 
   Failure createFailure(e, [s]) {
     if (e is Failure) {
