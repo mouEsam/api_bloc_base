@@ -55,7 +55,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   }
 
   @mustCallSuper
-  Future<void> fetchData({bool refresh = false}) async {
+  FutureOr<void> fetchData({bool refresh = false}) async {
     if (!_canFetchData.value) {
       _canFetchData.value = true;
     }
@@ -81,21 +81,21 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     super.clean();
   }
 
-  Future<void> refetchData() {
+  FutureOr<void> refetchData() {
     print("called refetchData");
     clean();
     return fetchData(refresh: false);
   }
 
-  Future<void> refreshData() {
+  FutureOr<void> refreshData() {
     return fetchData(refresh: true);
   }
 
-  Future<void> _handleSingleSource(
+  FutureOr<void> _handleSingleSource(
       Result<Either<ResponseEntity, Input>> singleSource, bool refresh) async {
     final future = await singleSource.value;
     return future.fold(
-      (l) async {
+      (l) {
         injectInputState(Error(l));
       },
       (r) {

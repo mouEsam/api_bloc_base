@@ -21,6 +21,13 @@ class Result<T> {
       return Result(value: Future.value(future));
     });
   }
+
+  Result<T> sideEffect(FutureOr<void> Function(T value) func) {
+    return this.next((value) async {
+      await func(value);
+      return value;
+    });
+  }
 }
 
 class CompletableResult<T> extends Result<T> {

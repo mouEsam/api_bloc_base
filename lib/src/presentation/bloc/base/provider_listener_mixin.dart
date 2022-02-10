@@ -5,9 +5,10 @@ import 'package:api_bloc_base/src/presentation/bloc/base/listenable_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/worker/listener_bloc.dart';
 
-import '../base/state.dart';
+import 'input_to_output.dart';
 
-mixin ProviderListenerMixin<Input, Output> on ListenerBloc<Input, Output>
+
+mixin ProviderListenerMixin<Input, Output, State extends BlocState> on InputToOutput<Input, Output, State>
     implements Refreshable {
   late final StreamSubscription _blocSubscription;
 

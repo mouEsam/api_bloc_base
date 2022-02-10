@@ -11,3 +11,4 @@ export 'user_provider.dart';
 export 'signal_emitter.dart';
 export 'value.dart';
 export '_defs.dart';
+export 'provider_converter.dart';

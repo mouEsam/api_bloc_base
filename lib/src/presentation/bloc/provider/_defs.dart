@@ -6,6 +6,7 @@ import 'package:api_bloc_base/src/presentation/bloc/base/input_to_output.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/lifecycle_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/listenable_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/listener_mixin.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/provider_listener_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/same_input_output_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/sources_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
@@ -30,8 +31,11 @@ typedef SourcesProviderMixin<Input, Output>
     = SourcesMixin<Input, Output, ProviderState<Output>>;
 typedef InputToOutputProviderMixin<Input, Output>
     = InputToOutput<Input, Output, ProviderState<Output>>;
+typedef ProviderListenerProviderMixin<Input, Output>
+    = ProviderListenerMixin<Input, Output, ProviderState<Output>>;
 typedef ParametersDependenceProviderMixin<ParameterType, Input, Output>
     = ParametersDependenceMixin<ParameterType, Input, Output,
         ProviderState<Output>>;
-typedef UserDependantProviderMixin<Input, Output, Profile extends BaseProfile<Profile>>
+typedef UserDependantProviderMixin<Input, Output,
+        Profile extends BaseProfile<Profile>>
     = UserDependantMixin<Input, Output, ProviderState<Output>, Profile>;

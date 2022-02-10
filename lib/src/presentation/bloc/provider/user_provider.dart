@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:api_bloc_base/src/domain/entity/base_profile.dart';
 import 'package:api_bloc_base/src/presentation/bloc/user/base_user_bloc.dart';
 import 'package:api_bloc_base/src/presentation/bloc/worker/_index.dart';
@@ -25,7 +27,7 @@ class SimpleUserProvider<UserType extends BaseProfile<UserType>>
         );
 
   @override
-  Future<void> refreshData() {
+  FutureOr<void> refreshData() {
     return userBloc.autoSignIn(true);
   }
 }

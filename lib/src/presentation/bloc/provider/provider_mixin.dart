@@ -17,9 +17,9 @@ mixin ProviderMixin<Data> on StatefulBloc<Data, ProviderState<Data>>
   Future<ProviderState<Data>> get stateFuture;
 
   @mustCallSuper
-  Future<void> fetchData({bool refresh = false});
-  Future<void> refreshData();
-  Future<void> refetchData();
+  FutureOr<void> fetchData({bool refresh = false});
+  FutureOr<void> refreshData();
+  FutureOr<void> refetchData();
   void clean();
 
   ProviderState<Data> createLoadingState() {
