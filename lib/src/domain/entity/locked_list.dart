@@ -18,6 +18,8 @@ abstract class PaginationList<T> extends ListMixin<T> {
   PaginationList<T> toList({bool? growable});
 
   void tweak(T f(T element));
+
+  PaginationList<S> map<S>(S f(T element));
 }
 
 class PageList<T> extends PaginationList<T> {
@@ -41,6 +43,11 @@ class PageList<T> extends PaginationList<T> {
     for (int i = 0; i < _list.length; i++) {
       _list[i] = f(_list[i]);
     }
+  }
+
+  PageList<S> map<S>(S f(T element)) {
+    final list = _list.map(f).toList();
+    return PageList._(list);
   }
 
   @override
@@ -139,6 +146,13 @@ class PagesList<T> extends PaginationList<T> {
     for (int x = 0; x < _pages.length; x++) {
       _pages[x].tweak(f);
     }
+  }
+
+  PagesList<S> map<S>(S f(T element)) {
+    final pages = _pages.map((page) {
+      return page.map(f).toList();
+    }).toList();
+    return PagesList._(pages);
   }
 
   List<T> get list {
