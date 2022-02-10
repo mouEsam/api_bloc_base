@@ -1,18 +1,27 @@
+import 'package:api_bloc_base/src/domain/entity/locked_list.dart';
 import 'package:flutter/foundation.dart';
 
 import 'pagination_mixin.dart';
 
-mixin PaginationListMixin<Paginated extends PaginatedInput<List<Output>>,
-    Output> on PaginationMixin<Paginated, List<Output>> {
+mixin PaginationListMixin<Paginated extends PaginatedInput<PageList<Output>>,
+    Output> on PaginationMixin<Paginated, PaginationList<Output>> {
+  @override
+  PaginatedOutput<PageList<Output>> get empty =>
+      const PaginatedOutput({}, false, PaginationMixin.startPage, null);
+
+  @override
+  PaginatedOutput<PageList<Output>> get paginatedData =>
+      super.paginatedData as PaginatedOutput<PageList<Output>>;
+
   @override
   @mustCallSuper
   convertInputToOutput(input) {
     final map = paginatedData.data;
-    final List<Output> newList = [];
+    final PagesList<Output> newList = PagesList.empty();
     final sortedIndices = map.keys.toList();
     sortedIndices.sort();
     for (final index in sortedIndices) {
-      newList.addAll(map[index]!);
+      newList.addPage(map[index]!);
     }
     return newList;
   }
