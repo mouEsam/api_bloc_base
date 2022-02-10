@@ -1,5 +1,6 @@
 import 'dart:collection';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
 abstract class PaginationList<T> extends ListMixin<T> {
@@ -15,10 +16,16 @@ abstract class PaginationList<T> extends ListMixin<T> {
 
   @override
   PaginationList<T> toList({bool? growable});
+
+  void tweak(T f(T element));
 }
 
 class PageList<T> extends PaginationList<T> {
   final List<T> _list;
+
+  factory PageList([List<T>? list]) {
+    return PageList(list ?? []);
+  }
 
   PageList._(this._list) : super._();
 
@@ -28,6 +35,12 @@ class PageList<T> extends PaginationList<T> {
 
   void addPages(List<PageList<T>> pages) {
     pages.forEach(addPage);
+  }
+
+  void tweak(T f(T element)) {
+    for (int i = 0; i < _list.length; i++) {
+      _list[i] = f(_list[i]);
+    }
   }
 
   @override
@@ -57,6 +70,10 @@ class PageList<T> extends PaginationList<T> {
 
 class PagesList<T> extends PaginationList<T> {
   final List<PageList<T>> _pages;
+
+  factory PagesList([List<PageList<T>>? list]) {
+    return PagesList(list ?? []);
+  }
 
   PagesList._(this._pages) : super._();
 
@@ -117,6 +134,12 @@ class PagesList<T> extends PaginationList<T> {
 
   @override
   set length(int newLength) {}
+
+  void tweak(T f(T element)) {
+    for (int x = 0; x < _pages.length; x++) {
+      _pages[x].tweak(f);
+    }
+  }
 
   List<T> get list {
     return _pages.expand((element) => element).toList();
