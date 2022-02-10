@@ -8,7 +8,7 @@ import 'sources_mixin.dart';
 import 'state.dart';
 import 'work.dart';
 
-mixin InputToOutput<Input, Output, State extends BlocState>
+mixin InputToOutputMixin<Input, Output, State extends BlocState>
     on SourcesMixin<Input, Output, State> {
   bool get isSinkClosed;
   StreamSink<Work> get inputSink;

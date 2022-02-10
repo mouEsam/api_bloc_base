@@ -30,7 +30,7 @@ typedef IndependenceProviderMixin<Input, Output>
 typedef SourcesProviderMixin<Input, Output>
     = SourcesMixin<Input, Output, ProviderState<Output>>;
 typedef InputToOutputProviderMixin<Input, Output>
-    = InputToOutput<Input, Output, ProviderState<Output>>;
+    = InputToOutputMixin<Input, Output, ProviderState<Output>>;
 typedef ProviderListenerProviderMixin<Input, Output>
     = ProviderListenerMixin<Input, Output, ProviderState<Output>>;
 typedef ParametersDependenceProviderMixin<ParameterType, Input, Output>

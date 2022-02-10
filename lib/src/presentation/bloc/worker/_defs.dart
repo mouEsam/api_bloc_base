@@ -27,7 +27,7 @@ typedef IndependenceWorkerMixin<Input, Output>
 typedef SourcesWorkerMixin<Input, Output>
     = SourcesMixin<Input, Output, WorkerState<Output>>;
 typedef InputToOutputWorkerMixin<Input, Output>
-    = InputToOutput<Input, Output, WorkerState<Output>>;
+    = InputToOutputMixin<Input, Output, WorkerState<Output>>;
 typedef ProviderListenerWorkerMixin<Input, Output>
     = ProviderListenerMixin<Input, Output, WorkerState<Output>>;
 typedef VisibilityWorkerMixin<Output> = VisibilityMixin<WorkerState<Output>>;

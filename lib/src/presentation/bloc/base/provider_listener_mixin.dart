@@ -1,14 +1,17 @@
 import 'dart:async';
 
 import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/independence_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/listenable_mixin.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/listener_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/worker/listener_bloc.dart';
 
 import 'input_to_output.dart';
+import 'sources_mixin.dart';
 
-
-mixin ProviderListenerMixin<Input, Output, State extends BlocState> on InputToOutput<Input, Output, State>
+mixin ProviderListenerMixin<Input, Output, State extends BlocState>
+    on ListenerMixin<State>, InputToOutputMixin<Input, Output, State>
     implements Refreshable {
   late final StreamSubscription _blocSubscription;
 
