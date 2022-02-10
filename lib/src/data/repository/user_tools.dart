@@ -2,9 +2,7 @@ import 'package:api_bloc_base/src/data/_index.dart';
 import 'package:api_bloc_base/src/domain/entity/_index.dart';
 import 'package:dartz/dartz.dart';
 
-
 mixin UserProfileUtilsMixin<T extends BaseProfile<T>> on BaseRepository {
-
   UserDefaults get userDefaults;
   String get noAccountSavedInError;
 
@@ -12,9 +10,15 @@ mixin UserProfileUtilsMixin<T extends BaseProfile<T>> on BaseRepository {
     return (await userDefaults.signedAccount) != null;
   }
 
-  Future<void> checkSave(T account) async {
-    if (account.active == true && await _wasSaved) {
+  Future<void> overwriteSavedAccount(T account) async {
+    if (await _wasSaved) {
       saveAccount(account);
+    }
+  }
+
+  Future<void> overwriteSavedAccountIfActive(T account) async {
+    if (account.active == true) {
+      return overwriteSavedAccount(account);
     }
   }
 
@@ -54,5 +58,4 @@ mixin UserProfileUtilsMixin<T extends BaseProfile<T>> on BaseRepository {
       Result<Either<ResponseEntity, D>> Function(T? user) action) {
     return withUser(action);
   }
-
 }

@@ -31,6 +31,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   bool get enableRetry;
 
   StreamSubscription<Input>? _streamSourceSubscription;
+  bool _hasSingleSource = false;
 
   @override
   get subscriptions => super.subscriptions..addAll([_streamSourceSubscription]);
@@ -46,8 +47,11 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   Timer? _timer;
 
   @mustCallSuper
-  void handleState(State state) {
-    setupTimer();
+  void stateChanged(State state) {
+    if (_hasSingleSource) {
+      setupTimer();
+    }
+    super.stateChanged(state);
   }
 
   void beginFetching() {
@@ -59,19 +63,24 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     if (!_canFetchData.value) {
       _canFetchData.value = true;
     }
-    if (!_alreadyFetchedData.value) {
-      _alreadyFetchedData.value = true;
-    }
-    if (!refresh) {
-      emitLoading();
-    }
     if (lastTrafficLightsValue) {
-      final singleSource = this.singleDataSource;
-      final streamSource = this.streamDataSource;
-      if (singleSource != null) {
-        await _handleSingleSource(singleSource, refresh);
-      } else if (streamSource != null) {
-        _handleStreamSource(streamSource);
+      if (!refresh) {
+        emitLoading();
+      }
+      if (!_alreadyFetchedData.value) {
+        _alreadyFetchedData.value = true;
+      }
+      try {
+        final singleSource = this.singleDataSource;
+        final streamSource = this.streamDataSource;
+        _hasSingleSource = singleSource != null;
+        if (_hasSingleSource) {
+          await _handleSingleSource(singleSource!, refresh);
+        } else if (streamSource != null) {
+          _handleStreamSource(streamSource);
+        }
+      } catch (e, s) {
+        injectInputState(createErrorState(createFailure(e, s)));
       }
     }
   }
@@ -96,7 +105,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     final future = await singleSource.value;
     return future.fold(
       (l) {
-        injectInputState(Error(l));
+        return injectInputState(Error(l));
       },
       (r) {
         return _handleStreamSource(Right(Stream.value(r)));
@@ -171,7 +180,9 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
       } else if (_needsToRefresh.value) {
         _performMarkedRefresh();
       }
-      setupTimer();
+      if (_hasSingleSource) {
+        setupTimer();
+      }
     } else {
       _streamSourceSubscription?.pause();
       _timer?.cancel();

@@ -1,4 +1,5 @@
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
+import 'package:flutter/cupertino.dart';
 
 import '_index.dart';
 
@@ -31,6 +32,7 @@ abstract class StatefulBloc<Data, State extends BlocState>
   }
 
   @override
+  @mustCallSuper
   void stateChanged(State nextState) {
     if (nextState is Loaded<Data>) {
       onDataEmitted(nextState.data);

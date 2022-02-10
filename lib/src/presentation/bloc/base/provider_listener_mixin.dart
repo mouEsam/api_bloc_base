@@ -43,6 +43,10 @@ mixin ProviderListenerMixin<Input, Output, State extends BlocState>
     injectInputState(Error(createFailure(e, s)));
   }
 
+  FutureOr<void> fetchData({bool refresh = false}) {
+    return provider.fetchData(refresh: refresh);
+  }
+
   FutureOr<void> refreshData() {
     return provider.refreshData();
   }

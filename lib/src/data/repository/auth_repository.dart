@@ -45,7 +45,7 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
       operation.converter ??= autoLoginConverter;
       operation.interceptResult = (user) {
         operation.interceptResult?.call(user);
-        checkSave(user);
+        overwriteSavedAccount(user);
       };
       final result = handleResponseOperation<BaseUserResponse, T>(operation);
       return result.next((value) =>
@@ -58,7 +58,7 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
     operation.converter ??= autoLoginConverter;
     operation.interceptResult = (user) {
       operation.interceptResult?.call(user);
-      checkSave(user);
+      overwriteSavedAccount(user);
     };
     final result = handleResponseOperation<BaseUserResponse, T>(operation);
     return result.next(

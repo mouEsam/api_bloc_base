@@ -1,16 +1,6 @@
 import 'dart:async';
 
-import 'package:api_bloc_base/src/data/_index.dart';
-import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/independence_mixin.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/input_to_output.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/lifecycle_mixin.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/listenable_mixin.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/listener_mixin.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/sources_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/state.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/work.dart';
 import 'package:async/async.dart' as async;
 import 'package:dartz/dartz.dart';
@@ -29,25 +19,14 @@ abstract class ProviderBloc<Input, Output> extends StatefulProviderBloc<Output>
         TrafficLightsProviderMixin<Output>,
         LifecycleProviderMixin<Output>,
         ListenableProviderMixin<Output>,
-        IndependenceProviderMixin<Input, Output>,
         ListenerStateProviderMixin<Output>,
         SourcesProviderMixin<Input, Output>,
         InputToOutputProviderMixin<Input, Output> {
-  final Duration? refreshInterval = Duration(seconds: 30);
-  final Duration? retryInterval = Duration(seconds: 30);
-
-  final Result<Either<ResponseEntity, Input>>? singleDataSource;
-  final Either<ResponseEntity, Stream<Input>>? streamDataSource;
-
   final LifecycleObserver? appLifecycleObserver;
   final List<ProviderMixin> providers;
   final List<Stream<ProviderState>> sources;
 
-  final bool enableRefresh;
-  final bool enableRetry;
   final bool canRunWithoutListeners;
-
-  final bool refreshOnAppActive;
 
   final _inputSubject = StreamController<Work>.broadcast();
   Stream<BlocState> get inputStream => _inputSubject.stream
@@ -76,21 +55,13 @@ abstract class ProviderBloc<Input, Output> extends StatefulProviderBloc<Output>
 
   ProviderBloc({
     Input? initialInput,
-    this.singleDataSource,
-    this.streamDataSource,
     this.appLifecycleObserver,
     this.sources = const [],
     this.providers = const [],
-    this.enableRefresh = true,
-    this.enableRetry = true,
     this.canRunWithoutListeners = true,
-    this.refreshOnAppActive = true,
-    bool fetchOnCreate = true,
   }) : super(ProviderLoading()) {
     setupInitialData(initialInput);
-    if (fetchOnCreate) {
-      beginFetching();
-    }
+
   }
 
   void setupInitialData(Input? initialDate) {
@@ -105,13 +76,7 @@ abstract class ProviderBloc<Input, Output> extends StatefulProviderBloc<Output>
     super.clean();
   }
 
-  void onChange(change) {
-    super.onChange(change);
-    setupTimer();
-    handleState(change.nextState);
-  }
-
-  void handleState(state) {
+  void stateChanged(ProviderState<Output> state) {
     if (state is ProviderLoaded<Output>) {
       Output data = state.data;
       _dataSubject.add(data);
@@ -120,15 +85,13 @@ abstract class ProviderBloc<Input, Output> extends StatefulProviderBloc<Output>
       }
       _dataFuture.complete(data);
     } else if (state is Invalidated) {
-      clean();
-      fetchData();
+      refetchData();
       return;
     }
     if (_stateFuture.isCompleted) {
       _stateFuture = Completer<ProviderState<Output>>();
     }
     _stateFuture.complete(state);
-    super.handleState(state);
   }
 
   @override
@@ -136,13 +99,5 @@ abstract class ProviderBloc<Input, Output> extends StatefulProviderBloc<Output>
     if (!output.isCancelled) {
       emitState(output.state);
     }
-  }
-
-  @override
-  void onAppState(bool isActive) {
-    if (isActive && refreshOnAppActive) {
-      markNeedsRefresh();
-    }
-    super.onAppState(isActive);
   }
 }
