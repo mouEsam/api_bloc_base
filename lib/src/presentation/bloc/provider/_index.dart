@@ -12,3 +12,4 @@ export 'signal_emitter.dart';
 export 'value.dart';
 export '_defs.dart';
 export 'provider_converter.dart';
+export 'independent_provider.dart';
