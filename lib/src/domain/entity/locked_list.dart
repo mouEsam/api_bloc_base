@@ -71,7 +71,7 @@ class PageList<T> extends PaginationList<T> {
   @override
   @protected
   PageList<T> toList({bool? growable}) {
-    return this;
+    return PageList._(_list);
   }
 }
 
