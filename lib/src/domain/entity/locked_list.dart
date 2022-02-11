@@ -28,7 +28,7 @@ class PageList<T> extends PaginationList<T> {
   final List<T> _list;
 
   factory PageList([List<T>? list]) {
-    return PageList(list ?? []);
+    return PageList._(list ?? []);
   }
 
   PageList._(this._list) : super._();
@@ -84,7 +84,7 @@ class PagesList<T> extends PaginationList<T> {
   final List<PageList<T>> _pages;
 
   factory PagesList([List<PageList<T>>? list]) {
-    return PagesList(list ?? []);
+    return PagesList._(list ?? []);
   }
 
   PagesList._(this._pages) : super._();

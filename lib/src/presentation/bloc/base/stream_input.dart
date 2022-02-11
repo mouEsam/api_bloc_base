@@ -21,7 +21,7 @@ mixin StreamInputMixin<Input, Output, State extends BlocState>
   StreamSink<Work> get inputSink => _inputSubject.sink;
 
   @override
-  get sinks => [_inputSubject];
+  get sinks => super.sinks..addAll([_inputSubject]);
 
   @override
   void handleInput(Work input) {

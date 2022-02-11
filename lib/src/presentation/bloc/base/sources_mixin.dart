@@ -7,11 +7,8 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:rxdart/rxdart.dart';
 
-import 'dependence_mixin.dart';
 import 'listenable_mixin.dart';
 import 'listener_mixin.dart';
-import 'state.dart';
-import 'stateful_bloc.dart';
 import 'traffic_lights_mixin.dart';
 import 'work.dart';
 
@@ -82,13 +79,16 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
         .forEach((element) => element.addListener(this));
     final newSources = [...sources, ...providers.map((e) => e.stream)];
     _dataSubscription = inputStream
-        .switchMap<Tuple2<BlocState, List<ProviderState<dynamic>>>>((event) {
+        .cast<BlocState>()
+        .switchMap((event) {
           if (newSources.isEmpty || event is Loading || event is Error) {
-            return Stream.value(Tuple2(event, []));
+            return Stream.value(
+                Tuple2<BlocState, List<ProviderState<dynamic>>>(event, []));
           } else {
             return CombineLatestStream<ProviderState<dynamic>,
-                    Tuple2<BlocState, List<ProviderState<dynamic>>>>(
-                newSources, (a) => Tuple2(event, a));
+                        Tuple2<BlocState, List<ProviderState<dynamic>>>>(
+                    newSources, (a) => Tuple2(event, a))
+                .asBroadcastStream(onCancel: (c) => c.cancel());
           }
         })
         .throttleTime(throttleWindowDuration, trailing: true)

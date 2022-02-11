@@ -1,10 +1,9 @@
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 
 import '../../../utils/box.dart';
-import '../base/stateful_bloc.dart';
+import '_defs.dart';
 import 'worker_mixin.dart';
 import 'worker_state.dart';
-import '_defs.dart';
 
 class WorkerBloc<Output> extends StatefulWorkerBloc<Output>
     with WorkerMixin<Output> {

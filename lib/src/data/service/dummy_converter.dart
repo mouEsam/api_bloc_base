@@ -1,6 +1,4 @@
-import 'package:api_bloc_base/api_bloc_base.dart';
-
-import 'converter.dart';
+import '../_index.dart';
 
 class DummyConverter extends BaseResponseConverter<BaseApiResponse, dynamic> {
   const DummyConverter() : super();

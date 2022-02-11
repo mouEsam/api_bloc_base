@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:api_bloc_base/src/data/_index.dart';
-import 'package:api_bloc_base/src/data/repository/auth_repository.dart';
 import 'package:api_bloc_base/src/domain/entity/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/state.dart'
@@ -65,8 +64,7 @@ abstract class BaseUserBloc<T extends BaseProfile<T>>
   }
 
   Future<Either<ResponseEntity, T>> refreshProfile() async {
-    final result =
-        await authRepository.refreshProfile(currentUser!).value;
+    final result = await authRepository.refreshProfile(currentUser!).value;
     result.fold((l) {
       handleReAuthFailure(l);
     }, (user) => handleUser(user));

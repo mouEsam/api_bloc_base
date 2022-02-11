@@ -5,13 +5,13 @@ import 'pagination_mixin.dart';
 
 mixin PaginationListMixin<Paginated extends PaginatedInput<PageList<Output>>,
     Output> on PaginationMixin<Paginated, PaginationList<Output>> {
-  @override
-  PaginatedOutput<PageList<Output>> get empty =>
-      const PaginatedOutput({}, false, PaginationMixin.startPage, null);
-
-  @override
-  PaginatedOutput<PageList<Output>> get paginatedData =>
-      super.paginatedData as PaginatedOutput<PageList<Output>>;
+  // @override
+  // PaginatedOutput<PageList<Output>> get empty =>
+  //     const PaginatedOutput({}, false, PaginationMixin.startPage, null);
+  //
+  // @override
+  // PaginatedOutput<PageList<Output>> get paginatedData =>
+  //     super.paginatedData as PaginatedOutput<PageList<Output>>;
 
   @override
   @mustCallSuper

@@ -44,7 +44,7 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
           .whereType<provider.ProviderState<Output>>()
           .asBroadcastStream(onCancel: (sub) => sub.cancel()));
 
-  get sinks => [_outputSubject];
+  get sinks => super.sinks..addAll([_outputSubject]);
   get subscriptions => super.subscriptions..addAll([_outputSubscription]);
 
   final List<Stream<provider.ProviderState>> sources;

@@ -56,7 +56,7 @@ class ChainedResult<S, T> extends CompletableResult<T> {
       : cancelToken = ChainedCancelToken(first.cancelToken),
         _progress = StreamController(),
         super(Completer()) {
-    _completer.future.whenComplete(() => _progress.close());
+    _completer.future.whenComplete(() => _progress.sink.close());
     if (first.progress != null) {
       _progress.addStream(first.progress!);
     }

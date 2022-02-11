@@ -1,11 +1,6 @@
-import 'dart:async';
-
 import 'package:api_bloc_base/src/data/_index.dart';
 import 'package:api_bloc_base/src/domain/entity/_index.dart';
 import 'package:dartz/dartz.dart';
-
-import 'user_tools.dart';
-
 
 abstract class BaseAuthRepository<T extends BaseProfile<T>>
     extends BaseRepository with UserProfileUtilsMixin<T> {
@@ -28,10 +23,10 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
 
   Result<Either<ResponseEntity, T>> login(BaseAuthParams params) {
     final operation = internalLogin(params);
-    final result = operation.result;
     operation.converter ??= converter;
+    final _intercept = operation.interceptResult;
     operation.interceptResult = (user) {
-      operation.interceptResult?.call(user);
+      _intercept?.call(user);
       if (user.active == true && params.rememberMe) {
         saveAccount(user);
       }
@@ -43,8 +38,9 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
     return dataRequireUser<T>((savedAccount) {
       final operation = internalRefreshToken(savedAccount);
       operation.converter ??= autoLoginConverter;
+      final _intercept = operation.interceptResult;
       operation.interceptResult = (user) {
-        operation.interceptResult?.call(user);
+        _intercept?.call(user);
         overwriteSavedAccount(user);
       };
       final result = handleResponseOperation<BaseUserResponse, T>(operation);
@@ -56,8 +52,9 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
   Result<Either<ResponseEntity, T>> refreshToken(T profile) {
     final operation = internalRefreshToken(profile);
     operation.converter ??= autoLoginConverter;
+    final _intercept = operation.interceptResult;
     operation.interceptResult = (user) {
-      operation.interceptResult?.call(user);
+      _intercept?.call(user);
       overwriteSavedAccount(user);
     };
     final result = handleResponseOperation<BaseUserResponse, T>(operation);
@@ -116,6 +113,4 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
       },
     );
   }
-
-
 }

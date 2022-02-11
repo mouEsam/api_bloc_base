@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:api_bloc_base/src/presentation/bloc/base/independence_mixin.dart';
-import 'package:api_bloc_base/src/presentation/bloc/worker/worker_state.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 
