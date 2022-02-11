@@ -58,11 +58,14 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   }
 
   bool removeHandler(Cookie cookie) {
-    final handlers = _handlers[cookie._key];
-    final index =
-        handlers?.indexWhere((element) => element.index == cookie._index);
-    if (index != null && index > -1) {
-      handlers!.removeAt(index);
+    return _removeHandler(cookie._key, cookie._index);
+  }
+
+  bool _removeHandler(_HandlerKey key, int index) {
+    final handlers = _handlers[key];
+    final hIndex = handlers?.indexWhere((element) => element.index == index);
+    if (hIndex != null && hIndex > -1) {
+      handlers!.removeAt(hIndex);
       return true;
     }
     return false;
@@ -179,6 +182,9 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     for (final handler in handlers) {
       final result = await handler(source, trigger.data);
       if (result.isRemoveHandler) {
+        _removeHandler(handler.key, handler.index);
+      }
+      if (result.isDeactivateHandler) {
         handler.deactivate();
       }
       isHandled = isHandled || result.isHandled;

@@ -59,8 +59,12 @@ enum HandlerAction {
   Handled,
   // ignore: unused_field
   Unhandled,
+  RemoveHandler,
+  DeactivateHandler,
   HandledRemoveHandler,
   UnhandledRemoveHandler,
+  HandledDeactivateHandler,
+  UnhandledDeactivateHandler,
 }
 
 extension on HandlerAction? {
@@ -69,8 +73,14 @@ extension on HandlerAction? {
         HandlerAction.HandledRemoveHandler
       ].contains(this);
   bool get isRemoveHandler => [
+        HandlerAction.RemoveHandler,
         HandlerAction.HandledRemoveHandler,
         HandlerAction.UnhandledRemoveHandler
+      ].contains(this);
+  bool get isDeactivateHandler => [
+        HandlerAction.DeactivateHandler,
+        HandlerAction.HandledDeactivateHandler,
+        HandlerAction.UnhandledDeactivateHandler,
       ].contains(this);
 }
 
