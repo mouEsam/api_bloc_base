@@ -9,6 +9,7 @@ import 'state.dart';
 
 typedef TriggerType<Data> = BaseCubit<Loaded<Data>>;
 
+typedef _StateHandler<Data> = FutureOr<bool?> Function(Data trigger);
 typedef _Handler<Output, Data> = FutureOr<bool?> Function(
     Output output, Data trigger);
 
@@ -68,18 +69,33 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     }
     _init = true;
     _subscriptions = triggers.map((trigger) {
-      return trigger.exclusiveStream.listen((event) {
+      return trigger.exclusiveStream.listen((event) async {
         _triggers[trigger.runtimeType] ??= [];
-        _triggers[trigger.runtimeType]!.add(_TriggerState(event.data));
+        final state = _TriggerState(event.data);
+        final list = _triggers[trigger.runtimeType]!;
+        list.add(state);
+        final handled = _handleTrigger<Null>(trigger.runtimeType, null, state);
+        if (handled is bool?) {
+          if (handled == true) {
+            list.remove(state);
+          }
+        } else if (true == await handled) {
+          list.remove(state);
+        }
       });
     }).toList();
   }
 
   void onTriggerState<Data>(
     TriggerType trigger, {
+    _StateHandler<Data>? handler,
     _Handler<Input, Data>? inputHandler,
     _Handler<Output, Data>? outputHandler,
   }) {
+    if (handler != null) {
+      final key = _HandlerKey(Null, Data, trigger.runtimeType);
+      _handlers[key] = (output, trigger) => handler(trigger);
+    }
     if (inputHandler != null) {
       final key = _HandlerKey(Input, Data, trigger.runtimeType);
       _handlers[key] = (output, trigger) => inputHandler(output, trigger);
@@ -92,9 +108,14 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
 
   void onTrigger<Data>(
     TriggerType<Data> trigger, {
+    _StateHandler<Data>? handler,
     _Handler<Input, Data>? inputHandler,
     _Handler<Output, Data>? outputHandler,
   }) {
+    if (handler != null) {
+      final key = _HandlerKey.general(Null, trigger.runtimeType);
+      _handlers[key] = (output, trigger) => handler(trigger);
+    }
     if (inputHandler != null) {
       final key = _HandlerKey.general(Input, trigger.runtimeType);
       _handlers[key] = (output, trigger) => inputHandler(output, trigger);
@@ -107,34 +128,34 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
 
   @override
   FutureOr<void> handleInjectedInput(input) async {
-    for (final trigger in _triggers.entries) {
-      final key = trigger.key;
-      final value = trigger.value;
-      List toRemove = [];
-      for (final item in value) {
-        if (true == await _handleTrigger<Input>(key, input, item)) {
-          toRemove.add(item);
-        }
-      }
-      toRemove.forEach(value.remove);
-    }
-    super.handleInjectedInput(input);
+    await _handleStates<Input>(input);
+    return super.handleInjectedInput(input);
   }
 
   @override
   FutureOr<void> handleOutputToInject(output) async {
+    await _handleStates<Output>(output);
+    return super.handleOutputToInject(output);
+  }
+
+  FutureOr<void> _handleStates<T>(T data) async {
     for (final trigger in _triggers.entries) {
       final key = trigger.key;
       final value = trigger.value;
       List toRemove = [];
-      for (final item in value) {
-        if (true == await _handleTrigger<Output>(key, output, item)) {
+      for (int i = 0; i < value.length; i++) {
+        final item = value[i];
+        final handled = _handleTrigger<T>(key, data, item);
+        if (handled is bool?) {
+          if (handled == true) {
+            toRemove.add(item);
+          }
+        } else if (true == await handled) {
           toRemove.add(item);
         }
       }
       toRemove.forEach(value.remove);
     }
-    super.handleOutputToInject(output);
   }
 
   FutureOr<bool?> _handleTrigger<T>(

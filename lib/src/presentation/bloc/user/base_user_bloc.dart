@@ -31,9 +31,9 @@ abstract class BaseUserBloc<T extends BaseProfile<T>>
       });
 
   @override
-  get timers => [_tokenRefreshTimer];
+  get timers => {_tokenRefreshTimer};
   @override
-  get subjects => [_userAccount];
+  get subjects => {_userAccount};
 
   BaseUserBloc(this.refreshInterval, this.authRepository)
       : super(UserLoadingState()) {
