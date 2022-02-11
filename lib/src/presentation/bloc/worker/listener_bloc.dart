@@ -47,7 +47,7 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
   get sinks => super.sinks..addAll([_outputSubject]);
   get subscriptions => super.subscriptions..addAll([_outputSubscription]);
 
-  final List<Stream<provider.ProviderState>> sources;
+  final List<Stream<BlocState>> sources;
   final List<ProviderMixin> providers;
 
   ListenerBloc(this.sources, this.providers, {Output? currentData})

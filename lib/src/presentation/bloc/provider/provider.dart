@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/work.dart';
 
 import '_defs.dart';
@@ -20,7 +21,7 @@ abstract class ProviderBloc<Input, Output> extends StatefulProviderBloc<Output>
         OutputInjectorProviderMixin<Input, Output> {
   final LifecycleObserver? appLifecycleObserver;
   final List<ProviderMixin> providers;
-  final List<Stream<ProviderState>> sources;
+  final List<Stream<BlocState>> sources;
 
   final bool canRunWithoutListeners;
 

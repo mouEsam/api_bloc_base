@@ -18,7 +18,7 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
         TrafficLightsMixin<State>,
         ListenerMixin<State> {
   late final List<ProviderMixin> providers;
-  late final List<Stream<ProviderState>> sources;
+  late final List<Stream<BlocState>> sources;
   late final StreamSubscription _dataSubscription;
 
   final ValueNotifier<bool> listeningToSources = ValueNotifier(true);
@@ -82,11 +82,10 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
         .cast<BlocState>()
         .switchMap((event) {
           if (newSources.isEmpty || event is Loading || event is Error) {
-            return Stream.value(
-                Tuple2<BlocState, List<ProviderState<dynamic>>>(event, []));
+            return Stream.value(Tuple2<BlocState, List<BlocState>>(event, []));
           } else {
-            return CombineLatestStream<ProviderState<dynamic>,
-                        Tuple2<BlocState, List<ProviderState<dynamic>>>>(
+            return CombineLatestStream<BlocState,
+                        Tuple2<BlocState, List<BlocState>>>(
                     newSources, (a) => Tuple2(event, a))
                 .asBroadcastStream(onCancel: (c) => c.cancel());
           }
@@ -100,17 +99,15 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
             return work.changeState(mainEvent);
           }
           mainEvent = mainEvent as Loaded<Input>;
-          ProviderError? errorState = event.value2
-                  .firstWhereOrNull((element) => element is ProviderError)
-              as ProviderError<dynamic>?;
+          Error? errorState = event.value2
+              .firstWhereOrNull((element) => element is Error) as Error?;
           if (errorState != null) {
             return work.changeState(Error(errorState.response));
-          } else if (event.value2
-              .any((element) => element is ProviderLoading)) {
+          } else if (event.value2.any((element) => element is Loading)) {
             return work.changeState(Loading());
           } else {
             final result = await combineDataWithSources(mainEvent.data,
-                event.value2.map((e) => (e as ProviderLoaded).data).toList());
+                event.value2.map((e) => (e as Loaded).data).toList());
             return work.changeState(Loaded<Input>(result));
           }
         })

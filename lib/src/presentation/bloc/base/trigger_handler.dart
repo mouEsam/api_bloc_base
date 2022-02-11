@@ -48,8 +48,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   final Map<_HandlerKey, _Handler<Output, dynamic>> _handlers = {};
 
   @override
-  List<Stream<ProviderState>> get sources =>
-      [...super.sources, ...triggers.map((e) => e.stream)];
+  get sources => [...super.sources, ...triggers.map((e) => e.stream)];
   @override
   get subscriptions => super.subscriptions..addAll(_subscriptions);
 

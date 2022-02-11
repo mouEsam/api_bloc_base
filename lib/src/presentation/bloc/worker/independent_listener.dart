@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:api_bloc_base/src/data/_index.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/worker/listener_bloc.dart';
 import 'package:dartz/dartz.dart';
@@ -27,7 +28,7 @@ abstract class IndependentListener<Input, Output>
   final bool refreshOnAppActive;
 
   IndependentListener(
-      {List<Stream<ProviderState>> sources = const [],
+      {List<Stream<BlocState>> sources = const [],
       List<ProviderMixin> providers = const [],
       this.singleDataSource,
       this.streamDataSource,
