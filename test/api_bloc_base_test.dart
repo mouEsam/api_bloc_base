@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 class Loaded<T> extends Equatable {
   final T data;
@@ -101,47 +102,49 @@ class C extends A {}
 class D extends C {}
 
 Future<void> main() async {
-  final Trigger<A> t1 = Trigger(A());
-  final Trigger<A> t2 = Trigger(B());
-  final Trigger<B> t3 = Trigger(B());
-  final Trigger<C> t4 = Trigger(D());
-  triggers.addAll([t1, t2, t3, t4]);
-  triggers.forEach((trigger) {
-    _triggers[trigger.runtimeType] ??= [];
-    _triggers[trigger.runtimeType]!.add(_Trigger(trigger.data.data));
+  test("Trigger", () async {
+    final Trigger<A> t1 = Trigger(A());
+    final Trigger<A> t2 = Trigger(B());
+    final Trigger<B> t3 = Trigger(B());
+    final Trigger<C> t4 = Trigger(D());
+    triggers.addAll([t1, t2, t3, t4]);
+    triggers.forEach((trigger) {
+      _triggers[trigger.runtimeType] ??= [];
+      _triggers[trigger.runtimeType]!.add(_Trigger(trigger.data.data));
+    });
+    onTriggerState<A>(t1, (output, trigger) {
+      print("A $trigger");
+    });
+    onTriggerState<B>(t1, (output, trigger) {
+      print("B $trigger");
+      return true;
+    });
+    onTriggerState<C>(t1, (output, trigger) {
+      print("B $trigger");
+      return true;
+    });
+    // onTrigger<int>(t2, (output, trigger) {
+    //   print(trigger);
+    //   return false;
+    // });
+    // onTrigger<double>(t3, (output, trigger) {
+    //   print(trigger);
+    //   return false;
+    // });
+    onTrigger<A>(t1, (output, trigger) {
+      print("General $trigger");
+      return true;
+    });
+    onTrigger<A>(t2, (output, trigger) {
+      print("General $trigger");
+      return true;
+    });
+    onTrigger<B>(t3, (output, trigger) {
+      print("General $trigger");
+      return true;
+    });
+    print(_triggers.values.map((value) => value.length));
+    await handleOutputToInject("");
+    print(_triggers.values.map((value) => value.length));
   });
-  onTriggerState<A>(t1, (output, trigger) {
-    print("A $trigger");
-  });
-  onTriggerState<B>(t1, (output, trigger) {
-    print("B $trigger");
-    return true;
-  });
-  onTriggerState<C>(t1, (output, trigger) {
-    print("B $trigger");
-    return true;
-  });
-  // onTrigger<int>(t2, (output, trigger) {
-  //   print(trigger);
-  //   return false;
-  // });
-  // onTrigger<double>(t3, (output, trigger) {
-  //   print(trigger);
-  //   return false;
-  // });
-  onTrigger<A>(t1, (output, trigger) {
-    print("General $trigger");
-    return true;
-  });
-  onTrigger<A>(t2, (output, trigger) {
-    print("General $trigger");
-    return true;
-  });
-  onTrigger<B>(t3, (output, trigger) {
-    print("General $trigger");
-    return true;
-  });
-  print(_triggers.values.map((value) => value.length));
-  await handleOutputToInject("");
-  print(_triggers.values.map((value) => value.length));
 }
