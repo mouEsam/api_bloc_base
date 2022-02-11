@@ -46,9 +46,9 @@ class CookieJar {
 
 class Cookie {
   final _HandlerKey _key;
-  final int index;
+  final int _index;
 
-  const Cookie._(this._key, this.index);
+  const Cookie._(this._key, this._index);
 
   factory Cookie._forHandler(_HandlerWrapper handler) {
     return Cookie._(handler.key, handler.index);

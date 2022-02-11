@@ -58,7 +58,14 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   }
 
   bool removeHandler(Cookie cookie) {
-    return _handlers.remove(cookie._key) != null;
+    final handlers = _handlers[cookie._key];
+    final index =
+        handlers?.indexWhere((element) => element.index == cookie._index);
+    if (index != null && index > -1) {
+      handlers!.removeAt(index);
+      return true;
+    }
+    return false;
   }
 
   CookieJar onTriggerState<Data>(
