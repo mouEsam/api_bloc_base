@@ -1,6 +1,7 @@
 import 'package:api_bloc_base/src/domain/entity/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/dependence_mixin.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/handlation.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/independence_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/input_to_output.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/lifecycle_mixin.dart';
@@ -30,6 +31,8 @@ typedef SourcesWorkerMixin<Input, Output>
     = SourcesMixin<Input, Output, WorkerState<Output>>;
 typedef TriggerHandlerWorkerMixin<Input, Output>
     = TriggerHandlerMixin<Input, Output, WorkerState<Output>>;
+typedef StateHandlerWorkerMixin<Output>
+    = StateHandlerMixin<Output, WorkerState<Output>>;
 typedef OutputConverterWorkerMixin<Input, Output>
     = OutputConverterMixin<Input, Output, WorkerState<Output>>;
 typedef InputSinkWorkerMixin<Input, Output>
