@@ -103,7 +103,7 @@ class _HandlerKey extends Equatable {
 }
 
 class _HandlerWrapper<Source, Data> {
-  static int _index = 0;
+  static int _index = 0; // no need to synchronise
   final _HandlerKey key;
   final _Handler<Source, Data> _handler;
   final int index = _index++;
