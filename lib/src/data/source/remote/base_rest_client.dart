@@ -2,13 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:api_bloc_base/src/data/model/_index.dart';
 import 'package:api_bloc_base/src/data/service/dio_flutter_transformer.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 
 typedef RequestResult<T> = Result<Response<T>>;
 
@@ -110,7 +109,7 @@ class BaseRestClient {
     T Function(dynamic)? fromJson,
   }) {
     if (T == BaseApiResponse) {
-      throw FlutterError(
+      throw Exception(
           'T must be either be a generic encodable Type or a sub class of BaseApiResponse');
     }
     final progressController = StreamController<double>.broadcast();
@@ -139,7 +138,7 @@ class BaseRestClient {
       }
     });
     headers ??= <String, dynamic>{};
-    if (acceptedLanguage is Locale) {
+    if (acceptedLanguage is ui.Locale) {
       headers[HttpHeaders.acceptLanguageHeader] = acceptedLanguage.languageCode;
     } else if (acceptedLanguage != null) {
       headers[HttpHeaders.acceptLanguageHeader] = acceptedLanguage.toString();
@@ -309,7 +308,7 @@ class BaseRestClient {
     queryParameters ??= <String, dynamic>{};
     queryParameters.removeWhere((k, v) => v == null);
     headers ??= <String, dynamic>{};
-    if (acceptedLanguage is Locale) {
+    if (acceptedLanguage is ui.Locale) {
       headers[HttpHeaders.acceptLanguageHeader] = acceptedLanguage.languageCode;
     } else if (acceptedLanguage != null) {
       headers[HttpHeaders.acceptLanguageHeader] = acceptedLanguage.toString();
@@ -377,7 +376,7 @@ class BaseRestClient {
   }
 }
 
-class CustomTransformer extends DefaultTransformer {
-  @override
-  get jsonDecodeCallback => (String json) => compute(jsonDecode, json);
-}
+// class CustomTransformer extends DefaultTransformer {
+//   @override
+//   get jsonDecodeCallback => (String json) => compute(jsonDecode, json);
+// }
