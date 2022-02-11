@@ -40,36 +40,41 @@ abstract class BaseCubit<State> extends Cubit<State> implements Initializable {
     notifiers.forEach((element) {
       try {
         element.dispose();
-      } catch (e) {
+      } catch (e, s) {
         print(e);
+        print(s);
       }
     });
     timers.forEach((element) {
       try {
         element?.cancel();
-      } catch (e) {
+      } catch (e, s) {
         print(e);
+        print(s);
       }
     });
     subscriptions.forEach((element) {
       try {
         element?.cancel();
-      } catch (e) {
+      } catch (e, s) {
         print(e);
+        print(s);
       }
     });
     sinks.forEach((element) {
       try {
         element.close();
-      } catch (e) {
+      } catch (e, s) {
         print(e);
+        print(s);
       }
     });
     for (final subject in subjects) {
       try {
         await subject.drain().then((value) => subject.close());
-      } catch (e) {
+      } catch (e, s) {
         print(e);
+        print(s);
       }
     }
     return super.close();

@@ -63,7 +63,7 @@ class ChainedResult<S, T> extends CompletableResult<T> {
     });
     if (first.progress != null) {
       if (!_progress.isClosed) {
-        _progress.addStream(first.progress!);
+        _progress.addStream(first.progress!, cancelOnError: true);
       }
     }
     Future.value(first.value).then((value) {
@@ -73,7 +73,7 @@ class ChainedResult<S, T> extends CompletableResult<T> {
       cancelToken.second = _second.cancelToken;
       if (_second.progress != null) {
         if (!_progress.isClosed) {
-          _progress.addStream(_second.progress!);
+          _progress.addStream(_second.progress!, cancelOnError: true);
         }
       }
     }, onError: (e, s) {
