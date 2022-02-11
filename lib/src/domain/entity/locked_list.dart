@@ -1,5 +1,7 @@
+import 'dart:_internal';
 import 'dart:collection';
 
+import 'package:dartz/dartz.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
@@ -125,27 +127,192 @@ class PagesList<T> extends PaginationList<T> {
   int get length => _pages.fold(
       0, (previousValue, element) => previousValue + element.length);
 
-  @override
-  T operator [](int index) {
+  Tuple2<PageList<T>, int> pageForIndex(int index) {
     int offset = 0;
     for (final page in _pages) {
-      final _index = index - offset - 1;
-      if (index < page.length) {
-        return page[_index];
+      final _index = index - offset;
+      if (_index < page.length) {
+        return Tuple2(page, _index);
       } else {
-        offset += page.length;
+        offset += page.length - 1;
       }
     }
     throw IndexError(index, this);
   }
 
-  @override
-  void operator []=(int index, T value) {
-    this[index] = value;
+  Tuple2<PageList<T>, int>? pageForObject(Object? object) {
+    for (final page in _pages) {
+      final index = page.indexOf(object);
+      if (index > -1) return Tuple2(page, index);
+    }
+    return null;
+  }
+
+  Tuple2<PageList<T>, int>? pageWhere(bool Function(T item) predicate) {
+    for (final page in _pages) {
+      final index = page.indexWhere(predicate);
+      if (index > -1) return Tuple2(page, index);
+    }
+    return null;
   }
 
   @override
-  set length(int newLength) {}
+  T operator [](int index) {
+    return pageForIndex(index).apply((a, b) => a[b]);
+  }
+
+  @override
+  void operator []=(int index, T value) {
+    pageForIndex(index).apply((a, b) => a[b] = value);
+  }
+
+  @override
+  set length(int newLength) {
+    throw FlutterError("Can't resize locked list");
+  }
+
+  @override
+  void insert(int index, T element) {
+    pageForIndex(index).apply((a, b) => a.insert(b, element));
+  }
+
+  @override
+  void insertAll(int index, Iterable<T> iterable) {
+    pageForIndex(index).apply((a, b) => a.insertAll(b, iterable));
+  }
+
+  @override
+  T firstWhere(bool Function(T element) test, {T Function()? orElse}) {
+    final index = indexWhere(test);
+    if (index > -1)
+      return this[index];
+    else if (orElse != null) return orElse();
+    throw IterableElementError.noElement();
+  }
+
+  @override
+  T lastWhere(bool Function(T element) test, {T Function()? orElse}) {
+    final index = lastIndexWhere(test);
+    if (index > -1)
+      return this[index];
+    else if (orElse != null) return orElse();
+    throw IterableElementError.noElement();
+  }
+
+  @override
+  int lastIndexWhere(bool Function(T element) test, [int? start]) {
+    if (start == null || start >= this.length) start = this.length - 1;
+    final startPage = pageForIndex(start);
+    int offset = start - startPage.value2;
+    {
+      final index = startPage.apply((a, b) => a.lastIndexWhere(test, b));
+      if (index > -1) {
+        return offset + index;
+      }
+    }
+    final startPageIndex = _pages.indexOf(startPage.value1);
+    for (final page in _pages.skip(startPageIndex + 1).toList().reversed) {
+      final index = page.lastIndexWhere(test);
+      if (index > -1) {
+        return offset + index;
+      } else {
+        offset += page.length - 1;
+      }
+    }
+    return -1;
+  }
+
+  @override
+  int lastIndexOf(Object? element, [int? start]) {
+    if (start == null || start >= this.length) start = this.length - 1;
+    final startPage = pageForIndex(start);
+    int offset = start - startPage.value2;
+    {
+      final index = startPage.apply((a, b) => a.lastIndexOf(element, b));
+      if (index > -1) {
+        return offset + index;
+      }
+    }
+    final startPageIndex = _pages.indexOf(startPage.value1);
+    for (final page in _pages.skip(startPageIndex + 1).toList().reversed) {
+      final index = page.lastIndexOf(element);
+      if (index > -1) {
+        return offset + index;
+      } else {
+        offset += page.length - 1;
+      }
+    }
+    return -1;
+  }
+
+  @override
+  int indexOf(Object? element, [int start = 0]) {
+    final startPage = pageForIndex(start);
+    int offset = start - startPage.value2;
+    {
+      final index = startPage.apply((a, b) => a.indexOf(element, b));
+      if (index > -1) {
+        return offset + index;
+      }
+    }
+    final startPageIndex = _pages.indexOf(startPage.value1);
+    for (final page in _pages.skip(startPageIndex + 1)) {
+      final index = page.indexOf(element);
+      if (index > -1) {
+        return offset + index;
+      } else {
+        offset += page.length - 1;
+      }
+    }
+    return -1;
+  }
+
+  @override
+  int indexWhere(bool Function(T element) test, [int start = 0]) {
+    final startPage = pageForIndex(start);
+    int offset = start - startPage.value2;
+    {
+      final index = startPage.apply((a, b) => a.indexWhere(test, b));
+      if (index > -1) {
+        return offset + index;
+      }
+    }
+    final startPageIndex = _pages.indexOf(startPage.value1);
+    for (final page in _pages.skip(startPageIndex + 1)) {
+      final index = page.indexWhere(test);
+      if (index > -1) {
+        return offset + index;
+      } else {
+        offset += page.length - 1;
+      }
+    }
+    return -1;
+  }
+
+  @override
+  T removeAt(int index) {
+    return pageForIndex(index).apply((a, b) => a.removeAt(b));
+  }
+
+  @override
+  bool remove(Object? element) {
+    return pageForObject(element)?.apply((a, b) => a.remove(b)) == true;
+  }
+
+  @override
+  void removeWhere(bool Function(T element) test) {
+    return pageWhere(test)?.apply((a, b) => a.removeAt(b));
+  }
+
+  @override
+  T removeLast() {
+    for (final page in _pages.reversed) {
+      if (page.isNotEmpty) {
+        return page.removeLast();
+      }
+    }
+    throw IterableElementError.noElement();
+  }
 
   void tweak(T f(T element)) {
     for (int x = 0; x < _pages.length; x++) {

@@ -28,6 +28,8 @@ typedef IndependenceWorkerMixin<Input, Output>
     = IndependenceMixin<Input, Output, WorkerState<Output>>;
 typedef SourcesWorkerMixin<Input, Output>
     = SourcesMixin<Input, Output, WorkerState<Output>>;
+typedef TriggerHandlerWorkerMixin<Input, Output>
+    = TriggerHandlerMixin<Input, Output, WorkerState<Output>>;
 typedef OutputInjectorWorkerMixin<Input, Output>
     = OutputInjectorMixin<Input, Output, WorkerState<Output>>;
 typedef InputSinkWorkerMixin<Input, Output>

@@ -9,7 +9,6 @@ import 'package:api_bloc_base/src/presentation/bloc/base/listener_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/provider_listener_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/same_input_output_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/sources_mixin.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/user_dependant_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/_index.dart';
@@ -32,6 +31,8 @@ typedef IndependenceProviderMixin<Input, Output>
     = IndependenceMixin<Input, Output, ProviderState<Output>>;
 typedef SourcesProviderMixin<Input, Output>
     = SourcesMixin<Input, Output, ProviderState<Output>>;
+typedef TriggerHandlerProviderMixin<Input, Output>
+    = TriggerHandlerMixin<Input, Output, ProviderState<Output>>;
 typedef OutputInjectorProviderMixin<Input, Output>
     = OutputInjectorMixin<Input, Output, ProviderState<Output>>;
 typedef InputSinkProviderMixin<Input, Output>

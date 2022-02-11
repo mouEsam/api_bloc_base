@@ -4,11 +4,11 @@ export 'package:bloc/bloc.dart';
 export 'package:dio/dio.dart';
 export 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 export 'package:flutter_bloc/flutter_bloc.dart';
+export 'package:listenable_stream/listenable_stream.dart';
 export 'package:sembast/blob.dart';
 export 'package:sembast/sembast.dart';
 export 'package:sembast/sembast_io.dart';
 export 'package:sembast/timestamp.dart';
-export 'package:listenable_stream/listenable_stream.dart';
 
 export 'src/data/_index.dart';
 export 'src/domain/entity/_index.dart';
