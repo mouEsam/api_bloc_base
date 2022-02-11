@@ -84,3 +84,21 @@ class _HandlerKey extends Equatable {
   @override
   get props => [source, data, trigger];
 }
+
+class _HandlerWrapper<Output, Data> {
+  final _Handler<Output, Data> _handler;
+  bool _active = true;
+
+  _HandlerWrapper(this._handler);
+
+  void deactivate() => _active = false;
+  void activate() => _active = true;
+
+  _HandlerResult call(Output output, Data trigger) {
+    if (_active) {
+      return _handler(output, trigger);
+    } else {
+      return null;
+    }
+  }
+}

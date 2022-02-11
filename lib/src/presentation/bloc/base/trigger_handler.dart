@@ -10,7 +10,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   late final List<StreamSubscription> _subscriptions;
 
   final Map<Type, List<_TriggerState>> _triggers = {};
-  final Map<_HandlerKey, _Handler> _handlers = {};
+  final Map<_HandlerKey, _HandlerWrapper> _handlers = {};
 
   @override
   get sources => [...super.sources, ...triggers.map((e) => e.stream)];
@@ -20,6 +20,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   @override
   clean() {
     _triggers.clear();
+    _handlers.values.forEach((element) => element.activate());
     super.clean();
   }
 
@@ -88,15 +89,17 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     _HandlerKey? ohk;
     if (handler != null) {
       hk = _HandlerKey.create(general, Null, Data, trigger);
-      _handlers[hk] = (output, trigger) => handler(trigger);
+      _handlers[hk] = _HandlerWrapper((output, trigger) => handler(trigger));
     }
     if (inputHandler != null) {
       ihk = _HandlerKey.general(Input, trigger);
-      _handlers[ihk] = (output, trigger) => inputHandler(output, trigger);
+      _handlers[ihk] =
+          _HandlerWrapper((output, trigger) => inputHandler(output, trigger));
     }
     if (outputHandler != null) {
       ohk = _HandlerKey.general(Output, trigger);
-      _handlers[ohk] = (output, trigger) => outputHandler(output, trigger);
+      _handlers[ohk] =
+          _HandlerWrapper((output, trigger) => outputHandler(output, trigger));
     }
     return CookieJar._(hk, ihk, ohk);
   }
@@ -140,7 +143,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     if (handler != null) {
       final result = await handler(source, trigger.data);
       if (result.isRemoveHandler) {
-        _handlers.remove(key);
+        handler.deactivate();
       }
       return result.isHandled;
     }
@@ -149,7 +152,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     if (generalHandler != null) {
       final result = await generalHandler(source, trigger.data);
       if (result.isRemoveHandler) {
-        _handlers.remove(generalKey);
+        generalHandler.deactivate();
       }
       return result.isHandled;
     }
