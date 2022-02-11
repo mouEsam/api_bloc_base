@@ -43,12 +43,4 @@ abstract class IndependentListener<Input, Output>
       beginFetching();
     }
   }
-
-  @override
-  void onAppState(bool isActive) {
-    if (isActive && refreshOnAppActive) {
-      markNeedsRefresh();
-    }
-    super.onAppState(isActive);
-  }
 }

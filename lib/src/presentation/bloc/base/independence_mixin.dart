@@ -33,6 +33,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
 
   bool get enableRefresh;
   bool get enableRetry;
+  bool get refreshOnAppActive;
 
   StreamSubscription<Input>? _streamSourceSubscription;
   bool _hasSingleSource = false;
@@ -180,6 +181,9 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
         _performMarkedRefetch();
       } else if (_needsToRefresh.value) {
         _performMarkedRefresh();
+      }
+      if (refreshOnAppActive) {
+        markNeedsRefresh();
       }
       if (_hasSingleSource) {
         setupTimer();

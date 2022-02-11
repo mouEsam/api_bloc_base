@@ -91,7 +91,9 @@ mixin OutputInjectorMixin<Input, Output, State extends BlocState>
         }
       }
     }
-    handleOutput(output);
+    if (!output.isCancelled) {
+      handleOutput(output);
+    }
   }
 
   FutureOr<void> handleOutputToInject(Output output) {}

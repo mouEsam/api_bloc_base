@@ -33,8 +33,6 @@ abstract class ProviderBloc<Input, Output> extends StatefulProviderBloc<Output>
 
   @override
   void handleOutput(Work output) {
-    if (!output.isCancelled) {
-      emitState(output.state);
-    }
+    emitState(output.state);
   }
 }

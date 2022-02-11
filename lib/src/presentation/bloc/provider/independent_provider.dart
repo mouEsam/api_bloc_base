@@ -55,12 +55,4 @@ abstract class IndependentProvider<Input, Output>
       injectInput(initialDate);
     }
   }
-
-  @override
-  void onAppState(bool isActive) {
-    if (isActive && refreshOnAppActive) {
-      markNeedsRefresh();
-    }
-    super.onAppState(isActive);
-  }
 }
