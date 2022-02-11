@@ -25,4 +25,9 @@ mixin PaginationListMixin<Paginated extends PaginatedInput<PageList<Output>>,
     }
     return newList;
   }
+
+  @override
+  convertOutputToInject(output) {
+    return output.asSinglePage;
+  }
 }

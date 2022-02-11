@@ -20,6 +20,8 @@ abstract class PaginationList<T> extends ListMixin<T> {
   void tweak(T f(T element));
 
   PaginationList<S> map<S>(S f(T element));
+
+  PageList<T> get asSinglePage;
 }
 
 class PageList<T> extends PaginationList<T> {
@@ -73,6 +75,9 @@ class PageList<T> extends PaginationList<T> {
   PageList<T> toList({bool? growable}) {
     return PageList._(_list);
   }
+
+  @override
+  get asSinglePage => this;
 }
 
 class PagesList<T> extends PaginationList<T> {
@@ -162,4 +167,7 @@ class PagesList<T> extends PaginationList<T> {
   PagesList<T> toList({bool? growable}) {
     return PagesList._(_pages.toList());
   }
+
+  @override
+  get asSinglePage => PageList._(list);
 }

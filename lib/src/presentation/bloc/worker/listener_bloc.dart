@@ -67,15 +67,8 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
     _outputSubscription = outputStream.listen(emitState, onError: handleError);
   }
 
-  Output convertInjectedOutput(Output output) {
-    return output;
-  }
-
-  void handleInjectedOutput(Output output) {}
-
   void emitData(Output event) {
-    handleInjectedOutput(event);
-    currentData = convertInjectedOutput(event);
+    currentData = event;
     emitCurrent();
   }
 

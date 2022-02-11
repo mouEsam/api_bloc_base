@@ -28,11 +28,11 @@ mixin InputSinkMixin<Input, Output, State extends BlocState>
     handleInput(input);
   }
 
-  void handleInput(Work input);
-
   FutureOr<void> handleInputToInject(Input input) {}
 
   FutureOr<Input> convertInputToInject(Input input) {
     return input;
   }
+
+  void handleInput(Work input);
 }

@@ -188,5 +188,6 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
       _streamSourceSubscription?.pause();
       _timer?.cancel();
     }
+    super.trafficLightsChanged(green);
   }
 }
