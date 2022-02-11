@@ -1,15 +1,8 @@
 import 'dart:async';
 
-import 'package:api_bloc_base/src/presentation/bloc/base/state.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/work.dart';
-import 'package:async/async.dart' as async;
-import 'package:dartz/dartz.dart';
-import 'package:rxdart/rxdart.dart';
-
-import 'lifecycle_observer.dart';
+import '_defs.dart';
 import 'provider_mixin.dart';
 import 'state.dart';
-import '_defs.dart';
 
 export 'state.dart';
 
@@ -28,9 +21,12 @@ class ProviderWrapper<Output> extends StatefulProviderBloc<Output>
 
   get subscriptions => super.subscriptions..add(_subscription);
 
-  final FutureOr<void> Function({bool refresh})? onFetchData;
-  final FutureOr<void> Function()? onRefreshData;
-  final FutureOr<void> Function()? onRefetchData;
+  final FutureOr<void> Function(ProviderWrapper<Output> provider,
+      [bool refresh])? onFetchData;
+  final FutureOr<void> Function(ProviderWrapper<Output> provider)?
+      onRefreshData;
+  final FutureOr<void> Function(ProviderWrapper<Output> provider)?
+      onRefetchData;
 
   ProviderWrapper(
     Stream<ProviderState<Output>> stream, {
@@ -65,13 +61,12 @@ class ProviderWrapper<Output> extends StatefulProviderBloc<Output>
     super.clean();
   }
 
-  @override
   FutureOr<void> fetchData({bool refresh = false}) =>
-      onFetchData?.call(refresh: refresh);
+      onFetchData?.call(this, refresh);
 
   @override
-  FutureOr<void> refetchData() => onRefetchData?.call();
+  FutureOr<void> refetchData() => onRefetchData?.call(this);
 
   @override
-  FutureOr<void> refreshData() => onRefreshData?.call();
+  FutureOr<void> refreshData() => onRefreshData?.call(this);
 }
