@@ -352,7 +352,9 @@ class BaseRestClient {
       final newCount = math.max(count, 0);
       final newTotal = math.max(total, 0);
       final double progress = newTotal == 0 ? 0.0 : (newCount / newTotal);
-      progressController.add(math.max(progress, 1.0));
+      if (!progressController.isClosed) {
+        progressController.add(math.max(progress, 1.0));
+      }
       return progress;
     };
     dio.options.baseUrl = baseUrl;

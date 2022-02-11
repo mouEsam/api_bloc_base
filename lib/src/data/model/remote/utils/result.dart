@@ -56,9 +56,15 @@ class ChainedResult<S, T> extends CompletableResult<T> {
       : cancelToken = ChainedCancelToken(first.cancelToken),
         _progress = StreamController(),
         super(Completer()) {
-    _completer.future.whenComplete(() => _progress.sink.close());
+    _completer.future.whenComplete(() {
+      if (!_progress.isClosed) {
+        _progress.close();
+      }
+    });
     if (first.progress != null) {
-      _progress.addStream(first.progress!);
+      if (!_progress.isClosed) {
+        _progress.addStream(first.progress!);
+      }
     }
     Future.value(first.value).then((value) {
       final _second = secondFactory(value);
@@ -66,7 +72,9 @@ class ChainedResult<S, T> extends CompletableResult<T> {
       second = _second;
       cancelToken.second = _second.cancelToken;
       if (_second.progress != null) {
-        _progress.addStream(_second.progress!);
+        if (!_progress.isClosed) {
+          _progress.addStream(_second.progress!);
+        }
       }
     }, onError: (e, s) {
       _completer.completeError(e, s);
