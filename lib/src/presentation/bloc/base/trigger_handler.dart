@@ -77,12 +77,12 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     }).toList();
   }
 
-  void onTrigger<Data>(Trigger trigger, _Handler<Output, Data> handler) {
+  void onTriggerState<Data>(Trigger trigger, _Handler<Output, Data> handler) {
     final key = _HandlerKey(Data, trigger.runtimeType);
     _handlers[key] = (output, trigger) => handler(output, trigger);
   }
 
-  void onGeneral<Data>(Trigger<Data> trigger, _Handler<Output, Data> handler) {
+  void onTrigger<Data>(Trigger<Data> trigger, _Handler<Output, Data> handler) {
     final key = _HandlerKey.general(trigger.runtimeType);
     _handlers[key] = (output, trigger) => handler(output, trigger);
   }

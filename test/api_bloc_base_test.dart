@@ -2,14 +2,6 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 
-class A {}
-
-class B extends A {}
-
-class C extends A {}
-
-class D extends C {}
-
 class Loaded<T> extends Equatable {
   final T data;
   const Loaded(this.data);
@@ -86,12 +78,12 @@ FutureOr<bool?> _handleTrigger(
   return false;
 }
 
-void onTrigger<Data>(Trigger trigger, _Handler<Output, Data> handler) {
+void onTriggerState<Data>(Trigger trigger, _Handler<Output, Data> handler) {
   final key = _HandlerKey(Data, trigger.runtimeType);
   _handlers[key] = (output, trigger) => handler(output, trigger);
 }
 
-void onGeneral<Data>(Trigger<Data> trigger, _Handler<Output, Data> handler) {
+void onTrigger<Data>(Trigger<Data> trigger, _Handler<Output, Data> handler) {
   final key = _HandlerKey.general(trigger.runtimeType);
   _handlers[key] = (output, trigger) => handler(output, trigger);
 }
@@ -99,6 +91,14 @@ void onGeneral<Data>(Trigger<Data> trigger, _Handler<Output, Data> handler) {
 final List<Trigger> triggers = [];
 final Map<Type, List<_Trigger>> _triggers = {};
 final Map<_HandlerKey, _Handler<Output, dynamic>> _handlers = {};
+
+class A {}
+
+class B extends A {}
+
+class C extends A {}
+
+class D extends C {}
 
 Future<void> main() async {
   final Trigger<A> t1 = Trigger(A());
@@ -110,14 +110,14 @@ Future<void> main() async {
     _triggers[trigger.runtimeType] ??= [];
     _triggers[trigger.runtimeType]!.add(_Trigger(trigger.data.data));
   });
-  onTrigger<A>(t1, (output, trigger) {
+  onTriggerState<A>(t1, (output, trigger) {
     print("A $trigger");
   });
-  onTrigger<B>(t1, (output, trigger) {
+  onTriggerState<B>(t1, (output, trigger) {
     print("B $trigger");
     return true;
   });
-  onTrigger<C>(t1, (output, trigger) {
+  onTriggerState<C>(t1, (output, trigger) {
     print("B $trigger");
     return true;
   });
@@ -129,15 +129,15 @@ Future<void> main() async {
   //   print(trigger);
   //   return false;
   // });
-  onGeneral<A>(t1, (output, trigger) {
+  onTrigger<A>(t1, (output, trigger) {
     print("General $trigger");
     return true;
   });
-  onGeneral<A>(t2, (output, trigger) {
+  onTrigger<A>(t2, (output, trigger) {
     print("General $trigger");
     return true;
   });
-  onGeneral<B>(t3, (output, trigger) {
+  onTrigger<B>(t3, (output, trigger) {
     print("General $trigger");
     return true;
   });
