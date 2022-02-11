@@ -90,26 +90,26 @@ class _HandlerKey extends Equatable {
   get props => [source, data, trigger];
 }
 
-class _HandlerWrapper<Output, Data> {
+class _HandlerWrapper<Source, Data> {
   static int _index = 0;
   final _HandlerKey key;
-  final _Handler<Output, Data> _handler;
+  final _Handler<Source, Data> _handler;
   final int index = _index++;
   bool _active = true;
 
   _HandlerWrapper._(this.key, this._handler);
 
-  static _HandlerWrapper<Output, Data> wrap<Output, Data>(
+  static _HandlerWrapper<Source, Data> wrap<Source, Data>(
     bool general,
     Type trigger,
-    _Handler<Output, Data> _handler,
+    _Handler<Source, Data> _handler,
   ) {
-    final key = _HandlerKey(Output, general ? Null : Data, trigger);
+    final key = _HandlerKey.create(general, Source, Data, trigger);
     return _HandlerWrapper._(key, _handler);
   }
 
   void deactivate() => _active = false;
   void activate() => _active = true;
 
-  _HandlerResult call(Output output, Data trigger) => _handler(output, trigger);
+  _HandlerResult call(Source output, Data trigger) => _handler(output, trigger);
 }
