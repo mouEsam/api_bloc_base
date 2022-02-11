@@ -23,6 +23,30 @@ class _TriggerState<T> extends Equatable {
   get props => [type, data];
 }
 
+class CookieJar {
+  final Cookie? handlerCookie;
+  final Cookie? inputHandlerCookie;
+  final Cookie? outputHandlerCookie;
+
+  CookieJar._(
+    _HandlerKey? handlerKey,
+    _HandlerKey? inputHandlerKey,
+    _HandlerKey? outputHandlerKey,
+  )   : handlerCookie = _createCookie(handlerKey),
+        inputHandlerCookie = _createCookie(inputHandlerKey),
+        outputHandlerCookie = _createCookie(outputHandlerKey);
+
+  static Cookie? _createCookie(_HandlerKey? handlerKey) {
+    return handlerKey == null ? null : Cookie(handlerKey);
+  }
+}
+
+class Cookie {
+  final _HandlerKey _key;
+
+  const Cookie(this._key);
+}
+
 class _HandlerKey extends Equatable {
   final Type source;
   final Type data;
@@ -31,6 +55,11 @@ class _HandlerKey extends Equatable {
   const _HandlerKey(this.source, this.data, this.trigger);
 
   const _HandlerKey.general(this.source, this.trigger) : data = Null;
+
+  factory _HandlerKey.create(
+      bool general, Type source, Type data, Type trigger) {
+    return _HandlerKey(source, general ? Null : data, trigger);
+  }
 
   @override
   get props => [source, data, trigger];
@@ -86,44 +115,53 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     }).toList();
   }
 
-  void onTriggerState<Data>(
+  bool removeHandler(Cookie cookie) {
+    return _handlers.remove(cookie._key) != null;
+  }
+
+  CookieJar onTriggerState<Data>(
     TriggerType trigger, {
     _StateHandler<Data>? handler,
     _Handler<Input, Data>? inputHandler,
     _Handler<Output, Data>? outputHandler,
   }) {
-    if (handler != null) {
-      final key = _HandlerKey(Null, Data, trigger.runtimeType);
-      _handlers[key] = (output, trigger) => handler(trigger);
-    }
-    if (inputHandler != null) {
-      final key = _HandlerKey(Input, Data, trigger.runtimeType);
-      _handlers[key] = (output, trigger) => inputHandler(output, trigger);
-    }
-    if (outputHandler != null) {
-      final key = _HandlerKey(Output, Data, trigger.runtimeType);
-      _handlers[key] = (output, trigger) => outputHandler(output, trigger);
-    }
+    return _registerHandler<Data>(
+        trigger.runtimeType, false, handler, inputHandler, outputHandler);
   }
 
-  void onTrigger<Data>(
+  CookieJar onTrigger<Data>(
     TriggerType<Data> trigger, {
     _StateHandler<Data>? handler,
     _Handler<Input, Data>? inputHandler,
     _Handler<Output, Data>? outputHandler,
   }) {
+    return _registerHandler<Data>(
+        trigger.runtimeType, true, handler, inputHandler, outputHandler);
+  }
+
+  CookieJar _registerHandler<Data>(
+    Type trigger,
+    bool general,
+    _StateHandler<Data>? handler,
+    _Handler<Input, Data>? inputHandler,
+    _Handler<Output, Data>? outputHandler,
+  ) {
+    _HandlerKey? hk;
+    _HandlerKey? ihk;
+    _HandlerKey? ohk;
     if (handler != null) {
-      final key = _HandlerKey.general(Null, trigger.runtimeType);
-      _handlers[key] = (output, trigger) => handler(trigger);
+      hk = _HandlerKey.create(general, Null, Data, trigger);
+      _handlers[hk] = (output, trigger) => handler(trigger);
     }
     if (inputHandler != null) {
-      final key = _HandlerKey.general(Input, trigger.runtimeType);
-      _handlers[key] = (output, trigger) => inputHandler(output, trigger);
+      ihk = _HandlerKey.general(Input, trigger);
+      _handlers[ihk] = (output, trigger) => inputHandler(output, trigger);
     }
     if (outputHandler != null) {
-      final key = _HandlerKey.general(Output, trigger.runtimeType);
-      _handlers[key] = (output, trigger) => outputHandler(output, trigger);
+      ohk = _HandlerKey.general(Output, trigger);
+      _handlers[ohk] = (output, trigger) => outputHandler(output, trigger);
     }
+    return CookieJar._(hk, ihk, ohk);
   }
 
   @override
