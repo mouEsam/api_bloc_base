@@ -2,20 +2,21 @@ import 'dart:async';
 
 import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/input_to_output.dart';
-import 'package:api_bloc_base/src/presentation/bloc/provider/_index.dart';
 import 'package:equatable/equatable.dart';
 
 import 'sources_mixin.dart';
 import 'state.dart';
 
+typedef TriggerType<Data> = BaseCubit<Loaded<Data>>;
+
 typedef _Handler<Output, Data> = FutureOr<bool?> Function(
     Output output, Data trigger);
 
-class _Trigger<T> extends Equatable {
+class _TriggerState<T> extends Equatable {
   final Type type;
   final T data;
 
-  _Trigger(this.data) : type = data.runtimeType;
+  _TriggerState(this.data) : type = data.runtimeType;
 
   @override
   get props => [type, data];
@@ -38,10 +39,10 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     on
         SourcesMixin<Input, Output, State>,
         OutputInjectorMixin<Input, Output, State> {
-  List<Trigger> get triggers;
+  List<TriggerType> get triggers;
   late final List<StreamSubscription> _subscriptions;
 
-  final Map<Type, List<_Trigger>> _triggers = {};
+  final Map<Type, List<_TriggerState>> _triggers = {};
   final Map<_HandlerKey, _Handler> _handlers = {};
 
   @override
@@ -69,13 +70,13 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     _subscriptions = triggers.map((trigger) {
       return trigger.exclusiveStream.listen((event) {
         _triggers[trigger.runtimeType] ??= [];
-        _triggers[trigger.runtimeType]!.add(_Trigger(event.data));
+        _triggers[trigger.runtimeType]!.add(_TriggerState(event.data));
       });
     }).toList();
   }
 
   void onTriggerState<Data>(
-    Trigger trigger, {
+    TriggerType trigger, {
     _Handler<Input, Data>? inputHandler,
     _Handler<Output, Data>? outputHandler,
   }) {
@@ -90,7 +91,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   }
 
   void onTrigger<Data>(
-    Trigger<Data> trigger, {
+    TriggerType<Data> trigger, {
     _Handler<Input, Data>? inputHandler,
     _Handler<Output, Data>? outputHandler,
   }) {
@@ -137,7 +138,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   }
 
   FutureOr<bool?> _handleTrigger<T>(
-      Type triggerType, T source, _Trigger trigger) {
+      Type triggerType, T source, _TriggerState trigger) {
     final key = _HandlerKey(T, trigger.type, triggerType);
     final handler = _handlers[key];
     if (handler != null) {
