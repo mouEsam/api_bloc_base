@@ -4,12 +4,16 @@ import 'package:api_bloc_base/src/data/_index.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:dartz/dartz.dart';
 
-export 'state.dart';
 import '_index.dart';
+
+export 'state.dart';
 
 abstract class IndependentProvider<Input, Output>
     extends ProviderBloc<Input, Output>
-    with IndependenceProviderMixin<Input, Output> {
+    with
+        InputSinkProviderMixin<Input, Output>,
+        StreamInputProviderMixin<Input, Output>,
+        IndependenceProviderMixin<Input, Output> {
   final Duration? refreshInterval = Duration(seconds: 30);
   final Duration? retryInterval = Duration(seconds: 30);
 
@@ -35,7 +39,6 @@ abstract class IndependentProvider<Input, Output>
     this.refreshOnAppActive = true,
     bool fetchOnCreate = true,
   }) : super(
-          initialInput: initialInput,
           appLifecycleObserver: appLifecycleObserver,
           sources: sources,
           providers: providers,
@@ -43,6 +46,13 @@ abstract class IndependentProvider<Input, Output>
         ) {
     if (fetchOnCreate) {
       beginFetching();
+    }
+    setupInitialData(initialInput);
+  }
+
+  void setupInitialData(Input? initialDate) {
+    if (initialDate is Input) {
+      injectInput(initialDate);
     }
   }
 

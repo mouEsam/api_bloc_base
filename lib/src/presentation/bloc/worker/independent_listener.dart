@@ -2,9 +2,6 @@ import 'dart:async';
 
 import 'package:api_bloc_base/src/data/_index.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/independence_mixin.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/lifecycle_mixin.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/listenable_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/worker/listener_bloc.dart';
 import 'package:dartz/dartz.dart';
@@ -16,6 +13,8 @@ abstract class IndependentListener<Input, Output>
     with
         LifecycleWorkerMixin<Output>,
         ListenableWorkerMixin<Output>,
+        InputSinkWorkerMixin<Input, Output>,
+        StreamInputWorkerMixin<Input, Output>,
         IndependenceWorkerMixin<Input, Output> {
   final Result<Either<ResponseEntity, Input>>? singleDataSource;
   final Either<ResponseEntity, Stream<Input>>? streamDataSource;

@@ -4,8 +4,8 @@ import 'package:api_bloc_base/src/data/_index.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
+import 'package:async/async.dart' as async;
 import 'package:dartz/dartz.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../base/state.dart';
@@ -13,14 +13,50 @@ import 'state.dart';
 
 mixin ProviderMixin<Data> on StatefulBloc<Data, ProviderState<Data>>
     implements Refreshable {
-  Future<Data?> get dataFuture;
-  Future<ProviderState<Data>> get stateFuture;
+  @override
+  get subjects => [_dataSubject];
 
-  @mustCallSuper
-  FutureOr<void> fetchData({bool refresh = false});
+  final BehaviorSubject<Data?> _dataSubject = BehaviorSubject<Data?>();
+  var _dataFuture = Completer<Data?>();
+  var _stateFuture = Completer<ProviderState<Data>>();
+  Future<Data?> get dataFuture => _dataFuture.future;
+  Future<ProviderState<Data>> get stateFuture => _stateFuture.future;
+  bool get hasData => latestData != null;
+  Data? get latestData => _dataSubject.valueOrNull;
+
+  Stream<Data?> get dataStream =>
+      async.LazyStream(() => _dataSubject.shareValue())
+          .asBroadcastStream(onCancel: (c) => c.cancel());
+
+  @override
+  void clean() {
+    _dataSubject.value = null;
+    _dataFuture = Completer();
+    super.clean();
+  }
+
   FutureOr<void> refreshData();
   FutureOr<void> refetchData();
-  void clean();
+
+  @override
+  void stateChanged(ProviderState<Data> state) {
+    if (state is ProviderLoaded<Data>) {
+      Data data = state.data;
+      _dataSubject.add(data);
+      if (_dataFuture.isCompleted) {
+        _dataFuture = Completer<Data>();
+      }
+      _dataFuture.complete(data);
+    } else if (state is Invalidated) {
+      refetchData();
+      return;
+    }
+    if (_stateFuture.isCompleted) {
+      _stateFuture = Completer<ProviderState<Data>>();
+    }
+    _stateFuture.complete(state);
+    super.stateChanged(state);
+  }
 
   ProviderState<Data> createLoadingState() {
     return ProviderLoading<Data>();

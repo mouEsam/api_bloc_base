@@ -14,6 +14,9 @@ import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.da
 import 'package:api_bloc_base/src/presentation/bloc/base/user_dependant_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/_index.dart';
 
+import '../base/input_sink.dart';
+import '../base/stream_input.dart';
+
 typedef SameInputOutputProviderMixin<Output>
     = SameInputOutputMixin<Output, ProviderState<Output>>;
 typedef StatefulProviderBloc<Output>
@@ -29,8 +32,12 @@ typedef IndependenceProviderMixin<Input, Output>
     = IndependenceMixin<Input, Output, ProviderState<Output>>;
 typedef SourcesProviderMixin<Input, Output>
     = SourcesMixin<Input, Output, ProviderState<Output>>;
-typedef InputToOutputProviderMixin<Input, Output>
-    = InputToOutputMixin<Input, Output, ProviderState<Output>>;
+typedef OutputInjectorProviderMixin<Input, Output>
+    = OutputInjectorMixin<Input, Output, ProviderState<Output>>;
+typedef InputSinkProviderMixin<Input, Output>
+    = InputSinkMixin<Input, Output, ProviderState<Output>>;
+typedef StreamInputProviderMixin<Input, Output>
+    = StreamInputMixin<Input, Output, ProviderState<Output>>;
 typedef ProviderListenerProviderMixin<Input, Output>
     = ProviderListenerMixin<Input, Output, ProviderState<Output>>;
 typedef ParametersDependenceProviderMixin<ParameterType, Input, Output>

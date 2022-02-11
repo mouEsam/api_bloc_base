@@ -1,11 +1,6 @@
 import 'dart:async';
 
-import 'package:api_bloc_base/src/presentation/bloc/base/input_to_output.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/listener_mixin.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/sources_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/state.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/visibility_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/work.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/worker/worker_bloc.dart';
@@ -25,16 +20,8 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
         ListenerWorkerMixin<Output>,
         VisibilityWorkerMixin<Output>,
         SourcesWorkerMixin<Input, Output>,
-        InputToOutputWorkerMixin<Input, Output> {
+        OutputInjectorWorkerMixin<Input, Output> {
   late final StreamSubscription _outputSubscription;
-
-  final _inputSubject = StreamController<Work>.broadcast();
-  Stream<BlocState> get inputStream => _inputSubject.stream
-      .shareValue()
-      .where((event) => !event.isCancelled)
-      .map((event) => event.state);
-  bool get isSinkClosed => _inputSubject.isClosed;
-  StreamSink<Work> get inputSink => _inputSubject.sink;
 
   final _outputSubject = StreamController<Work>.broadcast();
   Stream<BlocState> get outputStream => _outputSubject.stream
@@ -57,7 +44,7 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
           .whereType<provider.ProviderState<Output>>()
           .asBroadcastStream(onCancel: (sub) => sub.cancel()));
 
-  get sinks => [_inputSubject, _outputSubject];
+  get sinks => [_outputSubject];
   get subscriptions => super.subscriptions..addAll([_outputSubscription]);
 
   final List<Stream<provider.ProviderState>> sources;
@@ -102,6 +89,7 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
     emitLoading();
   }
 
+  @override
   void handleOutput(Work output) {
     if (!_outputSubject.isClosed) {
       _outputSink.add(output);

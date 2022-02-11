@@ -9,13 +9,17 @@ import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.da
 import 'package:dartz/dartz.dart';
 import 'package:flutter/cupertino.dart';
 
+import 'input_sink.dart';
 import 'state.dart';
+import 'stream_input.dart';
 
 mixin IndependenceMixin<Input, Output, State extends BlocState>
     on
         StatefulBloc<Output, State>,
         TrafficLightsMixin<State>,
-        ListenableMixin<State>
+        ListenableMixin<State>,
+        InputSinkMixin<Input, Output, State>,
+        StreamInputMixin<Input, Output, State>
     implements Refreshable {
   final ValueNotifier<bool> _canFetchData = ValueNotifier(false);
   final ValueNotifier<bool> _alreadyFetchedData = ValueNotifier(false);
@@ -141,9 +145,6 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
       }
     }
   }
-
-  void injectInput(Input input);
-  void injectInputState(BlocState input);
 
   void markNeedsRefetch() {
     _needsToRefetch.value = true;

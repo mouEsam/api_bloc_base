@@ -12,6 +12,8 @@ import 'package:api_bloc_base/src/presentation/bloc/base/sources_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/user_dependant_mixin.dart';
 
+import '../base/input_sink.dart';
+import '../base/stream_input.dart';
 import 'worker_state.dart';
 
 typedef SameInputOutputWorkerMixin<Output>
@@ -26,13 +28,18 @@ typedef IndependenceWorkerMixin<Input, Output>
     = IndependenceMixin<Input, Output, WorkerState<Output>>;
 typedef SourcesWorkerMixin<Input, Output>
     = SourcesMixin<Input, Output, WorkerState<Output>>;
-typedef InputToOutputWorkerMixin<Input, Output>
-    = InputToOutputMixin<Input, Output, WorkerState<Output>>;
+typedef OutputInjectorWorkerMixin<Input, Output>
+    = OutputInjectorMixin<Input, Output, WorkerState<Output>>;
+typedef InputSinkWorkerMixin<Input, Output>
+    = InputSinkMixin<Input, Output, WorkerState<Output>>;
+typedef StreamInputWorkerMixin<Input, Output>
+    = StreamInputMixin<Input, Output, WorkerState<Output>>;
 typedef ProviderListenerWorkerMixin<Input, Output>
     = ProviderListenerMixin<Input, Output, WorkerState<Output>>;
 typedef VisibilityWorkerMixin<Output> = VisibilityMixin<WorkerState<Output>>;
 typedef ParametersDependenceWorkerMixin<ParameterType, Input, Output>
     = ParametersDependenceMixin<ParameterType, Input, Output,
         WorkerState<Output>>;
-typedef UserDependantWorkerMixin<Input, Output, Profile extends BaseProfile<Profile>>
+typedef UserDependantWorkerMixin<Input, Output,
+        Profile extends BaseProfile<Profile>>
     = UserDependantMixin<Input, Output, WorkerState<Output>, Profile>;
