@@ -32,22 +32,27 @@ class CookieJar {
   final Cookie? outputHandlerCookie;
 
   CookieJar._(
-    _HandlerKey? handlerKey,
-    _HandlerKey? inputHandlerKey,
-    _HandlerKey? outputHandlerKey,
+    _HandlerWrapper? handlerKey,
+    _HandlerWrapper? inputHandlerKey,
+    _HandlerWrapper? outputHandlerKey,
   )   : handlerCookie = _createCookie(handlerKey),
         inputHandlerCookie = _createCookie(inputHandlerKey),
         outputHandlerCookie = _createCookie(outputHandlerKey);
 
-  static Cookie? _createCookie(_HandlerKey? handlerKey) {
-    return handlerKey == null ? null : Cookie._(handlerKey);
+  static Cookie? _createCookie(_HandlerWrapper? handler) {
+    return handler == null ? null : Cookie._forHandler(handler);
   }
 }
 
 class Cookie {
   final _HandlerKey _key;
+  final int index;
 
-  const Cookie._(this._key);
+  const Cookie._(this._key, this.index);
+
+  factory Cookie._forHandler(_HandlerWrapper handler) {
+    return Cookie._(handler.key, handler.index);
+  }
 }
 
 enum HandlerState {
@@ -72,9 +77,9 @@ class _HandlerKey extends Equatable {
   final Type data;
   final Type trigger;
 
-  const _HandlerKey(this.source, this.data, this.trigger);
+  _HandlerKey(this.source, this.data, this.trigger);
 
-  const _HandlerKey.general(this.source, this.trigger) : data = Null;
+  _HandlerKey.general(this.source, this.trigger) : data = Null;
 
   factory _HandlerKey.create(
       bool general, Type source, Type data, Type trigger) {
@@ -86,10 +91,22 @@ class _HandlerKey extends Equatable {
 }
 
 class _HandlerWrapper<Output, Data> {
+  static int _index = 0;
+  final _HandlerKey key;
   final _Handler<Output, Data> _handler;
+  final int index = _index++;
   bool _active = true;
 
-  _HandlerWrapper(this._handler);
+  _HandlerWrapper._(this.key, this._handler);
+
+  static _HandlerWrapper<Output, Data> wrap<Output, Data>(
+    bool general,
+    Type trigger,
+    _Handler<Output, Data> _handler,
+  ) {
+    final key = _HandlerKey(Output, general ? Null : Data, trigger);
+    return _HandlerWrapper._(key, _handler);
+  }
 
   void deactivate() => _active = false;
   void activate() => _active = true;

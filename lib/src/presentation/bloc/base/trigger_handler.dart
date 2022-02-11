@@ -10,7 +10,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   late final List<StreamSubscription> _subscriptions;
 
   final Map<Type, List<_TriggerState>> _triggers = {};
-  final Map<_HandlerKey, _HandlerWrapper> _handlers = {};
+  final Map<_HandlerKey, List<_HandlerWrapper>> _handlers = {};
 
   @override
   get sources => [...super.sources, ...triggers.map((e) => e.stream)];
@@ -20,7 +20,11 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   @override
   clean() {
     _triggers.clear();
-    _handlers.values.forEach((element) => element.activate());
+    _handlers.values.forEach(
+      (list) => list.forEach(
+        (element) => element.activate(),
+      ),
+    );
     super.clean();
   }
 
@@ -63,7 +67,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     _Handler<Input, Data>? inputHandler,
     _Handler<Output, Data>? outputHandler,
   }) {
-    return _registerHandler<Data>(
+    return _registerHandlers<Data>(
         trigger.runtimeType, false, handler, inputHandler, outputHandler);
   }
 
@@ -73,35 +77,44 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     _Handler<Input, Data>? inputHandler,
     _Handler<Output, Data>? outputHandler,
   }) {
-    return _registerHandler<Data>(
+    return _registerHandlers<Data>(
         trigger.runtimeType, true, handler, inputHandler, outputHandler);
   }
 
-  CookieJar _registerHandler<Data>(
+  CookieJar _registerHandlers<Data>(
     Type trigger,
     bool general,
     _StateHandler<Data>? handler,
     _Handler<Input, Data>? inputHandler,
     _Handler<Output, Data>? outputHandler,
   ) {
-    _HandlerKey? hk;
-    _HandlerKey? ihk;
-    _HandlerKey? ohk;
+    _HandlerWrapper? hk;
+    _HandlerWrapper? ihk;
+    _HandlerWrapper? ohk;
     if (handler != null) {
-      hk = _HandlerKey.create(general, Null, Data, trigger);
-      _handlers[hk] = _HandlerWrapper((output, trigger) => handler(trigger));
+      hk = _registerHandler<Null, Data>(
+          trigger, general, (output, trigger) => handler(trigger));
     }
     if (inputHandler != null) {
-      ihk = _HandlerKey.general(Input, trigger);
-      _handlers[ihk] =
-          _HandlerWrapper((output, trigger) => inputHandler(output, trigger));
+      ihk = _registerHandler<Input, Data>(
+          trigger, general, (output, trigger) => inputHandler(output, trigger));
     }
     if (outputHandler != null) {
-      ohk = _HandlerKey.general(Output, trigger);
-      _handlers[ohk] =
-          _HandlerWrapper((output, trigger) => outputHandler(output, trigger));
+      ohk = _registerHandler<Output, Data>(trigger, general,
+          (output, trigger) => outputHandler(output, trigger));
     }
     return CookieJar._(hk, ihk, ohk);
+  }
+
+  _HandlerWrapper _registerHandler<Source, Data>(
+    Type trigger,
+    bool general,
+    _Handler<Source, Data> handler,
+  ) {
+    final h = _HandlerWrapper.wrap<Source, Data>(general, trigger, handler);
+    _handlers[h.key] ??= [];
+    _handlers[h.key]!.add(h);
+    return h;
   }
 
   @override
@@ -139,23 +152,30 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   FutureOr<bool?> _handleTrigger<T>(
       Type triggerType, T source, _TriggerState trigger) async {
     final key = _HandlerKey(T, trigger.type, triggerType);
-    final handler = _handlers[key];
-    if (handler != null && handler._active) {
+    final handlers =
+        _handlers[key]?.where((element) => element._active).toList();
+    if (handlers != null && handlers.isNotEmpty) {
+      return _handleTriggerState<T>(handlers, source, trigger);
+    }
+    final generalKey = _HandlerKey.general(T, triggerType);
+    final generalHandlers =
+        _handlers[generalKey]?.where((element) => element._active).toList();
+    if (generalHandlers != null && generalHandlers.isNotEmpty) {
+      return _handleTriggerState<T>(generalHandlers, source, trigger);
+    }
+    return false;
+  }
+
+  FutureOr<bool?> _handleTriggerState<T>(
+      List<_HandlerWrapper> handlers, T source, _TriggerState trigger) async {
+    bool isHandled = false;
+    for (final handler in handlers) {
       final result = await handler(source, trigger.data);
       if (result.isRemoveHandler) {
         handler.deactivate();
       }
-      return result.isHandled;
+      isHandled = isHandled || result.isHandled;
     }
-    final generalKey = _HandlerKey.general(T, triggerType);
-    final generalHandler = _handlers[generalKey];
-    if (generalHandler != null && generalHandler._active) {
-      final result = await generalHandler(source, trigger.data);
-      if (result.isRemoveHandler) {
-        generalHandler.deactivate();
-      }
-      return result.isHandled;
-    }
-    return false;
+    return isHandled;
   }
 }
