@@ -53,6 +53,12 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   @override
   get subscriptions => super.subscriptions..addAll(_subscriptions);
 
+  @override
+  clean() {
+    _triggers.clear();
+    super.clean();
+  }
+
   init() {
     initializeTriggers();
     super.init();

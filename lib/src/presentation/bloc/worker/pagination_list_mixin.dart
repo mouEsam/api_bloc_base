@@ -17,13 +17,17 @@ mixin PaginationListMixin<Paginated extends PaginatedInput<PageList<Output>>,
   @mustCallSuper
   convertInputToOutput(input) {
     final map = paginatedData.data;
-    final PagesList<Output> newList = PagesList.empty();
-    final sortedIndices = map.keys.toList();
-    sortedIndices.sort();
-    for (final index in sortedIndices) {
-      newList.addPage(map[index]!);
+    if (map.length == 1) {
+      return PageList(map.values.first);
+    } else {
+      final PagesList<Output> newList = PagesList.empty();
+      final sortedIndices = map.keys.toList();
+      sortedIndices.sort();
+      for (final index in sortedIndices) {
+        newList.addPage(map[index]!);
+      }
+      return newList;
     }
-    return newList;
   }
 
   @override

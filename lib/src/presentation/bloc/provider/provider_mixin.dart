@@ -3,16 +3,14 @@ import 'dart:async';
 import 'package:api_bloc_base/src/data/_index.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
 import 'package:async/async.dart' as async;
 import 'package:dartz/dartz.dart';
 import 'package:rxdart/rxdart.dart';
 
-import '../base/state.dart';
+import '_defs.dart';
 import 'state.dart';
 
-mixin ProviderMixin<Data> on StatefulBloc<Data, ProviderState<Data>>
-    implements Refreshable {
+mixin ProviderMixin<Data> on StatefulProviderBloc<Data> implements Refreshable {
   @override
   get subjects => super.subjects..addAll([_dataSubject]);
 
