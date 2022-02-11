@@ -11,7 +11,7 @@ import 'state.dart';
 part 'state_handler.dart';
 part 'trigger_handler.dart';
 
-typedef _HandlerResult = FutureOr<HandlerState?>;
+typedef _HandlerResult = FutureOr<HandlerAction?>;
 typedef _StateHandler<Data> = _HandlerResult Function(Data trigger);
 typedef _Handler<Output, Data> = _HandlerResult Function(
     Output output, Data trigger);
@@ -55,7 +55,7 @@ class Cookie {
   }
 }
 
-enum HandlerState {
+enum HandlerAction {
   Handled,
   // ignore: unused_field
   Unhandled,
@@ -63,12 +63,14 @@ enum HandlerState {
   UnhandledRemoveHandler,
 }
 
-extension on HandlerState? {
-  bool get isHandled =>
-      [HandlerState.Handled, HandlerState.HandledRemoveHandler].contains(this);
+extension on HandlerAction? {
+  bool get isHandled => [
+        HandlerAction.Handled,
+        HandlerAction.HandledRemoveHandler
+      ].contains(this);
   bool get isRemoveHandler => [
-        HandlerState.HandledRemoveHandler,
-        HandlerState.UnhandledRemoveHandler
+        HandlerAction.HandledRemoveHandler,
+        HandlerAction.UnhandledRemoveHandler
       ].contains(this);
 }
 
