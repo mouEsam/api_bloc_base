@@ -109,7 +109,7 @@ class BaseRestClient {
     T Function(dynamic)? fromJson,
   }) {
     if (T == BaseApiResponse) {
-      throw Exception(
+      throw FormatException(
           'T must be either be a generic encodable Type or a sub class of BaseApiResponse');
     }
     final progressController = StreamController<double>.broadcast();
