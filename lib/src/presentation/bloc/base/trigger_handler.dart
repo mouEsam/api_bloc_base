@@ -30,10 +30,6 @@ class _HandlerKey extends Equatable {
 
   const _HandlerKey.general(this.source, this.trigger) : data = Null;
 
-  static _HandlerKey create<Source, Data, TriggerType>() {
-    return _HandlerKey(Source, Data, TriggerType);
-  }
-
   @override
   get props => [source, data, trigger];
 }
