@@ -94,11 +94,5 @@ class _HandlerWrapper<Output, Data> {
   void deactivate() => _active = false;
   void activate() => _active = true;
 
-  _HandlerResult call(Output output, Data trigger) {
-    if (_active) {
-      return _handler(output, trigger);
-    } else {
-      return null;
-    }
-  }
+  _HandlerResult call(Output output, Data trigger) => _handler(output, trigger);
 }

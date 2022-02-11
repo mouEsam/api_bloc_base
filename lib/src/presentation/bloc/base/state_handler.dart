@@ -76,7 +76,7 @@ mixin StateHandlerMixin<Output, State extends BlocState>
       Type triggerType, T source, _TriggerState trigger) async {
     final key = _HandlerKey(T, trigger.type, triggerType);
     final handler = _handlers[key];
-    if (handler != null) {
+    if (handler != null && handler._active) {
       final result = await handler(source, trigger.data);
       if (result.isRemoveHandler) {
         handler.deactivate();
@@ -85,7 +85,7 @@ mixin StateHandlerMixin<Output, State extends BlocState>
     }
     final generalKey = _HandlerKey.general(T, triggerType);
     final generalHandler = _handlers[generalKey];
-    if (generalHandler != null) {
+    if (generalHandler != null && generalHandler._active) {
       final result = await generalHandler(source, trigger.data);
       if (result.isRemoveHandler) {
         generalHandler.deactivate();
