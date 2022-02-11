@@ -8,6 +8,9 @@ mixin OnceListenerMixin<Data> on WorkerMixin<Data> {
   Map<Type, int> _wasCalled = {};
   Map<Type, StreamSubscription> _subs = {};
 
+  @override
+  get subscriptions => super.subscriptions..addAll(_subs.values);
+
   void init() {
     setUpSourcesListeners();
     super.init();
@@ -34,11 +37,5 @@ mixin OnceListenerMixin<Data> on WorkerMixin<Data> {
   bool handleSourceData(Type type, event) {
     print("$type loaded");
     return true;
-  }
-
-  @override
-  Future<void> close() {
-    _subs.forEach((key, value) => value.cancel());
-    return super.close();
   }
 }

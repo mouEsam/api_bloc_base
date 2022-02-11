@@ -7,69 +7,17 @@ import 'package:equatable/equatable.dart';
 import 'sources_mixin.dart';
 import 'state.dart';
 
-typedef TriggerType<Data> = BaseCubit<Loaded<Data>>;
-
-typedef _StateHandler<Data> = FutureOr<bool?> Function(Data trigger);
-typedef _Handler<Output, Data> = FutureOr<bool?> Function(
+typedef _TriggerType<Data> = BaseCubit<Loaded<Data>>;
+typedef HandlerResult = FutureOr<HandlerState?>;
+typedef _StateHandler<Data> = HandlerResult Function(Data trigger);
+typedef _Handler<Output, Data> = HandlerResult Function(
     Output output, Data trigger);
-
-class _TriggerState<T> extends Equatable {
-  final Type type;
-  final T data;
-
-  _TriggerState(this.data) : type = data.runtimeType;
-
-  @override
-  get props => [type, data];
-}
-
-class CookieJar {
-  final Cookie? handlerCookie;
-  final Cookie? inputHandlerCookie;
-  final Cookie? outputHandlerCookie;
-
-  CookieJar._(
-    _HandlerKey? handlerKey,
-    _HandlerKey? inputHandlerKey,
-    _HandlerKey? outputHandlerKey,
-  )   : handlerCookie = _createCookie(handlerKey),
-        inputHandlerCookie = _createCookie(inputHandlerKey),
-        outputHandlerCookie = _createCookie(outputHandlerKey);
-
-  static Cookie? _createCookie(_HandlerKey? handlerKey) {
-    return handlerKey == null ? null : Cookie(handlerKey);
-  }
-}
-
-class Cookie {
-  final _HandlerKey _key;
-
-  const Cookie(this._key);
-}
-
-class _HandlerKey extends Equatable {
-  final Type source;
-  final Type data;
-  final Type trigger;
-
-  const _HandlerKey(this.source, this.data, this.trigger);
-
-  const _HandlerKey.general(this.source, this.trigger) : data = Null;
-
-  factory _HandlerKey.create(
-      bool general, Type source, Type data, Type trigger) {
-    return _HandlerKey(source, general ? Null : data, trigger);
-  }
-
-  @override
-  get props => [source, data, trigger];
-}
 
 mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     on
         SourcesMixin<Input, Output, State>,
         OutputConverterMixin<Input, Output, State> {
-  List<TriggerType> get triggers;
+  List<_TriggerType> get triggers;
   late final List<StreamSubscription> _subscriptions;
 
   final Map<Type, List<_TriggerState>> _triggers = {};
@@ -120,7 +68,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   }
 
   CookieJar onTriggerState<Data>(
-    TriggerType trigger, {
+    _TriggerType trigger, {
     _StateHandler<Data>? handler,
     _Handler<Input, Data>? inputHandler,
     _Handler<Output, Data>? outputHandler,
@@ -130,7 +78,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   }
 
   CookieJar onTrigger<Data>(
-    TriggerType<Data> trigger, {
+    _TriggerType<Data> trigger, {
     _StateHandler<Data>? handler,
     _Handler<Input, Data>? inputHandler,
     _Handler<Output, Data>? outputHandler,
@@ -197,17 +145,94 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   }
 
   FutureOr<bool?> _handleTrigger<T>(
-      Type triggerType, T source, _TriggerState trigger) {
+      Type triggerType, T source, _TriggerState trigger) async {
     final key = _HandlerKey(T, trigger.type, triggerType);
     final handler = _handlers[key];
     if (handler != null) {
-      return handler(source, trigger.data);
+      final result = await handler(source, trigger.data);
+      if (result.isRemoveHandler) {
+        _handlers.remove(key);
+      }
+      return result.isHandled;
     }
     final generalKey = _HandlerKey.general(T, triggerType);
     final generalHandler = _handlers[generalKey];
     if (generalHandler != null) {
-      return generalHandler(source, trigger.data);
+      final result = await generalHandler(source, trigger.data);
+      if (result.isRemoveHandler) {
+        _handlers.remove(generalKey);
+      }
+      return result.isHandled;
     }
     return false;
   }
+}
+
+class _TriggerState<T> extends Equatable {
+  final Type type;
+  final T data;
+
+  _TriggerState(this.data) : type = data.runtimeType;
+
+  @override
+  get props => [type, data];
+}
+
+class CookieJar {
+  final Cookie? handlerCookie;
+  final Cookie? inputHandlerCookie;
+  final Cookie? outputHandlerCookie;
+
+  CookieJar._(
+    _HandlerKey? handlerKey,
+    _HandlerKey? inputHandlerKey,
+    _HandlerKey? outputHandlerKey,
+  )   : handlerCookie = _createCookie(handlerKey),
+        inputHandlerCookie = _createCookie(inputHandlerKey),
+        outputHandlerCookie = _createCookie(outputHandlerKey);
+
+  static Cookie? _createCookie(_HandlerKey? handlerKey) {
+    return handlerKey == null ? null : Cookie(handlerKey);
+  }
+}
+
+class Cookie {
+  final _HandlerKey _key;
+
+  const Cookie(this._key);
+}
+
+enum HandlerState {
+  Handled,
+  // ignore: unused_field
+  Unhandled,
+  HandledRemoveHandler,
+  UnhandledRemoveHandler,
+}
+
+extension on HandlerState? {
+  bool get isHandled =>
+      [HandlerState.Handled, HandlerState.HandledRemoveHandler].contains(this);
+  bool get isRemoveHandler => [
+        HandlerState.HandledRemoveHandler,
+        HandlerState.UnhandledRemoveHandler
+      ].contains(this);
+}
+
+class _HandlerKey extends Equatable {
+  final Type source;
+  final Type data;
+  final Type trigger;
+
+  const _HandlerKey(this.source, this.data, this.trigger);
+
+  const _HandlerKey.general(this.source, this.trigger) : data = Null;
+
+  factory _HandlerKey.create(
+      bool general, Type source, Type data, Type trigger) {
+    return _HandlerKey(source, general ? Null : data, trigger);
+  }
+
+  @override
+  get props => [source, data, trigger];
 }
