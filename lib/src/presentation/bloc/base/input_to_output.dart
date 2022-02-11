@@ -7,7 +7,7 @@ import 'sources_mixin.dart';
 import 'state.dart';
 import 'work.dart';
 
-mixin OutputInjectorMixin<Input, Output, State extends BlocState>
+mixin OutputConverterMixin<Input, Output, State extends BlocState>
     on SourcesMixin<Input, Output, State> {
   @mustCallSuper
   void handleSourcesOutput(work) async {
@@ -43,13 +43,17 @@ mixin OutputInjectorMixin<Input, Output, State extends BlocState>
     handleOutputState(work.changeState(outputState));
   }
 
+  @mustCallSuper
   FutureOr<void> handleInjectedInput(Input input) {}
+  @mustCallSuper
   FutureOr<void> handleConvertedOutput(Output output) {}
-  FutureOr<void> handleConvertedInput(Input output) {}
-
-  FutureOr<Output> convertInputToOutput(Input input);
 
   @mustCallSuper
+  FutureOr<void> handleConvertedInput(Input output) {}
+
+  @mustCallSuper
+  FutureOr<Output> convertInputToOutput(Input input);
+
   void handleOutputState(Work event) {
     injectOutputWork(event);
   }
@@ -96,6 +100,7 @@ mixin OutputInjectorMixin<Input, Output, State extends BlocState>
     }
   }
 
+  @mustCallSuper
   FutureOr<void> handleOutputToInject(Output output) {}
 
   FutureOr<Output> convertOutputToInject(Output output) {

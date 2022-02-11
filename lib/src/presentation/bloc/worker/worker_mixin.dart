@@ -10,6 +10,16 @@ import '../base/state.dart';
 import '_defs.dart';
 import 'worker_state.dart';
 
+class _Work {
+  final String loadingMessage;
+  final CancelToken? cancelToken;
+  final Stream<double>? progress;
+  final bool announceLoading;
+
+  const _Work(this.loadingMessage, this.cancelToken, this.progress,
+      this.announceLoading);
+}
+
 mixin WorkerMixin<Output> on StatefulWorkerBloc<Output> {
   static const _DEFAULT_OPERATION = '_DEFAULT_OPERATION';
 
@@ -17,8 +27,7 @@ mixin WorkerMixin<Output> on StatefulWorkerBloc<Output> {
 
   Output get currentData;
 
-  Map<String, Tuple4<String, CancelToken?, Stream<double>?, bool>>
-      _operationStack = {};
+  Map<String, _Work> _operationStack = {};
 
   void emitState(BlocState state) {
     if (state is Loading) {
@@ -66,10 +75,10 @@ mixin WorkerMixin<Output> on StatefulWorkerBloc<Output> {
   void checkOperations() {
     if (_operationStack.isNotEmpty && state is! OnGoingOperationState) {
       final item = _operationStack.entries.first;
-      startOperation(item.value.value1,
-          cancelToken: item.value.value2,
-          progress: item.value.value3,
-          announceLoading: item.value.value4,
+      startOperation(item.value.loadingMessage,
+          cancelToken: item.value.cancelToken,
+          progress: item.value.progress,
+          announceLoading: item.value.announceLoading,
           operationTag: item.key);
     }
   }
@@ -186,7 +195,7 @@ mixin WorkerMixin<Output> on StatefulWorkerBloc<Output> {
         silent: !announceLoading,
       ));
       _operationStack[operationTag] =
-          Tuple4(message, cancelToken, progress, announceLoading);
+          _Work(message, cancelToken, progress, announceLoading);
     }
     checkOperations();
   }
@@ -194,8 +203,8 @@ mixin WorkerMixin<Output> on StatefulWorkerBloc<Output> {
   void cancelOperation({String operationTag = _DEFAULT_OPERATION}) {
     emitCurrent();
     final tuple = _operationStack.remove(operationTag)!;
-    if (tuple.value2?.isCancelled == false) {
-      tuple.value2!.cancel();
+    if (tuple.cancelToken?.isCancelled == false) {
+      tuple.cancelToken!.cancel();
     }
     checkOperations();
   }

@@ -20,7 +20,7 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
         ListenerWorkerMixin<Output>,
         VisibilityWorkerMixin<Output>,
         SourcesWorkerMixin<Input, Output>,
-        OutputInjectorWorkerMixin<Input, Output> {
+        OutputConverterWorkerMixin<Input, Output> {
   late final StreamSubscription _outputSubscription;
 
   final _outputSubject = StreamController<Work>.broadcast();

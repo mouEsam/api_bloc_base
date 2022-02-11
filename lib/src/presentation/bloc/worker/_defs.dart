@@ -30,8 +30,8 @@ typedef SourcesWorkerMixin<Input, Output>
     = SourcesMixin<Input, Output, WorkerState<Output>>;
 typedef TriggerHandlerWorkerMixin<Input, Output>
     = TriggerHandlerMixin<Input, Output, WorkerState<Output>>;
-typedef OutputInjectorWorkerMixin<Input, Output>
-    = OutputInjectorMixin<Input, Output, WorkerState<Output>>;
+typedef OutputConverterWorkerMixin<Input, Output>
+    = OutputConverterMixin<Input, Output, WorkerState<Output>>;
 typedef InputSinkWorkerMixin<Input, Output>
     = InputSinkMixin<Input, Output, WorkerState<Output>>;
 typedef StreamInputWorkerMixin<Input, Output>

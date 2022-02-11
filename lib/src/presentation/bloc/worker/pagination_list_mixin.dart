@@ -15,6 +15,7 @@ mixin PaginationListMixin<Paginated extends PaginatedInput<PageList<Output>>,
 
   @override
   @mustCallSuper
+  // ignore: must_call_super
   convertInputToOutput(input) {
     final map = paginatedData.data;
     if (map.length == 1) {

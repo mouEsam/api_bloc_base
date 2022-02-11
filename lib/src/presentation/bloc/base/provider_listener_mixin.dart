@@ -12,7 +12,7 @@ mixin ProviderListenerMixin<Input, Output, State extends BlocState>
     on
         ListenerMixin<State>,
         InputSinkMixin<Input, Output, State>,
-        OutputInjectorMixin<Input, Output, State>
+        OutputConverterMixin<Input, Output, State>
     implements Refreshable {
   late final StreamSubscription _blocSubscription;
 

@@ -18,7 +18,7 @@ abstract class ProviderBloc<Input, Output> extends StatefulProviderBloc<Output>
         ListenableProviderMixin<Output>,
         ListenerStateProviderMixin<Output>,
         SourcesProviderMixin<Input, Output>,
-        OutputInjectorProviderMixin<Input, Output> {
+        OutputConverterProviderMixin<Input, Output> {
   final LifecycleObserver? appLifecycleObserver;
   final List<ProviderMixin> providers;
   final List<Stream<BlocState>> sources;

@@ -33,8 +33,8 @@ typedef SourcesProviderMixin<Input, Output>
     = SourcesMixin<Input, Output, ProviderState<Output>>;
 typedef TriggerHandlerProviderMixin<Input, Output>
     = TriggerHandlerMixin<Input, Output, ProviderState<Output>>;
-typedef OutputInjectorProviderMixin<Input, Output>
-    = OutputInjectorMixin<Input, Output, ProviderState<Output>>;
+typedef OutputConverterProviderMixin<Input, Output>
+    = OutputConverterMixin<Input, Output, ProviderState<Output>>;
 typedef InputSinkProviderMixin<Input, Output>
     = InputSinkMixin<Input, Output, ProviderState<Output>>;
 typedef StreamInputProviderMixin<Input, Output>

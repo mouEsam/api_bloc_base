@@ -70,6 +70,7 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
   @override
   @mustCallSuper
   handleInjectedInput(input) {
+    super.handleInjectedInput(input);
     final newData = input.input;
     final isThereMore = canGetMore(newData);
     final map = paginatedData.data;
@@ -140,7 +141,7 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
   @override
   void handleErrorState(errorState) {
     _currentPage = null;
-    if (!hasData || safeData == null) {
+    if (!hasData || safeData is! Output) {
       super.handleErrorState(errorState);
     } else {
       emit(ErrorGettingNextPageState<Output>(currentData, errorState.response));
@@ -149,7 +150,7 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
 
   @override
   void handleLoadingState(loadingState) {
-    if (!hasData || safeData == null) {
+    if (!hasData || safeData is! Output) {
       super.handleLoadingState(loadingState);
     } else {
       emit(LoadingNextPageState<Output>(currentData));

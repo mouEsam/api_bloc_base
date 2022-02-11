@@ -38,7 +38,7 @@ class _HandlerKey extends Equatable {
 mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     on
         SourcesMixin<Input, Output, State>,
-        OutputInjectorMixin<Input, Output, State> {
+        OutputConverterMixin<Input, Output, State> {
   List<TriggerType> get triggers;
   late final List<StreamSubscription> _subscriptions;
 
