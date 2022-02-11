@@ -1,8 +1,10 @@
 part of 'handlation.dart';
 
+typedef _SourceType = BaseCubit<BlocState>;
+
 mixin StateHandlerMixin<Output, State extends BlocState>
     on StatefulBloc<Output, State> {
-  List<BaseCubit<BlocState>> get triggers;
+  List<_SourceType> get triggers;
   late final List<StreamSubscription> _subscriptions;
 
   final Map<Type, List<_TriggerState>> _triggers = {};
@@ -51,12 +53,11 @@ mixin StateHandlerMixin<Output, State extends BlocState>
   }
 
   Cookie onTriggerState<Data>(
-      BaseCubit<BlocState> trigger, _StateHandler<Data> handler) {
+      _SourceType trigger, _StateHandler<Data> handler) {
     return _registerHandler<Data>(trigger.runtimeType, false, handler);
   }
 
-  Cookie onTrigger<Data>(
-      BaseCubit<BlocState> trigger, _StateHandler<Data> handler) {
+  Cookie onTrigger<Data>(_SourceType trigger, _StateHandler<Data> handler) {
     return _registerHandler<Data>(trigger.runtimeType, true, handler);
   }
 

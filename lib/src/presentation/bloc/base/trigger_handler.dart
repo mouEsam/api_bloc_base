@@ -1,10 +1,12 @@
 part of 'handlation.dart';
 
+typedef _TriggerType<Data> = BaseCubit<Loaded<Data>>;
+
 mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     on
         SourcesMixin<Input, Output, State>,
         OutputConverterMixin<Input, Output, State> {
-  List<BaseCubit<Loaded>> get triggers;
+  List<_TriggerType> get triggers;
   late final List<StreamSubscription> _subscriptions;
 
   final Map<Type, List<_TriggerState>> _triggers = {};
@@ -55,7 +57,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   }
 
   CookieJar onTriggerState<Data>(
-    BaseCubit<Loaded> trigger, {
+    _TriggerType trigger, {
     _StateHandler<Data>? handler,
     _Handler<Input, Data>? inputHandler,
     _Handler<Output, Data>? outputHandler,
@@ -65,7 +67,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   }
 
   CookieJar onTrigger<Data>(
-    BaseCubit<Loaded> trigger, {
+    _TriggerType<Data> trigger, {
     _StateHandler<Data>? handler,
     _Handler<Input, Data>? inputHandler,
     _Handler<Output, Data>? outputHandler,
