@@ -14,7 +14,7 @@ import 'state.dart';
 mixin ProviderMixin<Data> on StatefulBloc<Data, ProviderState<Data>>
     implements Refreshable {
   @override
-  get subjects => [_dataSubject];
+  get subjects => super.subjects..addAll([_dataSubject]);
 
   final BehaviorSubject<Data?> _dataSubject = BehaviorSubject<Data?>();
   var _dataFuture = Completer<Data?>();
