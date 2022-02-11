@@ -22,19 +22,20 @@ class _Trigger<T> extends Equatable {
 }
 
 class _HandlerKey extends Equatable {
+  final Type source;
   final Type data;
   final Type trigger;
 
-  const _HandlerKey(this.data, this.trigger);
+  const _HandlerKey(this.source, this.data, this.trigger);
 
-  const _HandlerKey.general(this.trigger) : data = Null;
+  const _HandlerKey.general(this.source, this.trigger) : data = Null;
 
-  static _HandlerKey create<Data, TriggerType>() {
-    return _HandlerKey(Data, TriggerType);
+  static _HandlerKey create<Source, Data, TriggerType>() {
+    return _HandlerKey(Source, Data, TriggerType);
   }
 
   @override
-  get props => [data, trigger];
+  get props => [source, data, trigger];
 }
 
 mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
@@ -45,7 +46,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   late final List<StreamSubscription> _subscriptions;
 
   final Map<Type, List<_Trigger>> _triggers = {};
-  final Map<_HandlerKey, _Handler<Output, dynamic>> _handlers = {};
+  final Map<_HandlerKey, _Handler> _handlers = {};
 
   @override
   get sources => [...super.sources, ...triggers.map((e) => e.stream)];
@@ -77,14 +78,50 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     }).toList();
   }
 
-  void onTriggerState<Data>(Trigger trigger, _Handler<Output, Data> handler) {
-    final key = _HandlerKey(Data, trigger.runtimeType);
-    _handlers[key] = (output, trigger) => handler(output, trigger);
+  void onTriggerState<Data>(
+    Trigger trigger, {
+    _Handler<Input, Data>? inputHandler,
+    _Handler<Output, Data>? outputHandler,
+  }) {
+    if (inputHandler != null) {
+      final key = _HandlerKey(Input, Data, trigger.runtimeType);
+      _handlers[key] = (output, trigger) => inputHandler(output, trigger);
+    }
+    if (outputHandler != null) {
+      final key = _HandlerKey(Output, Data, trigger.runtimeType);
+      _handlers[key] = (output, trigger) => outputHandler(output, trigger);
+    }
   }
 
-  void onTrigger<Data>(Trigger<Data> trigger, _Handler<Output, Data> handler) {
-    final key = _HandlerKey.general(trigger.runtimeType);
-    _handlers[key] = (output, trigger) => handler(output, trigger);
+  void onTrigger<Data>(
+    Trigger<Data> trigger, {
+    _Handler<Input, Data>? inputHandler,
+    _Handler<Output, Data>? outputHandler,
+  }) {
+    if (inputHandler != null) {
+      final key = _HandlerKey.general(Input, trigger.runtimeType);
+      _handlers[key] = (output, trigger) => inputHandler(output, trigger);
+    }
+    if (outputHandler != null) {
+      final key = _HandlerKey.general(Output, trigger.runtimeType);
+      _handlers[key] = (output, trigger) => outputHandler(output, trigger);
+    }
+  }
+
+  @override
+  FutureOr<void> handleInjectedInput(input) async {
+    for (final trigger in _triggers.entries) {
+      final key = trigger.key;
+      final value = trigger.value;
+      List toRemove = [];
+      for (final item in value) {
+        if (true == await _handleTrigger<Input>(key, input, item)) {
+          toRemove.add(item);
+        }
+      }
+      toRemove.forEach(value.remove);
+    }
+    super.handleInjectedInput(input);
   }
 
   @override
@@ -94,25 +131,26 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
       final value = trigger.value;
       List toRemove = [];
       for (final item in value) {
-        if (true == await _handleTrigger(key, output, item)) {
+        if (true == await _handleTrigger<Output>(key, output, item)) {
           toRemove.add(item);
         }
       }
       toRemove.forEach(value.remove);
     }
+    super.handleOutputToInject(output);
   }
 
-  FutureOr<bool?> _handleTrigger(
-      Type triggerType, Output output, _Trigger trigger) {
-    final key = _HandlerKey(trigger.type, triggerType);
+  FutureOr<bool?> _handleTrigger<T>(
+      Type triggerType, T source, _Trigger trigger) {
+    final key = _HandlerKey(T, trigger.type, triggerType);
     final handler = _handlers[key];
     if (handler != null) {
-      return handler(output, trigger.data);
+      return handler(source, trigger.data);
     }
-    final generalKey = _HandlerKey.general(triggerType);
+    final generalKey = _HandlerKey.general(T, triggerType);
     final generalHandler = _handlers[generalKey];
     if (generalHandler != null) {
-      return generalHandler(output, trigger.data);
+      return generalHandler(source, trigger.data);
     }
     return false;
   }
