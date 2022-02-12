@@ -123,17 +123,18 @@ mixin StateHandlerMixin<Output, State extends BlocState>
   }
 
   FutureOr<bool?> _handleTrigger<T>(
-      Type triggerType, T source, _TriggerState trigger) async {
-    final key = _HandlerKey(T, trigger.type, triggerType);
-    final handlers = _handlers[key]?.where((element) => element._active);
+      Type triggerType, T source, _TriggerState state) async {
+    final key = _HandlerKey(T, state.type, triggerType);
+    final handlers =
+        _handlers[key]?.where((element) => element.canHandle(state)).toList();
     if (handlers != null && handlers.isNotEmpty) {
-      return _handleTriggerState<T>(handlers, source, trigger);
+      return _handleTriggerState<T>(handlers, source, state);
     }
     final generalKey = _HandlerKey.general(T, triggerType);
     final generalHandlers =
         _handlers[generalKey]?.where((element) => element._active);
     if (generalHandlers != null && generalHandlers.isNotEmpty) {
-      return _handleTriggerState<T>(generalHandlers, source, trigger);
+      return _handleTriggerState<T>(generalHandlers, source, state);
     }
     return false;
   }
@@ -148,13 +149,16 @@ mixin StateHandlerMixin<Output, State extends BlocState>
       bool isHandled = false;
       for (final handler in handlers) {
         final result = await handler(source, trigger.data);
+        if (result.isHandled) {
+          trigger.addDoneHandler(handler.index);
+        }
         if (result.isRemoveHandler) {
           _removeHandler(handler.key, handler.index);
         }
         if (result.isDeactivateHandler) {
           handler.deactivate();
         }
-        isHandled = isHandled || result.isHandled;
+        isHandled = isHandled || result.isRemoveEvent;
       }
       _isHandled.complete(isHandled);
       return isHandled;

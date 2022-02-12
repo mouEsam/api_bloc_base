@@ -20,10 +20,11 @@ typedef _Handler<Output, Data> = _HandlerResult Function(
 class _TriggerState<T> {
   final Type type;
   final T data;
+  final List<int> doneHandlers = [];
+
   Completer<bool> _handle = Completer()..complete(false);
   bool _isHandled = false;
   bool _isBeingHandled = false;
-
   _TriggerState(this.data) : type = data.runtimeType;
 
   FutureOr<bool> get isHandled => _handle.future;
@@ -46,6 +47,14 @@ class _TriggerState<T> {
     }
     _isHandled = temp;
     return _isHandled;
+  }
+
+  void addDoneHandler(int index) {
+    doneHandlers.add(index);
+  }
+
+  bool isDone(int index) {
+    return doneHandlers.contains(index);
   }
 }
 
@@ -82,6 +91,9 @@ enum HandlerAction {
   Handled,
   // ignore: unused_field
   Unhandled,
+  RemoveEvent,
+  RemoveEventRemoveHandler,
+  RemoveEventDeactivateHandler,
   RemoveHandler,
   DeactivateHandler,
   HandledRemoveHandler,
@@ -91,17 +103,24 @@ enum HandlerAction {
 }
 
 extension on HandlerAction? {
+  bool get isRemoveEvent => [
+        HandlerAction.RemoveEvent,
+        HandlerAction.RemoveEventRemoveHandler,
+        HandlerAction.RemoveEventDeactivateHandler,
+      ].contains(this);
   bool get isHandled => [
         HandlerAction.Handled,
         HandlerAction.HandledRemoveHandler
       ].contains(this);
   bool get isRemoveHandler => [
         HandlerAction.RemoveHandler,
+        HandlerAction.RemoveEventRemoveHandler,
         HandlerAction.HandledRemoveHandler,
         HandlerAction.UnhandledRemoveHandler
       ].contains(this);
   bool get isDeactivateHandler => [
         HandlerAction.DeactivateHandler,
+        HandlerAction.RemoveEventDeactivateHandler,
         HandlerAction.HandledDeactivateHandler,
         HandlerAction.UnhandledDeactivateHandler,
       ].contains(this);
@@ -164,4 +183,8 @@ class _HandlerWrapper<Source, Data> {
   }
 
   _HandlerResult call(Source output, Data trigger) => _handler(output, trigger);
+
+  bool canHandle(_TriggerState state) {
+    return _active && !state.isDone(index);
+  }
 }
