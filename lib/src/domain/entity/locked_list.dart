@@ -1,11 +1,13 @@
 import 'dart:_internal';
 import 'dart:collection';
 
+import 'package:api_bloc_base/src/presentation/bloc/worker/pagination_mixin.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
-abstract class PaginationList<T> extends ListMixin<T> {
+abstract class PaginationList<T> extends ListMixin<T>
+    implements Paginated<List<T>> {
   PaginationList._();
 
   factory PaginationList.single([List<T>? page]) {
@@ -24,6 +26,8 @@ abstract class PaginationList<T> extends ListMixin<T> {
   PaginationList<S> map<S>(S f(T element));
 
   PageList<T> get asSinglePage;
+
+  List<T> get item => this;
 }
 
 class PageList<T> extends PaginationList<T> {

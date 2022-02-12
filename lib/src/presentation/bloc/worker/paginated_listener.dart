@@ -11,7 +11,7 @@ import 'package:dartz/dartz.dart';
 import 'pagination_mixin.dart';
 
 abstract class PaginatedListener<Paginated extends PaginatedInput<Output>,
-        Output> extends IndependentListener<Paginated, Output>
+        Output> extends IndependentListener<Paginated, PaginatedOutput<Output>>
     with PaginationMixin<Paginated, Output> {
   PaginatedListener(
       {List<Stream<BlocState>> sources = const [],
@@ -23,7 +23,7 @@ abstract class PaginatedListener<Paginated extends PaginatedInput<Output>,
       bool refreshOnAppActive = false,
       bool enableRetry = true,
       bool fetchOnCreate = true,
-      Output? currentData})
+      PaginatedOutput<Output>? currentData})
       : super(
             sources: sources,
             providers: providers,

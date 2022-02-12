@@ -3,10 +3,22 @@ import 'dart:math';
 
 import 'package:api_bloc_base/src/presentation/bloc/base/independence_mixin.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/cupertino.dart';
 
 import 'listener_bloc.dart';
 import 'paginated_state.dart';
+
+abstract class Paginated<T> {
+  T get item;
+}
+
+class SimplePaginated<T> extends Equatable implements Paginated<T> {
+  final T item;
+
+  const SimplePaginated(this.item);
+
+  @override
+  get props => [item];
+}
 
 abstract class PaginatedInput<T> extends Equatable {
   final T input;
@@ -20,100 +32,110 @@ abstract class PaginatedInput<T> extends Equatable {
 }
 
 class PaginatedOutput<T> extends Equatable {
-  final Map<int, T> data;
+  final Map<int, T> dataMap;
+  final Paginated<T> _data;
   final bool isThereMore;
   final int currentPage;
-  final String? nextPage;
+  final int lastPage;
+
+  T get page => _data.item;
 
   const PaginatedOutput(
-      this.data, this.isThereMore, this.currentPage, this.nextPage);
+    this.dataMap,
+    this._data,
+    this.isThereMore,
+    this.currentPage,
+    this.lastPage,
+  );
+
+  PaginatedOutput<T> mapData(Paginated<T> Function(Paginated<T> data) mapper) {
+    return PaginatedOutput(
+        dataMap, mapper(_data), isThereMore, currentPage, lastPage);
+  }
 
   @override
-  get props => [this.data, this.isThereMore, this.currentPage];
+  get props => [
+        this.dataMap,
+        this._data,
+        this.isThereMore,
+        this.currentPage,
+        this.lastPage,
+      ];
 }
 
-mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
+mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
     on
-        ListenerBloc<Paginated, Output>,
-        IndependenceMixin<Paginated, Output, WorkerState<Output>> {
+        ListenerBloc<Input, PaginatedOutput<Output>>,
+        IndependenceMixin<Input, PaginatedOutput<Output>,
+            WorkerState<PaginatedOutput<Output>>> {
   static const int startPage = 1;
-  PaginatedOutput<Output> get empty =>
-      const PaginatedOutput({}, false, startPage, null);
+  static const int _invalidPage = startPage - 1;
 
-  Paginated? lastInput;
-
-  int? _currentPage;
-
-  int get currentPage => _currentPage ?? paginatedData.currentPage;
-  int get lastPage => paginatedData.data.keys.fold(
-      startPage, ((previousValue, element) => max(previousValue, element)));
+  int get currentPage => safeData?.currentPage ?? _invalidPage;
+  int get lastPage => safeData?.lastPage ?? currentPage;
+  int? _shownPage = startPage;
+  int get nextPage => _shownPage ?? startPage;
 
   bool get canGoBack => currentPage > startPage;
   bool get canGoForward => currentPage < lastPage || isThereMore;
-  bool get isThereMore => paginatedData.isThereMore;
-
-  late PaginatedOutput<Output> paginatedData = empty;
-
-  Stream<PaginatedOutput<Output>?> get paginatedStream =>
-      stream.map((event) => paginatedData).distinct();
+  bool get isThereMore => safeData?.isThereMore != false;
 
   @override
-  @mustCallSuper
-  void handleInputToInject(event) {
-    final index = lastInput?.currentPage ?? 0;
-    if (index < event.currentPage) {
-      lastInput = event;
-    }
-    super.handleInputToInject(event);
+  PaginatedOutput<Output> convertInputToOutput(Input input) {
+    return _createOutput(input.input, input.currentPage, input.nextUrl);
   }
 
-  @override
-  @mustCallSuper
-  handleInjectedInput(input) {
-    super.handleInjectedInput(input);
-    final newData = input.input;
-    final isThereMore = canGetMore(newData);
-    final map = paginatedData.data;
-    final newMap = Map.of(map);
-    newMap[currentPage] = newData;
-    paginatedData = PaginatedOutput(
+  PaginatedOutput<Output> _createOutput(Output data, int page,
+      [String? nextPage]) {
+    final Map<int, Output> initialDataMap = safeData?.dataMap ?? {};
+    final bool initialIsThereMore = safeData?.isThereMore ?? true;
+    final int initialCurrentPage = safeData?.currentPage ?? _invalidPage;
+    final int initialLastPage = safeData?.lastPage ?? _invalidPage;
+
+    final newMap = Map.of(initialDataMap);
+    newMap[page] = data;
+    final newLast = newMap.keys.reduce((value, element) => max(value, element));
+    late final bool isThereMore;
+    if (page != initialLastPage && page == newLast) {
+      isThereMore = nextPage != null;
+    } else {
+      isThereMore = initialIsThereMore;
+    }
+
+    final newData = createOutput(newMap, page);
+    final newOutput = PaginatedOutput(
       newMap,
+      newData,
       isThereMore,
-      currentPage,
-      lastInput?.nextUrl,
+      page,
+      newLast,
+    );
+    _shownPage ??= page;
+    return _fixForPage(newOutput, _shownPage!);
+  }
+
+  PaginatedOutput<Output> _fixForPage(
+      PaginatedOutput<Output> startData, int page) {
+    final newData = createOutput(startData.dataMap, page);
+    return PaginatedOutput(
+      startData.dataMap,
+      newData,
+      startData.isThereMore,
+      page,
+      startData.lastPage,
     );
   }
 
-  @override
-  convertInputToOutput(input) {
-    return input.input;
-  }
-
-  bool canGetMore(Output newData) {
-    if (lastInput != null && lastInput?.nextUrl == null) {
-      return false;
-    } else if (newData == null) {
-      return false;
-    } else if (newData is Iterable) {
-      return newData.isNotEmpty;
-    } else if (newData is Map) {
-      return newData.isNotEmpty;
-    } else {
-      try {
-        dynamic d = newData;
-        return d.count > 0;
-      } catch (e) {
-        return false;
-      }
-    }
+  Paginated<Output> createOutput(Map<int, Output> dataMap, int page) {
+    return SimplePaginated(dataMap[page]!);
   }
 
   Future<void> next() async {
     if (canGoForward) {
-      _currentPage = paginatedData.currentPage + 1;
-      final nextData = paginatedData.data[_currentPage!];
-      if (nextData != null) {
-        emitData(nextData);
+      _shownPage = currentPage + 1;
+      final nextData = safeData?.dataMap[nextPage];
+      if (safeData != null && nextData != null) {
+        injectOutput(_createOutput(nextData, nextPage));
         emitCurrent();
       } else {
         fetchData(refresh: true);
@@ -122,43 +144,38 @@ mixin PaginationMixin<Paginated extends PaginatedInput<Output>, Output>
   }
 
   Future<void> back() async {
-    if (canGoBack) {
-      _currentPage = paginatedData.currentPage - 1;
-      final previousData = paginatedData.data[_currentPage!]!;
-      emitData(previousData);
-      emitCurrent();
+    if (canGoBack && safeData != null) {
+      _shownPage = currentPage + 1;
+      final previousData = safeData?.dataMap[nextPage];
+      if (previousData != null) {
+        injectOutput(_createOutput(previousData, nextPage));
+        emitCurrent();
+      }
     }
   }
 
   @override
   void clean() {
     super.clean();
-    _currentPage = null;
-    paginatedData = empty;
-    lastInput = null;
+    _shownPage = null;
   }
 
   @override
   void handleErrorState(errorState) {
-    _currentPage = null;
-    if (!hasData || safeData is! Output) {
+    if (!hasData || safeData is! PaginatedOutput<Output>) {
       super.handleErrorState(errorState);
     } else {
-      emit(ErrorGettingNextPageState<Output>(currentData, errorState.response));
+      emit(ErrorGettingNextPageState<PaginatedOutput<Output>>(
+          currentData, errorState.response));
     }
   }
 
   @override
   void handleLoadingState(loadingState) {
-    if (!hasData || safeData is! Output) {
+    if (!hasData || safeData is! PaginatedOutput<Output>) {
       super.handleLoadingState(loadingState);
     } else {
-      emit(LoadingNextPageState<Output>(currentData));
+      emit(LoadingNextPageState<PaginatedOutput<Output>>(currentData));
     }
-  }
-
-  @override
-  void emitLoaded(Output data) {
-    emit(PaginatedLoadedState(paginatedData, data));
   }
 }
