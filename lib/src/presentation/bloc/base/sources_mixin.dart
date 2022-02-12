@@ -105,8 +105,8 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
                 newSources, (a) => Tuple2(event, a));
           }
         })
+        .asyncMap((event) => whenActive(() => event))
         .throttleTime(throttleWindowDuration, trailing: true)
-        .where((event) => this.lastTrafficLightsValue)
         .asyncMap((event) async {
           final work = Work.start(Loading());
           lastWork = work;
