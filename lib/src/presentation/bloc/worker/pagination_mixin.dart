@@ -68,12 +68,12 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
         ListenerBloc<Input, PaginatedOutput<Output>>,
         IndependenceMixin<Input, PaginatedOutput<Output>,
             WorkerState<PaginatedOutput<Output>>> {
-  static const int startPage = 1;
-  static const int _invalidPage = startPage - 1;
+  int get startPage => 1;
+  int get invalidPage => startPage - 1;
 
-  int get currentPage => safeData?.currentPage ?? _invalidPage;
+  int get currentPage => safeData?.currentPage ?? invalidPage;
   int get lastPage => safeData?.lastPage ?? currentPage;
-  int? _shownPage = startPage;
+  late int? _shownPage = startPage;
   int get nextPage => _shownPage ?? startPage;
 
   bool get canGoBack => currentPage > startPage;
@@ -89,8 +89,8 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
       [String? nextPage]) {
     final Map<int, Output> initialDataMap = safeData?.dataMap ?? {};
     final bool initialIsThereMore = safeData?.isThereMore ?? true;
-    final int initialCurrentPage = safeData?.currentPage ?? _invalidPage;
-    final int initialLastPage = safeData?.lastPage ?? _invalidPage;
+    final int initialCurrentPage = safeData?.currentPage ?? invalidPage;
+    final int initialLastPage = safeData?.lastPage ?? invalidPage;
 
     final newMap = Map.of(initialDataMap);
     newMap[page] = data;
@@ -123,6 +123,16 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
       startData.isThereMore,
       page,
       startData.lastPage,
+    );
+  }
+
+  PaginatedOutput<Output> createEmptyOutput(Output obj) {
+    return PaginatedOutput(
+      {},
+      createOutput({invalidPage: obj}, invalidPage),
+      false,
+      invalidPage,
+      invalidPage,
     );
   }
 

@@ -1,4 +1,3 @@
-import 'dart:_internal';
 import 'dart:collection';
 
 import 'package:api_bloc_base/src/presentation/bloc/worker/pagination_mixin.dart';
@@ -191,7 +190,7 @@ class PagesList<T> extends PaginationList<T> {
     if (index > -1)
       return this[index];
     else if (orElse != null) return orElse();
-    throw IterableElementError.noElement();
+    throw StateError("No element");
   }
 
   @override
@@ -200,7 +199,7 @@ class PagesList<T> extends PaginationList<T> {
     if (index > -1)
       return this[index];
     else if (orElse != null) return orElse();
-    throw IterableElementError.noElement();
+    throw StateError("No element");
   }
 
   @override
@@ -315,7 +314,7 @@ class PagesList<T> extends PaginationList<T> {
         return page.removeLast();
       }
     }
-    throw IterableElementError.noElement();
+    throw StateError("No element");
   }
 
   void tweak(T f(T element)) {

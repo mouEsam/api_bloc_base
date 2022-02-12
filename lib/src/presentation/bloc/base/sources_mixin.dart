@@ -87,6 +87,7 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
     final newSources = [...sources, ...providers.map((e) => e.stream)];
     var _lastValue;
     _dataSubscription = inputStream
+        .cast<BlocState>()
         .doOnData((event) {
           if (event is Loaded) {
             if (event.data != _lastValue) {
@@ -95,7 +96,6 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
             _lastValue = event.data;
           }
         })
-        .cast<BlocState>()
         .switchMap((event) {
           if (newSources.isEmpty || event is Loading || event is Error) {
             return Stream.value(Tuple2<BlocState, List<BlocState>>(event, []));

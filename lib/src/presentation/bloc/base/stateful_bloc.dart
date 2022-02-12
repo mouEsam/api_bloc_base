@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -10,6 +12,14 @@ abstract class StatefulBloc<Data, State extends BlocState>
   String get defaultErrorMessage => "Error in ${this.runtimeType}";
 
   bool get hasData;
+
+  Future<R> whenState<State extends BlocState, R extends Object?>(
+      [FutureOr<R> Function()? f]) {
+    f ??= () => Future.value(null);
+    return exclusiveStream
+        .firstWhere((event) => event is State)
+        .then((value) => f!());
+  }
 
   String extractErrorMessage(e, [s]) {
     print(e);

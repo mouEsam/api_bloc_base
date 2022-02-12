@@ -2,6 +2,8 @@ import 'package:api_bloc_base/src/domain/entity/locked_list.dart';
 
 import 'pagination_mixin.dart';
 
+typedef PagedOutput<Output> = PaginatedOutput<PaginationList<Output>>;
+
 mixin PaginationListMixin<Input extends PaginatedInput<PaginationList<Output>>,
     Output> on PaginationMixin<Input, PaginationList<Output>> {
   // @override
