@@ -122,7 +122,6 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
             } else {
               final loaded = event.value2
                   .whereType<Loaded>()
-                  .map((e) => (e).data)
                   .toList();
               if (loaded.length == event.value2.length) {
                 _combined = true;
@@ -154,7 +153,7 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
     handleSourcesOutput(_lastWork!);
   }
 
-  FutureOr<Input> combineDataWithSources(Input data, Iterable<dynamic> map) {
+  FutureOr<Input> combineDataWithSources(Input data, Iterable<Loaded> map) {
     return data;
   }
 
