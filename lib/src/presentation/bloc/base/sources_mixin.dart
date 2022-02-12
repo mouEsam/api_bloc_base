@@ -119,16 +119,24 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
                 .firstWhereOrNull((element) => element is Error) as Error?;
             if (errorState != null) {
               return work.changeState(Error(errorState.response));
-            } else if (event.value2.every((element) => element is Loaded)) {
-              _combined = true;
-              final result = await combineDataWithSources(mainEvent.data,
-                  event.value2.map((e) => (e as Loaded).data).toList());
-              return work.changeState(Loaded<Input>(result));
             } else {
-              if (_combined) {
-                return work.changeState(mainEvent);
+              final loaded = event.value2
+                  .whereType<Loaded>()
+                  .map((e) => (e).data)
+                  .toList();
+              if (loaded.length == event.value2.length) {
+                _combined = true;
+                final result =
+                    await combineDataWithSources(mainEvent.data, loaded);
+                return work.changeState(Loaded<Input>(result));
               } else {
-                return work.changeState(Loading());
+                if (_combined) {
+                  final result =
+                      await combineDataWithSources(mainEvent.data, loaded);
+                  return work.changeState(Loaded<Input>(result));
+                } else {
+                  return work.changeState(Loading());
+                }
               }
             }
           }

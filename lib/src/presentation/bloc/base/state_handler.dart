@@ -91,22 +91,21 @@ mixin StateHandlerMixin<Output, State extends BlocState>
   FutureOr<bool?> _handleTrigger<T>(
       Type triggerType, T source, _TriggerState trigger) async {
     final key = _HandlerKey(T, trigger.type, triggerType);
-    final handlers =
-        _handlers[key]?.where((element) => element._active).toList();
+    final handlers = _handlers[key]?.where((element) => element._active);
     if (handlers != null && handlers.isNotEmpty) {
       return _handleTriggerState<T>(handlers, source, trigger);
     }
     final generalKey = _HandlerKey.general(T, triggerType);
     final generalHandlers =
-        _handlers[generalKey]?.where((element) => element._active).toList();
+        _handlers[generalKey]?.where((element) => element._active);
     if (generalHandlers != null && generalHandlers.isNotEmpty) {
       return _handleTriggerState<T>(generalHandlers, source, trigger);
     }
     return false;
   }
 
-  FutureOr<bool?> _handleTriggerState<T>(
-      List<_HandlerWrapper> handlers, T source, _TriggerState trigger) async {
+  FutureOr<bool?> _handleTriggerState<T>(Iterable<_HandlerWrapper> handlers,
+      T source, _TriggerState trigger) async {
     bool isHandled = false;
     for (final handler in handlers) {
       final result = await handler(source, trigger.data);
