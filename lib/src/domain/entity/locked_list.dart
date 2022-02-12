@@ -7,7 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
 abstract class PaginationList<T> extends ListMixin<T>
-    implements Paginated<List<T>> {
+    implements Paginated<PaginationList<T>> {
   PaginationList._();
 
   factory PaginationList.single([List<T>? page]) {
@@ -27,7 +27,7 @@ abstract class PaginationList<T> extends ListMixin<T>
 
   PageList<T> get asSinglePage;
 
-  List<T> get item => this;
+  PaginationList<T> get item => this;
 }
 
 class PageList<T> extends PaginationList<T> {
