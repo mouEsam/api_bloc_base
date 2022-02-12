@@ -124,12 +124,12 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
               if (loaded.length == event.value2.length) {
                 _combined = true;
                 final result =
-                    await combineDataWithSources(mainEvent.data, loaded);
+                    await combineDataWithStates(mainEvent.data, loaded);
                 return work.changeState(Loaded<Input>(result));
               } else {
                 if (_combined) {
                   final result =
-                      await combineDataWithSources(mainEvent.data, loaded);
+                      await combineDataWithStates(mainEvent.data, loaded);
                   return work.changeState(Loaded<Input>(result));
                 } else {
                   return work.changeState(Loading());
@@ -151,11 +151,11 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
     handleSourcesOutput(_lastWork!);
   }
 
-  FutureOr<Input> combineDataWithSources(Input data, Iterable<Loaded> map) {
-    return combineDataWithSourcesData(data, map.map((e) => e.data));
+  FutureOr<Input> combineDataWithStates(Input data, Iterable<Loaded> map) {
+    return combineDataWithSources(data, map.map((e) => e.data));
   }
 
-  FutureOr<Input> combineDataWithSourcesData(Input data, Iterable map) {
+  FutureOr<Input> combineDataWithSources(Input data, Iterable map) {
     return data;
   }
 
