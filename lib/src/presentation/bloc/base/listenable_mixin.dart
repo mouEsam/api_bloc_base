@@ -14,33 +14,36 @@ mixin ListenableMixin<State> on TrafficLightsMixin<State> {
 
   final List<ListenerMixin> _listeners = [];
   final List<ListenableMixin> _listenableListeners = [];
+  final List<TrafficLightsMixin> _generalListeners = [];
 
   @override
   get notifiers => super.notifiers..add(_isListenedTo);
   @override
   get trafficLights => super.trafficLights..add(_isListenedTo);
 
-  void addListener(ListenerMixin listener) {
+  void addListener(TrafficLightsMixin listener) {
     if (listener is ListenableMixin) {
-      final listenable = listener as ListenableMixin;
-      _listenableListeners.add(listenable);
-      listenable._canRunWithoutListeners.addListener(_changed);
-    } else {
+      _listenableListeners.add(listener);
+      listener._canRunWithoutListeners.addListener(_changed);
+    } else if (listener is ListenerMixin) {
+      listener.isListeningNotifier.addListener(_changed);
       _listeners.add(listener);
+    } else {
+      _generalListeners.add(listener);
     }
-    listener.isListeningNotifier.addListener(_changed);
     _changed();
   }
 
-  void removeListener(ListenerMixin listener) {
+  void removeListener(TrafficLightsMixin listener) {
     if (listener is ListenableMixin) {
-      final listenable = listener as ListenableMixin;
-      _listenableListeners.remove(listenable);
-      listenable._canRunWithoutListeners.removeListener(_changed);
-    } else {
+      _listenableListeners.remove(listener);
+      listener._canRunWithoutListeners.removeListener(_changed);
+    } else if (listener is ListenerMixin) {
+      listener.isListeningNotifier.removeListener(_changed);
       _listeners.remove(listener);
+    } else {
+      _generalListeners.remove(listener);
     }
-    listener.isListeningNotifier.removeListener(_changed);
     _changed();
   }
 
@@ -51,6 +54,11 @@ mixin ListenableMixin<State> on TrafficLightsMixin<State> {
   bool _getIsListenedTo() {
     if (_canRunWithoutListeners.value) {
       return true;
+    }
+    for (final l in _generalListeners) {
+      if (l.lastTrafficLightsValue) {
+        return true;
+      }
     }
     for (final l in _listeners) {
       if (l.isListeningNotifier.value) {
