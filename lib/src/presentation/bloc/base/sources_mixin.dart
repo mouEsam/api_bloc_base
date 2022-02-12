@@ -97,18 +97,19 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
           var mainEvent = event.value1;
           if (mainEvent is Loading || mainEvent is Error) {
             return work.changeState(mainEvent);
-          }
-          mainEvent = mainEvent as Loaded<Input>;
-          Error? errorState = event.value2
-              .firstWhereOrNull((element) => element is Error) as Error?;
-          if (errorState != null) {
-            return work.changeState(Error(errorState.response));
-          } else if (event.value2.any((element) => element is Loading)) {
-            return work.changeState(Loading());
           } else {
-            final result = await combineDataWithSources(mainEvent.data,
-                event.value2.map((e) => (e as Loaded).data).toList());
-            return work.changeState(Loaded<Input>(result));
+            mainEvent = mainEvent as Loaded<Input>;
+            Error? errorState = event.value2
+                .firstWhereOrNull((element) => element is Error) as Error?;
+            if (errorState != null) {
+              return work.changeState(Error(errorState.response));
+            } else if (event.value2.every((element) => element is Loaded)) {
+              final result = await combineDataWithSources(mainEvent.data,
+                  event.value2.map((e) => (e as Loaded).data).toList());
+              return work.changeState(Loaded<Input>(result));
+            } else {
+              return work.changeState(mainEvent);
+            }
           }
         })
         .where((event) => !event.isCancelled)
