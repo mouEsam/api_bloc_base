@@ -204,19 +204,20 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
       return true;
     }
     final Completer<bool> _isHandled = Completer();
-    trigger.setHandled(_isHandled.future);
-    bool isHandled = false;
-    for (final handler in handlers) {
-      final result = await handler(source, trigger.data);
-      if (result.isRemoveHandler) {
-        _removeHandler(handler.key, handler.index);
+    return trigger.setHandled(() async {
+      bool isHandled = false;
+      for (final handler in handlers) {
+        final result = await handler(source, trigger.data);
+        if (result.isRemoveHandler) {
+          _removeHandler(handler.key, handler.index);
+        }
+        if (result.isDeactivateHandler) {
+          handler.deactivate();
+        }
+        isHandled = isHandled || result.isHandled;
       }
-      if (result.isDeactivateHandler) {
-        handler.deactivate();
-      }
-      isHandled = isHandled || result.isHandled;
-    }
-    _isHandled.complete(isHandled);
-    return isHandled;
+      _isHandled.complete(isHandled);
+      return isHandled;
+    });
   }
 }

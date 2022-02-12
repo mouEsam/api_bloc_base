@@ -140,17 +140,24 @@ mixin StateHandlerMixin<Output, State extends BlocState>
 
   FutureOr<bool?> _handleTriggerState<T>(Iterable<_HandlerWrapper> handlers,
       T source, _TriggerState trigger) async {
-    bool isHandled = false;
-    for (final handler in handlers) {
-      final result = await handler(source, trigger.data);
-      if (result.isRemoveHandler) {
-        _removeHandler(handler.key, handler.index);
-      }
-      if (result.isDeactivateHandler) {
-        handler.deactivate();
-      }
-      isHandled = isHandled || result.isHandled;
+    if (await trigger.isHandled) {
+      return true;
     }
-    return isHandled;
+    final Completer<bool> _isHandled = Completer();
+    return trigger.setHandled(() async {
+      bool isHandled = false;
+      for (final handler in handlers) {
+        final result = await handler(source, trigger.data);
+        if (result.isRemoveHandler) {
+          _removeHandler(handler.key, handler.index);
+        }
+        if (result.isDeactivateHandler) {
+          handler.deactivate();
+        }
+        isHandled = isHandled || result.isHandled;
+      }
+      _isHandled.complete(isHandled);
+      return isHandled;
+    });
   }
 }

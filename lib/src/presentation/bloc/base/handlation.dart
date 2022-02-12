@@ -28,20 +28,24 @@ class _TriggerState<T> {
 
   FutureOr<bool> get isHandled => _handle.future;
 
-  FutureOr<void> setHandled([FutureOr<bool>? isHandled]) async {
+  FutureOr<bool> setHandled([FutureOr<bool> Function()? isHandled]) async {
     _handle = Completer();
     _isBeingHandled = true;
-    if (isHandled == null) {
-      _isHandled = true;
-    } else if (isHandled is bool) {
-      _isHandled = isHandled;
+    final handled = isHandled?.call();
+    bool temp;
+    if (handled == null) {
+      temp = true;
+    } else if (handled is bool) {
+      temp = handled;
     } else {
-      _isHandled = await isHandled;
+      temp = await handled;
     }
     _isBeingHandled = false;
     if (!_handle.isCompleted) {
-      _handle.complete(_isHandled);
+      _handle.complete(temp);
     }
+    _isHandled = temp;
+    return _isHandled;
   }
 }
 
