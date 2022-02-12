@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/initializable.dart';
 import 'package:flutter/foundation.dart';
+import 'package:listenable_stream/listenable_stream.dart';
 
 mixin TrafficLightsMixin<State> on BaseCubit<State>, Initializable {
   final ValueNotifier<bool> isGreen = ValueNotifier(true);
@@ -40,6 +43,14 @@ mixin TrafficLightsMixin<State> on BaseCubit<State>, Initializable {
 
   void _changed() {
     isGreen.value = _trafficLightsValue;
+  }
+
+  Future<R> whenActive<R extends Object?>([FutureOr<R> Function()? f]) {
+    f ??= () => Future.value(null);
+    return isGreen
+        .toValueStream(replayValue: true)
+        .firstWhere((event) => event)
+        .then((value) => f!());
   }
 
   @override

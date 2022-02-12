@@ -116,8 +116,8 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
           trigger, (output, trigger) => inputHandler(output, trigger));
     }
     if (outputHandler != null) {
-      ohk = _registerHandler<Output, Data>(trigger,
-          (output, trigger) => outputHandler(output, trigger));
+      ohk = _registerHandler<Output, Data>(
+          trigger, (output, trigger) => outputHandler(output, trigger));
     }
     return CookieJar._(hk, ihk, ohk);
   }
@@ -151,6 +151,14 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
       final key = trigger.key;
       final value = trigger.value;
       await _handleTriggers<T>(key, value, data);
+    }
+  }
+
+  FutureOr<void> handleRemainingTriggers() async {
+    for (final trigger in _triggers.entries) {
+      final key = trigger.key;
+      final value = trigger.value;
+      await _handleTriggers<Null>(key, value, null);
     }
   }
 

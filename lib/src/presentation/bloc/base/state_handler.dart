@@ -92,6 +92,14 @@ mixin StateHandlerMixin<Output, State extends BlocState>
     return Cookie._forHandler(h);
   }
 
+  FutureOr<void> handleRemainingTriggers() async {
+    for (final trigger in _triggers.entries) {
+      final key = trigger.key;
+      final value = trigger.value;
+      await _handleTriggers<Null>(key, value, null);
+    }
+  }
+
   FutureOr<void> _handleTriggers<T>(
       Type triggerType, List<_TriggerState> triggers, T source) async {
     final List<_TriggerState> toRemove = [];
