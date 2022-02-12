@@ -64,11 +64,18 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
   }
 
   @override
+  void clean() {
+    super.clean();
+    _combined = false;
+  }
+
+  @override
   void init() {
     setupStreams();
     super.init();
   }
 
+  bool _combined = false;
   bool _init = false;
   void setupStreams() {
     if (_init) return;
@@ -104,11 +111,16 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
             if (errorState != null) {
               return work.changeState(Error(errorState.response));
             } else if (event.value2.every((element) => element is Loaded)) {
+              _combined = true;
               final result = await combineDataWithSources(mainEvent.data,
                   event.value2.map((e) => (e as Loaded).data).toList());
               return work.changeState(Loaded<Input>(result));
             } else {
-              return work.changeState(mainEvent);
+              if (_combined) {
+                return work.changeState(mainEvent);
+              } else {
+                return work.changeState(Loading());
+              }
             }
           }
         })
