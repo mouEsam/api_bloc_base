@@ -85,9 +85,8 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
         .whereType<ListenableMixin>()
         .forEach((element) => element.addListener(this));
     final newSources = [...sources, ...providers.map((e) => e.stream)];
-    final _stream = inputStream;
     var _lastValue;
-    _dataSubscription = _stream
+    _dataSubscription = inputStream
         .doOnData((event) {
           if (event is Loaded) {
             if (event.data != _lastValue) {

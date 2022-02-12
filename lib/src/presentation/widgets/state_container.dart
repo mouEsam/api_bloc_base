@@ -165,7 +165,7 @@ class _StateContainerState<Data, StateType>
           context,
           state.loadingMessage,
           state.progress,
-          ifTrue(state.token != null, () => state.token!.cancel()),
+          state.token != null ? () => state.token!.cancel() : null,
           child,
         );
       }
@@ -195,8 +195,4 @@ class _StateContainerState<Data, StateType>
       return child;
     }
   }
-}
-
-X? ifTrue<X>(bool check, X? value) {
-  return check ? value : null;
 }
