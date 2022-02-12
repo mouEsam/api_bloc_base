@@ -53,15 +53,15 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
     listeningToSources.value = true;
   }
 
-  @mustCallSuper
-  void trafficLightsChanged(bool green) {
-    if (green) {
-      _dataSubscription.resume();
-    } else {
-      _dataSubscription.pause();
-    }
-    super.trafficLightsChanged(green);
-  }
+  // @mustCallSuper
+  // void trafficLightsChanged(bool green) {
+  //   if (green) {
+  //     _dataSubscription.resume();
+  //   } else {
+  //     _dataSubscription.pause();
+  //   }
+  //   super.trafficLightsChanged(green);
+  // }
 
   @override
   void clean() {
@@ -107,6 +107,7 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
           }
         })
         .throttleTime(throttleWindowDuration, trailing: true)
+        .where((event) => this.lastTrafficLightsValue)
         .asyncMap((event) async {
           final work = Work.start(Loading());
           lastWork = work;
