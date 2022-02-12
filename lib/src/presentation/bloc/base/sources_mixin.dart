@@ -101,9 +101,8 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
             return Stream.value(Tuple2<BlocState, List<BlocState>>(event, []));
           } else {
             return CombineLatestStream<BlocState,
-                        Tuple2<BlocState, List<BlocState>>>(
-                    newSources, (a) => Tuple2(event, a))
-                .asBroadcastStream(onCancel: (c) => c.cancel());
+                    Tuple2<BlocState, List<BlocState>>>(
+                newSources, (a) => Tuple2(event, a));
           }
         })
         .throttleTime(throttleWindowDuration, trailing: true)
