@@ -11,7 +11,6 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
 
   final Map<Type, List<_TriggerState>> _triggers = {};
   final Map<_HandlerKey, List<_HandlerWrapper>> _handlers = {};
-  final Map<_HandlerKey, int> _handlersCount = {};
 
   @override
   get sources => [...super.sources, ...triggers.map((e) => e.stream)];
@@ -42,10 +41,10 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     _init = true;
     _subscriptions = triggers.map((trigger) {
       return trigger.exclusiveStream
-          .where((event) => _hasHandler(event.runtimeType, trigger.runtimeType))
-          .listen((event) async {
+          .map((event) => _TriggerState(event.data))
+          .where((state) => _hasHandler(state, trigger.runtimeType))
+          .listen((state) async {
         _triggers[trigger.runtimeType] ??= [];
-        final state = _TriggerState(event.data);
         final list = _triggers[trigger.runtimeType]!;
         list.add(state);
         await _handleTriggers<Null>(trigger.runtimeType, list, null);
@@ -53,15 +52,14 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     }).toList();
   }
 
-  bool _hasHandler(Type data, Type trigger) {
-    final key = _HandlerKey.noSource(data, trigger);
-    final spec = _handlersCount[key];
-    if (spec != null && spec > 0) {
-      return true;
-    }
-    final gen = _handlersCount[key.generalized];
-    if (gen != null && gen > 0) {
-      return true;
+  bool _hasHandler(_TriggerState trigger, Type triggerType) {
+    final sources = [Input, Output, Null];
+    for (final source in sources) {
+      final key = _HandlerKey(source, triggerType);
+      final spec = _handlers[key];
+      if (spec != null && spec.any((element) => element.canHandle(trigger))) {
+        return true;
+      }
     }
     return false;
   }
@@ -74,11 +72,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     final handlers = _handlers[key];
     final hIndex = handlers?.indexWhere((element) => element.index == index);
     if (hIndex != null && hIndex > -1) {
-      final handler = handlers!.removeAt(hIndex);
-      if (handler._active) {
-        final g = key.unSourced;
-        _handlersCount[g] = _handlersCount[g]! - 1;
-      }
+      handlers!.removeAt(hIndex);
       return true;
     }
     return false;
@@ -91,7 +85,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     _Handler<Output, Data>? outputHandler,
   }) {
     return _registerHandlers<Data>(
-        trigger.runtimeType, false, handler, inputHandler, outputHandler);
+        trigger.runtimeType, handler, inputHandler, outputHandler);
   }
 
   CookieJar onTrigger<Data>(
@@ -101,12 +95,11 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     _Handler<Output, Data>? outputHandler,
   }) {
     return _registerHandlers<Data>(
-        trigger.runtimeType, true, handler, inputHandler, outputHandler);
+        trigger.runtimeType, handler, inputHandler, outputHandler);
   }
 
   CookieJar _registerHandlers<Data>(
     Type trigger,
-    bool general,
     _StateHandler<Data>? handler,
     _Handler<Input, Data>? inputHandler,
     _Handler<Output, Data>? outputHandler,
@@ -116,14 +109,14 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     _HandlerWrapper? ohk;
     if (handler != null) {
       hk = _registerHandler<Null, Data>(
-          trigger, general, (output, trigger) => handler(trigger));
+          trigger, (output, trigger) => handler(trigger));
     }
     if (inputHandler != null) {
       ihk = _registerHandler<Input, Data>(
-          trigger, general, (output, trigger) => inputHandler(output, trigger));
+          trigger, (output, trigger) => inputHandler(output, trigger));
     }
     if (outputHandler != null) {
-      ohk = _registerHandler<Output, Data>(trigger, general,
+      ohk = _registerHandler<Output, Data>(trigger,
           (output, trigger) => outputHandler(output, trigger));
     }
     return CookieJar._(hk, ihk, ohk);
@@ -131,18 +124,13 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
 
   _HandlerWrapper _registerHandler<Source, Data>(
     Type trigger,
-    bool general,
     _Handler<Source, Data> handler,
   ) {
-    final h = _HandlerWrapper.wrap<Source, Data>(general, trigger, handler,
-        (key, active) {
-      final g = key.unSourced;
-      _handlersCount[g] = _handlersCount[g]! + (active ? 1 : -1);
+    final h = _HandlerWrapper.wrap<Source, Data>(trigger, handler, (data) {
+      return data is Data;
     });
     _handlers[h.key] ??= [];
     _handlers[h.key]!.add(h);
-    final g = h.key.unSourced;
-    _handlersCount[g] = (_handlersCount[g] ?? 0) + 1;
     return h;
   }
 
@@ -184,19 +172,20 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
 
   FutureOr<bool?> _handleTrigger<T>(
       Type triggerType, T source, _TriggerState state) async {
-    final key = _HandlerKey(T, state.type, triggerType);
-    final handlers = _handlers[key]
-        ?.where((element) =>
-            element.canHandle(state))
-        .toList();
+    final key = _HandlerKey(T, triggerType);
+    final handlers =
+        _handlers[key]?.where((element) => element.canHandle(state)).toList();
     if (handlers != null && handlers.isNotEmpty) {
-      return _handleTriggerState<T>(handlers, source, state);
-    }
-    final generalKey = _HandlerKey.general(T, triggerType);
-    final generalHandlers =
-        _handlers[generalKey]?.where((element) => element._active);
-    if (generalHandlers != null && generalHandlers.isNotEmpty) {
-      return _handleTriggerState<T>(generalHandlers, source, state);
+      final exact =
+          handlers.where((element) => element.data == state.type).toList();
+      if (exact.isNotEmpty) {
+        return _handleTriggerState<T>(exact, source, state);
+      }
+      final remaining =
+          handlers.where((element) => element.data != state.type).toList();
+      if (remaining.isNotEmpty) {
+        return _handleTriggerState<T>(remaining, source, state);
+      }
     }
     return false;
   }

@@ -9,7 +9,6 @@ mixin StateHandlerMixin<Output, State extends BlocState>
 
   final Map<Type, List<_TriggerState>> _triggers = {};
   final Map<_HandlerKey, List<_HandlerWrapper>> _handlers = {};
-  final Map<_HandlerKey, int> _handlersCount = {};
 
   @override
   get subscriptions => super.subscriptions..addAll(_subscriptions);
@@ -38,26 +37,25 @@ mixin StateHandlerMixin<Output, State extends BlocState>
     _init = true;
     _subscriptions = triggers.map((trigger) {
       return trigger.exclusiveStream
-          .where((event) => _hasHandler(event.runtimeType, trigger.runtimeType))
-          .listen((event) async {
+          .map((event) => _TriggerState(event))
+          .where((state) => _hasHandler(state, trigger.runtimeType))
+          .listen((state) async {
         _triggers[trigger.runtimeType] ??= [];
-        final state = _TriggerState(event);
         final list = _triggers[trigger.runtimeType]!;
         list.add(state);
-        _handleTriggers<Null>(trigger.runtimeType, list, null);
+        await _handleTriggers<Null>(trigger.runtimeType, list, null);
       });
     }).toList();
   }
 
-  bool _hasHandler(Type data, Type trigger) {
-    final key = _HandlerKey.noSource(data, trigger);
-    final spec = _handlersCount[key];
-    if (spec != null && spec > 0) {
-      return true;
-    }
-    final gen = _handlersCount[key.generalized];
-    if (gen != null && gen > 0) {
-      return true;
+  bool _hasHandler(_TriggerState trigger, Type triggerType) {
+    final sources = [Output, Null];
+    for (final source in sources) {
+      final key = _HandlerKey(source, triggerType);
+      final spec = _handlers[key];
+      if (spec != null && spec.any((element) => element.canHandle(trigger))) {
+        return true;
+      }
     }
     return false;
   }
@@ -70,11 +68,7 @@ mixin StateHandlerMixin<Output, State extends BlocState>
     final handlers = _handlers[key];
     final hIndex = handlers?.indexWhere((element) => element.index == index);
     if (hIndex != null && hIndex > -1) {
-      final handler = handlers!.removeAt(hIndex);
-      if (handler._active) {
-        final g = key.unSourced;
-        _handlersCount[g] = _handlersCount[g]! - 1;
-      }
+      handlers!.removeAt(hIndex);
       return true;
     }
     return false;
@@ -82,27 +76,19 @@ mixin StateHandlerMixin<Output, State extends BlocState>
 
   Cookie onTriggerState<Data>(
       _SourceType trigger, _StateHandler<Data> handler) {
-    return _registerHandler<Data>(trigger.runtimeType, false, handler);
-  }
-
-  Cookie onTrigger<Data>(_SourceType trigger, _StateHandler<Data> handler) {
-    return _registerHandler<Data>(trigger.runtimeType, true, handler);
+    return _registerHandler<Data>(trigger.runtimeType, handler);
   }
 
   Cookie _registerHandler<Data>(
     Type trigger,
-    bool general,
     _StateHandler<Data> handler,
   ) {
     final h = _HandlerWrapper.wrap<Null, Data>(
-        general, trigger, (output, trigger) => handler(trigger), (key, active) {
-      final g = key.unSourced;
-      _handlersCount[g] = _handlersCount[g]! + (active ? 1 : -1);
+        trigger, (output, trigger) => handler(trigger), (stateData) {
+      return stateData is Data;
     });
     _handlers[h.key] ??= [];
     _handlers[h.key]!.add(h);
-    final g = h.key.unSourced;
-    _handlersCount[g] = (_handlersCount[g] ?? 0) + 1;
     return Cookie._forHandler(h);
   }
 
@@ -124,17 +110,20 @@ mixin StateHandlerMixin<Output, State extends BlocState>
 
   FutureOr<bool?> _handleTrigger<T>(
       Type triggerType, T source, _TriggerState state) async {
-    final key = _HandlerKey(T, state.type, triggerType);
+    final key = _HandlerKey(T, triggerType);
     final handlers =
         _handlers[key]?.where((element) => element.canHandle(state)).toList();
     if (handlers != null && handlers.isNotEmpty) {
-      return _handleTriggerState<T>(handlers, source, state);
-    }
-    final generalKey = _HandlerKey.general(T, triggerType);
-    final generalHandlers =
-        _handlers[generalKey]?.where((element) => element._active);
-    if (generalHandlers != null && generalHandlers.isNotEmpty) {
-      return _handleTriggerState<T>(generalHandlers, source, state);
+      final exact =
+          handlers.where((element) => element.data == state.type).toList();
+      if (exact.isNotEmpty) {
+        return _handleTriggerState<T>(exact, source, state);
+      }
+      final remaining =
+          handlers.where((element) => element.data != state.type).toList();
+      if (remaining.isNotEmpty) {
+        return _handleTriggerState<T>(remaining, source, state);
+      }
     }
     return false;
   }

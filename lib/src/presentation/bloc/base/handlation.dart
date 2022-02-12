@@ -128,63 +128,49 @@ extension on HandlerAction? {
 
 class _HandlerKey extends Equatable {
   final Type source;
-  final Type data;
   final Type trigger;
 
-  _HandlerKey(this.source, this.data, this.trigger);
+  _HandlerKey(this.source, this.trigger);
 
-  _HandlerKey.general(this.source, this.trigger) : data = Null;
-  _HandlerKey.noSource(this.data, this.trigger) : source = Null;
+  _HandlerKey.noSource(this.trigger) : source = Null;
 
-  factory _HandlerKey.create(
-      bool general, Type source, Type data, Type trigger) {
-    return _HandlerKey(source, general ? Null : data, trigger);
-  }
-
-  _HandlerKey get unSourced => _HandlerKey.noSource(data, trigger);
-  _HandlerKey get generalized => _HandlerKey.general(source, trigger);
+  _HandlerKey get unSourced => _HandlerKey.noSource(trigger);
 
   @override
-  get props => [source, data, trigger];
+  get props => [source, trigger];
 }
 
 class _HandlerWrapper<Source, Data> {
   static int _index = 0; // no need to synchronise
   final _HandlerKey key;
+  final Type data = Data;
   final _Handler<Source, Data> _handler;
   final int index = _index++;
-  final void Function(_HandlerKey key, bool active) _onStateChanged;
+  final bool Function(dynamic stateData) _canHandle;
   bool _active = true;
 
-  _HandlerWrapper._(this.key, this._handler, this._onStateChanged);
+  _HandlerWrapper._(this.key, this._handler, this._canHandle);
 
   static _HandlerWrapper<Source, Data> wrap<Source, Data>(
-    bool general,
     Type trigger,
     _Handler<Source, Data> _handler,
-    void Function(_HandlerKey key, bool active) onStateChanged,
+      bool Function(dynamic stateData) _canHandle,
   ) {
-    final key = _HandlerKey.create(general, Source, Data, trigger);
-    return _HandlerWrapper._(key, _handler, onStateChanged);
+    final key = _HandlerKey(Source, trigger);
+    return _HandlerWrapper._(key, _handler, _canHandle);
   }
 
   void deactivate() {
-    if (_active) {
-      _active = false;
-      _onStateChanged(key, _active);
-    }
+    _active = false;
   }
 
   void activate() {
-    if (!_active) {
-      _active = true;
-      _onStateChanged(key, _active);
-    }
+    _active = true;
   }
 
   _HandlerResult call(Source output, Data trigger) => _handler(output, trigger);
 
   bool canHandle(_TriggerState state) {
-    return _active && !state.isDone(index);
+    return _active && _canHandle(state.data) && !state.isDone(index);
   }
 }
