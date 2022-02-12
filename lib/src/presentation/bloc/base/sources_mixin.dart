@@ -154,7 +154,7 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
     handleSourcesOutput(_lastWork!);
   }
 
-  FutureOr<Input> combineDataWithSources(Input data, List<dynamic> map) {
+  FutureOr<Input> combineDataWithSources(Input data, Iterable<dynamic> map) {
     return data;
   }
 
