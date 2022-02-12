@@ -44,14 +44,7 @@ mixin StateHandlerMixin<Output, State extends BlocState>
         final state = _TriggerState(event);
         final list = _triggers[trigger.runtimeType]!;
         list.add(state);
-        final handled = _handleTrigger<Null>(trigger.runtimeType, null, state);
-        if (handled is bool?) {
-          if (handled == true) {
-            list.remove(state);
-          }
-        } else if (true == await handled) {
-          list.remove(state);
-        }
+        _handleTriggers<Null>(trigger.runtimeType, list, null);
       });
     }).toList();
   }
@@ -111,6 +104,22 @@ mixin StateHandlerMixin<Output, State extends BlocState>
     final g = h.key.unSourced;
     _handlersCount[g] = (_handlersCount[g] ?? 0) + 1;
     return Cookie._forHandler(h);
+  }
+
+  FutureOr<void> _handleTriggers<T>(
+      Type triggerType, List<_TriggerState> triggers, T source) async {
+    final List<_TriggerState> toRemove = [];
+    for (final item in triggers.toList()) {
+      final handled = _handleTrigger<T>(triggerType, source, item);
+      if (handled is bool?) {
+        if (handled == true) {
+          toRemove.add(item);
+        }
+      } else if (true == await handled) {
+        toRemove.add(item);
+      }
+    }
+    toRemove.forEach(triggers.remove);
   }
 
   FutureOr<bool?> _handleTrigger<T>(

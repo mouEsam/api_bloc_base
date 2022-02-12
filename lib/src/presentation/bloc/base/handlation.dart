@@ -17,14 +17,32 @@ typedef _StateHandler<Data> = _HandlerResult Function(Data trigger);
 typedef _Handler<Output, Data> = _HandlerResult Function(
     Output output, Data trigger);
 
-class _TriggerState<T> extends Equatable {
+class _TriggerState<T> {
   final Type type;
   final T data;
+  Completer<bool> _handle = Completer()..complete(false);
+  bool _isHandled = false;
+  bool _isBeingHandled = false;
 
   _TriggerState(this.data) : type = data.runtimeType;
 
-  @override
-  get props => [type, data];
+  FutureOr<bool> get isHandled => _handle.future;
+
+  FutureOr<void> setHandled([FutureOr<bool>? isHandled]) async {
+    _handle = Completer();
+    _isBeingHandled = true;
+    if (isHandled == null) {
+      _isHandled = true;
+    } else if (isHandled is bool) {
+      _isHandled = isHandled;
+    } else {
+      _isHandled = await isHandled;
+    }
+    _isBeingHandled = false;
+    if (!_handle.isCompleted) {
+      _handle.complete(_isHandled);
+    }
+  }
 }
 
 class CookieJar {

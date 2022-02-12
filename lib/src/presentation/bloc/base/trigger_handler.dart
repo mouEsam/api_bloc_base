@@ -48,14 +48,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
         final state = _TriggerState(event.data);
         final list = _triggers[trigger.runtimeType]!;
         list.add(state);
-        final handled = _handleTrigger<Null>(trigger.runtimeType, null, state);
-        if (handled is bool?) {
-          if (handled == true) {
-            list.remove(state);
-          }
-        } else if (true == await handled) {
-          list.remove(state);
-        }
+        await _handleTriggers<Null>(trigger.runtimeType, list, null);
       });
     }).toList();
   }
@@ -169,20 +162,24 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     for (final trigger in _triggers.entries) {
       final key = trigger.key;
       final value = trigger.value;
-      List toRemove = [];
-      for (int i = 0; i < value.length; i++) {
-        final item = value[i];
-        final handled = _handleTrigger<T>(key, data, item);
-        if (handled is bool?) {
-          if (handled == true) {
-            toRemove.add(item);
-          }
-        } else if (true == await handled) {
+      await _handleTriggers<T>(key, value, data);
+    }
+  }
+
+  FutureOr<void> _handleTriggers<T>(
+      Type triggerType, List<_TriggerState> triggers, T source) async {
+    final List<_TriggerState> toRemove = [];
+    for (final item in triggers.toList()) {
+      final handled = _handleTrigger<T>(triggerType, source, item);
+      if (handled is bool?) {
+        if (handled == true) {
           toRemove.add(item);
         }
+      } else if (true == await handled) {
+        toRemove.add(item);
       }
-      toRemove.forEach(value.remove);
     }
+    toRemove.forEach(triggers.remove);
   }
 
   FutureOr<bool?> _handleTrigger<T>(
@@ -203,6 +200,11 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
 
   FutureOr<bool?> _handleTriggerState<T>(Iterable<_HandlerWrapper> handlers,
       T source, _TriggerState trigger) async {
+    if (await trigger.isHandled) {
+      return true;
+    }
+    final Completer<bool> _isHandled = Completer();
+    trigger.setHandled(_isHandled.future);
     bool isHandled = false;
     for (final handler in handlers) {
       final result = await handler(source, trigger.data);
@@ -214,6 +216,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
       }
       isHandled = isHandled || result.isHandled;
     }
+    _isHandled.complete(isHandled);
     return isHandled;
   }
 }
