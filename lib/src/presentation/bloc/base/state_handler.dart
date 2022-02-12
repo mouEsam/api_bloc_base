@@ -7,6 +7,8 @@ mixin StateHandlerMixin<Output, State extends BlocState>
   List<_SourceType> get triggers;
   late final List<StreamSubscription> _subscriptions;
 
+  bool get handleStatesSequentially => false;
+
   final Map<Type, List<_TriggerState>> _triggers = {};
   final Map<_HandlerKey, List<_HandlerWrapper>> _handlers = {};
 
@@ -101,6 +103,32 @@ mixin StateHandlerMixin<Output, State extends BlocState>
   }
 
   FutureOr<void> _handleTriggers<T>(
+      Type triggerType, List<_TriggerState> triggers, T source) {
+    if (handleStatesSequentially) {
+      return _handleTriggersSequentially<T>(triggerType, triggers, source);
+    } else {
+      return _handleTriggersConcurrently<T>(triggerType, triggers, source);
+    }
+  }
+
+  FutureOr<void> _handleTriggersSequentially<T>(
+      Type triggerType, List<_TriggerState> triggers, T source) async {
+    final List<_TriggerState> toRemove = [];
+    final futures = triggers.map((item) async {
+      final handled = _handleTrigger<T>(triggerType, source, item);
+      if (handled is bool?) {
+        if (handled == true) {
+          toRemove.add(item);
+        }
+      } else if (true == await handled) {
+        toRemove.add(item);
+      }
+    });
+    await Future.wait(futures);
+    toRemove.forEach(triggers.remove);
+  }
+
+  FutureOr<void> _handleTriggersConcurrently<T>(
       Type triggerType, List<_TriggerState> triggers, T source) async {
     final List<_TriggerState> toRemove = [];
     for (final item in triggers.toList()) {
