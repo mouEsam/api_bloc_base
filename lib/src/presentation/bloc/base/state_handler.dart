@@ -9,6 +9,7 @@ mixin StateHandlerMixin<Output, State extends BlocState>
 
   final Map<Type, List<_TriggerState>> _triggers = {};
   final Map<_HandlerKey, List<_HandlerWrapper>> _handlers = {};
+  final Map<_HandlerKey, int> _handlersCount = {};
 
   @override
   get subscriptions => super.subscriptions..addAll(_subscriptions);
@@ -36,7 +37,9 @@ mixin StateHandlerMixin<Output, State extends BlocState>
     }
     _init = true;
     _subscriptions = triggers.map((trigger) {
-      return trigger.exclusiveStream.listen((event) async {
+      return trigger.exclusiveStream
+          .where((event) => _hasHandler(event.runtimeType, trigger.runtimeType))
+          .listen((event) async {
         _triggers[trigger.runtimeType] ??= [];
         final state = _TriggerState(event);
         final list = _triggers[trigger.runtimeType]!;
@@ -53,6 +56,19 @@ mixin StateHandlerMixin<Output, State extends BlocState>
     }).toList();
   }
 
+  bool _hasHandler(Type data, Type trigger) {
+    final key = _HandlerKey.noSource(data, trigger);
+    final spec = _handlersCount[key];
+    if (spec != null && spec > 0) {
+      return true;
+    }
+    final gen = _handlersCount[key.generalized];
+    if (gen != null && gen > 0) {
+      return true;
+    }
+    return false;
+  }
+
   bool removeHandler(Cookie cookie) {
     return _removeHandler(cookie._key, cookie._index);
   }
@@ -61,7 +77,11 @@ mixin StateHandlerMixin<Output, State extends BlocState>
     final handlers = _handlers[key];
     final hIndex = handlers?.indexWhere((element) => element.index == index);
     if (hIndex != null && hIndex > -1) {
-      handlers!.removeAt(hIndex);
+      final handler = handlers!.removeAt(hIndex);
+      if (handler._active) {
+        final g = key.unSourced;
+        _handlersCount[g] = _handlersCount[g]! - 1;
+      }
       return true;
     }
     return false;
@@ -77,14 +97,19 @@ mixin StateHandlerMixin<Output, State extends BlocState>
   }
 
   Cookie _registerHandler<Data>(
-    Type trigger,
-    bool general,
-    _StateHandler<Data> handler,
-  ) {
-    final h = _HandlerWrapper.wrap<Null, Data>(
-        general, trigger, (output, trigger) => handler(trigger));
+      Type trigger,
+      bool general,
+      _StateHandler<Data> handler,
+      ) {
+    final h = _HandlerWrapper.wrap<Null, Data>(general, trigger, (output, trigger) => handler(trigger),
+            (key, active) {
+          final g = key.unSourced;
+          _handlersCount[g] = _handlersCount[g]! + (active ? 1 : -1);
+        });
     _handlers[h.key] ??= [];
     _handlers[h.key]!.add(h);
+    final g = h.key.unSourced;
+    _handlersCount[g] = (_handlersCount[g] ?? 0) + 1;
     return Cookie._forHandler(h);
   }
 

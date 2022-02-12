@@ -92,11 +92,15 @@ class _HandlerKey extends Equatable {
   _HandlerKey(this.source, this.data, this.trigger);
 
   _HandlerKey.general(this.source, this.trigger) : data = Null;
+  _HandlerKey.noSource(this.data, this.trigger) : source = Null;
 
   factory _HandlerKey.create(
       bool general, Type source, Type data, Type trigger) {
     return _HandlerKey(source, general ? Null : data, trigger);
   }
+
+  _HandlerKey get unSourced => _HandlerKey.noSource(data, trigger);
+  _HandlerKey get generalized => _HandlerKey.general(source, trigger);
 
   @override
   get props => [source, data, trigger];
@@ -107,21 +111,34 @@ class _HandlerWrapper<Source, Data> {
   final _HandlerKey key;
   final _Handler<Source, Data> _handler;
   final int index = _index++;
+  final void Function(_HandlerKey key, bool active) _onStateChanged;
   bool _active = true;
 
-  _HandlerWrapper._(this.key, this._handler);
+  _HandlerWrapper._(this.key, this._handler, this._onStateChanged);
 
   static _HandlerWrapper<Source, Data> wrap<Source, Data>(
     bool general,
     Type trigger,
     _Handler<Source, Data> _handler,
+    void Function(_HandlerKey key, bool active) onStateChanged,
   ) {
     final key = _HandlerKey.create(general, Source, Data, trigger);
-    return _HandlerWrapper._(key, _handler);
+    return _HandlerWrapper._(key, _handler, onStateChanged);
   }
 
-  void deactivate() => _active = false;
-  void activate() => _active = true;
+  void deactivate() {
+    if (_active) {
+      _active = false;
+      _onStateChanged(key, _active);
+    }
+  }
+
+  void activate() {
+    if (!_active) {
+      _active = true;
+      _onStateChanged(key, _active);
+    }
+  }
 
   _HandlerResult call(Source output, Data trigger) => _handler(output, trigger);
 }

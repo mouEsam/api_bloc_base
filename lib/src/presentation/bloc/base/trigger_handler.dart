@@ -11,6 +11,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
 
   final Map<Type, List<_TriggerState>> _triggers = {};
   final Map<_HandlerKey, List<_HandlerWrapper>> _handlers = {};
+  final Map<_HandlerKey, int> _handlersCount = {};
 
   @override
   get sources => [...super.sources, ...triggers.map((e) => e.stream)];
@@ -40,7 +41,9 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     }
     _init = true;
     _subscriptions = triggers.map((trigger) {
-      return trigger.exclusiveStream.listen((event) async {
+      return trigger.exclusiveStream
+          .where((event) => _hasHandler(event.runtimeType, trigger.runtimeType))
+          .listen((event) async {
         _triggers[trigger.runtimeType] ??= [];
         final state = _TriggerState(event.data);
         final list = _triggers[trigger.runtimeType]!;
@@ -57,6 +60,19 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     }).toList();
   }
 
+  bool _hasHandler(Type data, Type trigger) {
+    final key = _HandlerKey.noSource(data, trigger);
+    final spec = _handlersCount[key];
+    if (spec != null && spec > 0) {
+      return true;
+    }
+    final gen = _handlersCount[key.generalized];
+    if (gen != null && gen > 0) {
+      return true;
+    }
+    return false;
+  }
+
   bool removeHandler(Cookie cookie) {
     return _removeHandler(cookie._key, cookie._index);
   }
@@ -65,7 +81,11 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     final handlers = _handlers[key];
     final hIndex = handlers?.indexWhere((element) => element.index == index);
     if (hIndex != null && hIndex > -1) {
-      handlers!.removeAt(hIndex);
+      final handler = handlers!.removeAt(hIndex);
+      if (handler._active) {
+        final g = key.unSourced;
+        _handlersCount[g] = _handlersCount[g]! - 1;
+      }
       return true;
     }
     return false;
@@ -121,9 +141,15 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     bool general,
     _Handler<Source, Data> handler,
   ) {
-    final h = _HandlerWrapper.wrap<Source, Data>(general, trigger, handler);
+    final h = _HandlerWrapper.wrap<Source, Data>(general, trigger, handler,
+        (key, active) {
+      final g = key.unSourced;
+      _handlersCount[g] = _handlersCount[g]! + (active ? 1 : -1);
+    });
     _handlers[h.key] ??= [];
     _handlers[h.key]!.add(h);
+    final g = h.key.unSourced;
+    _handlersCount[g] = (_handlersCount[g] ?? 0) + 1;
     return h;
   }
 
@@ -160,17 +186,17 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   }
 
   FutureOr<bool?> _handleTrigger<T>(
-      Type triggerType, T source, _TriggerState trigger) async {
-    final key = _HandlerKey(T, trigger.type, triggerType);
+      Type triggerType, T source, _TriggerState state) async {
+    final key = _HandlerKey(T, state.type, triggerType);
     final handlers = _handlers[key]?.where((element) => element._active);
     if (handlers != null && handlers.isNotEmpty) {
-      return _handleTriggerState<T>(handlers, source, trigger);
+      return _handleTriggerState<T>(handlers, source, state);
     }
     final generalKey = _HandlerKey.general(T, triggerType);
     final generalHandlers =
         _handlers[generalKey]?.where((element) => element._active);
     if (generalHandlers != null && generalHandlers.isNotEmpty) {
-      return _handleTriggerState<T>(generalHandlers, source, trigger);
+      return _handleTriggerState<T>(generalHandlers, source, state);
     }
     return false;
   }
