@@ -6,15 +6,13 @@ part of 'token.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-UserToken _$UserTokenFromJson(Map<String, dynamic> json) {
-  return UserToken(
-    accessToken: json['access_token'] as String,
-    refreshToken: json['refresh_token'] as String?,
-    expiration: json['expiration'] == null
-        ? null
-        : DateTime.parse(json['expiration'] as String),
-  );
-}
+UserToken _$UserTokenFromJson(Map<String, dynamic> json) => UserToken(
+      accessToken: json['access_token'] as String,
+      refreshToken: json['refresh_token'] as String?,
+      expiration: json['expiration'] == null
+          ? null
+          : DateTime.parse(json['expiration'] as String),
+    );
 
 Map<String, dynamic> _$UserTokenToJson(UserToken instance) => <String, dynamic>{
       'access_token': instance.accessToken,

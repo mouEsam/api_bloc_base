@@ -6,12 +6,11 @@ part of 'localized_string.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-LocalizedString _$LocalizedStringFromJson(Map<String, dynamic> json) {
-  return LocalizedString(
-    json['default_lang'] as String,
-    Map<String, String>.from(json['data'] as Map),
-  );
-}
+LocalizedString _$LocalizedStringFromJson(Map<String, dynamic> json) =>
+    LocalizedString(
+      json['default_lang'] as String,
+      Map<String, String>.from(json['data'] as Map),
+    );
 
 Map<String, dynamic> _$LocalizedStringToJson(LocalizedString instance) =>
     <String, dynamic>{

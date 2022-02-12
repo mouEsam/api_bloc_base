@@ -4,9 +4,14 @@ part 'base_errors.g.dart';
 
 @JsonSerializable()
 class BaseErrors {
-  const BaseErrors([this.errors = const {}]);
+  const BaseErrors({this.message, this.errors = const {}});
 
+  final String? message;
   final Map<String, List<String>> errors;
+
+  BaseErrors withMessage(String? message) {
+    return BaseErrors(message: message ?? this.message, errors: errors);
+  }
 
   factory BaseErrors.fromJson(Map<String, dynamic> json) =>
       _$BaseErrorsFromJson(json);

@@ -18,3 +18,5 @@ export 'src/presentation/bloc/user/base_user_bloc.dart';
 export 'src/presentation/bloc/user/base_user_state.dart';
 export 'src/presentation/bloc/worker/_index.dart';
 export 'src/presentation/widgets/_index.dart';
+export 'src/utils/box.dart';
+export 'src/utils/utils.dart';
