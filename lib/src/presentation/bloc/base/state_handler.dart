@@ -97,15 +97,15 @@ mixin StateHandlerMixin<Output, State extends BlocState>
   }
 
   Cookie _registerHandler<Data>(
-      Type trigger,
-      bool general,
-      _StateHandler<Data> handler,
-      ) {
-    final h = _HandlerWrapper.wrap<Null, Data>(general, trigger, (output, trigger) => handler(trigger),
-            (key, active) {
-          final g = key.unSourced;
-          _handlersCount[g] = _handlersCount[g]! + (active ? 1 : -1);
-        });
+    Type trigger,
+    bool general,
+    _StateHandler<Data> handler,
+  ) {
+    final h = _HandlerWrapper.wrap<Null, Data>(
+        general, trigger, (output, trigger) => handler(trigger), (key, active) {
+      final g = key.unSourced;
+      _handlersCount[g] = _handlersCount[g]! + (active ? 1 : -1);
+    });
     _handlers[h.key] ??= [];
     _handlers[h.key]!.add(h);
     final g = h.key.unSourced;

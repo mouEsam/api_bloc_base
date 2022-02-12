@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:api_bloc_base/src/presentation/bloc/base/input_to_output.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
 import 'package:equatable/equatable.dart';
 
 import 'base_bloc.dart';
