@@ -136,6 +136,10 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
     );
   }
 
+  void emitEmptyOutput(Output obj) {
+    currentData = createEmptyOutput(obj);
+  }
+
   Paginated<Output> createOutput(Map<int, Output> dataMap, int page) {
     return SimplePaginated(dataMap[page]!);
   }

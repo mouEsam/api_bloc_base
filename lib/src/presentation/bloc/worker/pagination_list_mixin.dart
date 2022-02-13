@@ -36,7 +36,11 @@ mixin PaginationListMixin<Input extends PaginatedInput<PaginationList<Output>>,
   }
 
   @override
-  createEmptyOutput([PaginationList? obj]) {
+  createEmptyOutput([PaginationList<Output>? obj]) {
     return super.createEmptyOutput(PageList());
+  }
+
+  void emitEmptyOutput([PaginationList<Output>? obj]) {
+    currentData = createEmptyOutput(obj);
   }
 }
