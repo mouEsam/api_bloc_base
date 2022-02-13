@@ -11,8 +11,10 @@ abstract class Converter<IN, OUT> {
   List<Converter> get converters;
   OUT? convert(IN initialData);
   Converter? getConverter(Type inputType, Type outputType) {
-    final converter = converters.firstWhereOrNull((element) =>
-        element.acceptsInput(inputType) && element.returnsOutput(outputType));
+    final converter = converters.followedBy([this]).firstWhereOrNull(
+        (element) =>
+            element.acceptsInput(inputType) &&
+            element.returnsOutput(outputType));
     return converter;
   }
 
@@ -38,11 +40,11 @@ abstract class Converter<IN, OUT> {
 
   Map<String, X> resolveMapConverter<X, Y>(Map<String, Y>? input) {
     final converter = getConverter(Y, X);
-    final Iterable<MapEntry<String, X>> entries = input
-        ?.entries
-        .map((entry) => MapEntry(entry.key, converter?.convert(entry.value)))
-        .whereType<MapEntry<String, X>>()
-        .toList() ??
+    final Iterable<MapEntry<String, X>> entries = input?.entries
+            .map(
+                (entry) => MapEntry(entry.key, converter?.convert(entry.value)))
+            .whereType<MapEntry<String, X>>()
+            .toList() ??
         <MapEntry<String, X>>[];
     return Map.fromEntries(entries);
   }
@@ -89,11 +91,11 @@ abstract class BaseModelConverter<Input, Output>
   final bool failIfError;
 
   const BaseModelConverter([this.failIfError = false]);
-  
+
   List<Converter> get converters => [];
 
   Output? convert(Input model);
-  
+
   Output? convertSingle(Input? initialData) {
     Output? result;
     if (failIfError) {
@@ -120,8 +122,7 @@ abstract class BaseModelConverter<Input, Output>
   }
 
   Map<String, Output> convertMap(Map<String, Input?>? initialData) {
-    final entries = initialData
-            ?.entries
+    final entries = initialData?.entries
             .map((entry) => MapEntry(entry.key, convertSingle(entry.value)))
             .whereType<MapEntry<String, Output>>()
             .toList() ??
