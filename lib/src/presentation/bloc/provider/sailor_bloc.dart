@@ -21,7 +21,7 @@ abstract class SailorBloc extends BaseCubit<NavigationState> implements Sailor {
   static const _localHost = "localhost";
 
   final GlobalKey<NavigatorState> navKey = GlobalKey();
-  final Compass observer = CompassNavigatorObserver();
+  final Compass compass = CompassNavigatorObserver();
 
   String get mainHost;
   String get localHost => _localHost;
