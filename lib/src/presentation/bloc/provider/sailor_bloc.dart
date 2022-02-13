@@ -21,7 +21,7 @@ abstract class SailorBloc extends BaseCubit<NavigationState> implements Sailor {
   static const _localHost = "localhost";
 
   final GlobalKey<NavigatorState> navKey = GlobalKey();
-  final CompassObserver observer = CompassObserver();
+  final Compass observer = CompassNavigatorObserver();
 
   String get mainHost;
   String get localHost => _localHost;
@@ -202,11 +202,15 @@ class _NavEvent {
   const _NavEvent(this.type, this.route);
 }
 
-class CompassObserver extends NavigatorObserver {
-  @override
-  get navigator => _navigator; //navKey.currentState;
-  NavigatorState? _navigator;
+abstract class Compass implements NavigatorObserver {
+  Route? get currentRoute;
+  FutureOr<Route> awaitRoute(bool Function(Route route) predicate);
+  FutureOr<Route> awaitAdded(bool Function(Route route) predicate);
+  FutureOr<Route> awaitRemoved(bool Function(Route route) predicate);
+  void didChange(Route? from, Route? to);
+}
 
+class CompassNavigatorObserver extends NavigatorObserver implements Compass {
   final _currentRoute = ValueNotifier<Route?>(null);
   final _currentEvent = ValueNotifier<_NavEvent?>(null);
 
