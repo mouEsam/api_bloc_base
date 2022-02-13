@@ -34,4 +34,9 @@ mixin PaginationListMixin<Input extends PaginatedInput<PaginationList<Output>>,
     return output.mapData(
         (data) => data is PaginationList<Output> ? data.asSinglePage : data);
   }
+
+  @override
+  createEmptyOutput([PaginationList? obj]) {
+    return super.createEmptyOutput(PageList());
+  }
 }

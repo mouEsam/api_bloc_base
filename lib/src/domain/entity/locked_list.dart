@@ -38,6 +38,10 @@ class PageList<T> extends PaginationList<T> {
 
   PageList._(this._list) : super._();
 
+  factory PageList.empty() {
+    return PageList._([]);
+  }
+
   void addPage(PageList<T> page) {
     addAll(page._list);
   }
