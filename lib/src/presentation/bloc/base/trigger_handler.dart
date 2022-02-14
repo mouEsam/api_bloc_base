@@ -84,9 +84,10 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     _StateHandler<Data>? handler,
     _Handler<Input, Data>? inputHandler,
     _Handler<Output, Data>? outputHandler,
+    bool Function(Data data)? predicate,
   }) {
     return _registerHandlers<Data>(
-        trigger.runtimeType, handler, inputHandler, outputHandler);
+        trigger.runtimeType, handler, inputHandler, outputHandler, predicate);
   }
 
   CookieJar onTrigger<Data>(
