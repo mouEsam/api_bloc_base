@@ -24,7 +24,10 @@ abstract class Sailor {
 
 mixin SailorMixin implements Sailor {
   final GlobalKey<NavigatorState> navKey = GlobalKey();
-  final Compass compass = CompassNavigatorObserver();
+  final CompassNavigatorObserver _compass = CompassNavigatorObserver();
+
+  Compass get compass => _compass;
+  NavigatorObserver get navigatorObserver => _compass;
 
   Future<GlobalKey<NavigatorState>> ensureInitialized() async {
     if (navKey.currentContext != null) {

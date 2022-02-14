@@ -13,7 +13,7 @@ class _NavEvent {
   const _NavEvent(this.type, this.route);
 }
 
-abstract class Compass implements NavigatorObserver {
+abstract class Compass {
   Route? get currentRoute;
   FutureOr<Route> awaitRoute(RoutePredicate predicate);
   FutureOr<Route> awaitAdded(RoutePredicate predicate);
