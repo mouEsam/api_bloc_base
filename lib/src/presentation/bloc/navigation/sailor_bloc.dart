@@ -1,7 +1,8 @@
+// ignore_for_file: cancel_subscriptions
+
 import 'dart:async';
 
 import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
-import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:uni_links/uni_links.dart' as uni_links;
@@ -9,6 +10,7 @@ import 'package:universal_platform/universal_platform.dart';
 import 'package:url_launcher/url_launcher.dart' as launcher;
 
 import 'compass.dart';
+import 'state.dart';
 
 abstract class Sailor {
   GlobalKey<NavigatorState> get navKey;
@@ -20,18 +22,61 @@ abstract class Sailor {
   Future<void> popUntil(RoutePredicate withName);
 }
 
-abstract class SailorBloc extends BaseCubit<NavigationState> implements Sailor {
-  static const _localHost = "localhost";
-
+mixin SailorMixin implements Sailor {
   final GlobalKey<NavigatorState> navKey = GlobalKey();
   final Compass compass = CompassNavigatorObserver();
+
+  Future<GlobalKey<NavigatorState>> ensureInitialized() async {
+    if (navKey.currentContext != null) {
+      return navKey;
+    }
+    await Future.doWhile(() async {
+      await Future.delayed(Duration(microseconds: 1000), () {});
+      return navKey.currentContext == null;
+    });
+    return navKey;
+  }
+
+  Future<T?> pushDestructively<T>(String routeName, {args}) async {
+    final key = await ensureInitialized();
+    final result = await key.currentState!
+        .pushNamedAndRemoveUntil(routeName, (r) => false, arguments: args);
+    return result as T?;
+  }
+
+  Future<T?> push<T>(String routeName, {args}) async {
+    final key = await ensureInitialized();
+    final result =
+        await key.currentState!.pushNamed(routeName, arguments: args);
+    return result as T?;
+  }
+
+  Future<void> popUntil(RoutePredicate withName) async {
+    final key = await ensureInitialized();
+    return key.currentState!.popUntil(withName);
+  }
+
+  Future<void> goHome() async {
+    final key = await ensureInitialized();
+    key.currentState!.popUntil((route) => route.isFirst);
+  }
+
+  Future<void> popNum(int routes) async {
+    int count = 0;
+    final key = await ensureInitialized();
+    key.currentState!.popUntil((route) => count++ == routes);
+  }
+}
+
+abstract class SailorBloc extends BaseCubit<NavigationState> with SailorMixin {
+  static const _localHost = "localhost";
 
   String get mainHost;
   String get localHost => _localHost;
   String get internalInitialRoute;
   String get internalMainRoute;
 
-  late final StreamSubscription _sub;
+  late final StreamSubscription<NavigationState> _sub;
   late final StreamSubscription<Uri?> _linkSub;
 
   String? _loadedLink;
@@ -43,6 +88,8 @@ abstract class SailorBloc extends BaseCubit<NavigationState> implements Sailor {
 
   @override
   get stream => super.stream.distinct();
+
+  get subscriptions => super.subscriptions..addAll([_sub, _linkSub]);
 
   List<Stream> get eventsStreams;
 
@@ -80,17 +127,6 @@ abstract class SailorBloc extends BaseCubit<NavigationState> implements Sailor {
   }
 
   Future<void> onKeyInitialized(GlobalKey<NavigatorState> navKey) async {}
-
-  Future<GlobalKey<NavigatorState>> ensureInitialized() async {
-    if (navKey.currentContext != null) {
-      return navKey;
-    }
-    await Future.doWhile(() async {
-      await Future.delayed(Duration(microseconds: 1000), () {});
-      return navKey.currentContext == null;
-    });
-    return navKey;
-  }
 
   void _handleState(NavigationState event) {
     print("NavigationState ${event.runtimeType}");
@@ -148,56 +184,4 @@ abstract class SailorBloc extends BaseCubit<NavigationState> implements Sailor {
   }
 
   FutureOr<NavigationState>? generateNavigationState(List events);
-
-  Future<T?> pushDestructively<T>(String routeName, {args}) async {
-    final key = await ensureInitialized();
-    final result = await key.currentState!
-        .pushNamedAndRemoveUntil(routeName, (r) => false, arguments: args);
-    return result as T?;
-  }
-
-  Future<T?> push<T>(String routeName, {args}) async {
-    final key = await ensureInitialized();
-    final result =
-        await key.currentState!.pushNamed(routeName, arguments: args);
-    return result as T?;
-  }
-
-  Future<void> popUntil(RoutePredicate withName) async {
-    final key = await ensureInitialized();
-    return key.currentState!.popUntil(withName);
-  }
-
-  Future<void> goHome() async {
-    final key = await ensureInitialized();
-    key.currentState!.popUntil((route) => route.isFirst);
-  }
-
-  Future<void> popNum(int routes) async {
-    int count = 0;
-    final key = await ensureInitialized();
-    key.currentState!.popUntil((route) => count++ == routes);
-  }
-
-  @override
-  Future<void> close() {
-    _sub.cancel();
-    _linkSub.cancel();
-    return super.close();
-  }
 }
-
-abstract class NavigationState extends Equatable implements Type {
-  const NavigationState();
-
-  void push(Sailor sailor, String routeName) {
-    sailor.pushDestructively(routeName);
-  }
-
-  @override
-  get stringify => true;
-  @override
-  get props => [];
-}
-
-class MainPageState extends NavigationState {}
