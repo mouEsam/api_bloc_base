@@ -29,6 +29,13 @@ dependencies:
   flutter_deep_linking: ^0.2.1
   uni_links: ^0.5.1
   universal_platform: ^1.0.0+1
+  universal_html: ^2.0.8
+  file: ^6.1.2
+  share_plus: ^3.0.4
+  permission_handler: ^8.1.2
+  file_picker: any
+  image_picker: any
+  device_info_plus: any
 
   visibility_detector: ^0.2.2
   enum_to_string: ^2.0.1

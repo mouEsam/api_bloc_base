@@ -1,3 +1,9 @@
 export 'converter.dart';
+export 'device_info.dart';
 export 'dio_flutter_transformer.dart';
 export 'dummy_converter.dart';
+export 'file_manager.dart';
+export 'file_picker.dart';
+export 'path_provider.dart';
+export 'permission_handler.dart';
+export 'uuid_generator.dart';
