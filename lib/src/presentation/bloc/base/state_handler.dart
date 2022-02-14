@@ -77,17 +77,19 @@ mixin StateHandlerMixin<Output, State extends BlocState>
   }
 
   Cookie onTriggerState<Data>(
-      _SourceType trigger, _StateHandler<Data> handler) {
-    return _registerHandler<Data>(trigger.runtimeType, handler);
+      _SourceType trigger, _StateHandler<Data> handler, [bool Function(Data)? predicate,]) {
+    return _registerHandler<Data>(trigger.runtimeType, handler, predicate);
   }
 
   Cookie _registerHandler<Data>(
     Type trigger,
     _StateHandler<Data> handler,
+    bool Function(Data)? predicate,
   ) {
+    predicate ??= (_) => true;
     final h = _HandlerWrapper.wrap<Null, Data>(
         trigger, (output, trigger) => handler(trigger), (stateData) {
-      return stateData is Data;
+      return stateData is Data && predicate(stateData);
     });
     _handlers[h.key] ??= [];
     _handlers[h.key]!.add(h);
