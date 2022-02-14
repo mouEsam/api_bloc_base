@@ -94,9 +94,10 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     _StateHandler<Data>? handler,
     _Handler<Input, Data>? inputHandler,
     _Handler<Output, Data>? outputHandler,
+    bool Function(Data data)? predicate,
   }) {
     return _registerHandlers<Data>(
-        trigger.runtimeType, handler, inputHandler, outputHandler);
+        trigger.runtimeType, handler, inputHandler, outputHandler, predicate);
   }
 
   CookieJar _registerHandlers<Data>(
@@ -104,31 +105,34 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     _StateHandler<Data>? handler,
     _Handler<Input, Data>? inputHandler,
     _Handler<Output, Data>? outputHandler,
+    bool Function(Data)? predicate,
   ) {
     _HandlerWrapper? hk;
     _HandlerWrapper? ihk;
     _HandlerWrapper? ohk;
     if (handler != null) {
       hk = _registerHandler<Null, Data>(
-          trigger, (output, trigger) => handler(trigger));
+          trigger, predicate, (output, trigger) => handler(trigger));
     }
     if (inputHandler != null) {
       ihk = _registerHandler<Input, Data>(
-          trigger, (output, trigger) => inputHandler(output, trigger));
+          trigger, predicate, (output, trigger) => inputHandler(output, trigger));
     }
     if (outputHandler != null) {
       ohk = _registerHandler<Output, Data>(
-          trigger, (output, trigger) => outputHandler(output, trigger));
+          trigger, predicate, (output, trigger) => outputHandler(output, trigger));
     }
     return CookieJar._(hk, ihk, ohk);
   }
 
   _HandlerWrapper _registerHandler<Source, Data>(
     Type trigger,
+    bool Function(Data)? predicate,
     _Handler<Source, Data> handler,
   ) {
+    predicate ??= (_) => true;
     final h = _HandlerWrapper.wrap<Source, Data>(trigger, handler, (data) {
-      return data is Data;
+      return data is Data && predicate(data);
     });
     _handlers[h.key] ??= [];
     _handlers[h.key]!.add(h);
