@@ -6,6 +6,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     on
         SourcesMixin<Input, Output, State>,
         OutputConverterMixin<Input, Output, State> {
+  HandlerAction get defaultHandlerAction => HandlerAction.Handled;
   bool get handleTriggersSequentially => true;
   List<_TriggerType> get triggers;
   late final List<StreamSubscription> _subscriptions;
@@ -30,12 +31,12 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   }
 
   init() {
-    initializeTriggers();
+    _initializeTriggers();
     super.init();
   }
 
   bool _init = false;
-  void initializeTriggers() {
+  void _initializeTriggers() {
     if (_init) {
       return;
     }
@@ -116,12 +117,12 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
           trigger, predicate, (output, trigger) => handler(trigger));
     }
     if (inputHandler != null) {
-      ihk = _registerHandler<Input, Data>(
-          trigger, predicate, (output, trigger) => inputHandler(output, trigger));
+      ihk = _registerHandler<Input, Data>(trigger, predicate,
+          (output, trigger) => inputHandler(output, trigger));
     }
     if (outputHandler != null) {
-      ohk = _registerHandler<Output, Data>(
-          trigger, predicate, (output, trigger) => outputHandler(output, trigger));
+      ohk = _registerHandler<Output, Data>(trigger, predicate,
+          (output, trigger) => outputHandler(output, trigger));
     }
     return CookieJar._(hk, ihk, ohk);
   }
@@ -133,7 +134,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   ) {
     predicate ??= (_) => true;
     final h = _HandlerWrapper.wrap<Source, Data>(trigger, handler, (data) {
-      return data is Data && predicate(data);
+      return data is Data && predicate!(data);
     });
     _handlers[h.key] ??= [];
     _handlers[h.key]!.add(h);
@@ -239,7 +240,8 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     return trigger.setHandled(() async {
       bool isHandled = false;
       for (final handler in handlers) {
-        final result = await handler(source, trigger.data);
+        final result =
+            await handler(source, trigger.data) ?? defaultHandlerAction;
         if (result.isHandled) {
           trigger.addDoneHandler(handler.index);
         }

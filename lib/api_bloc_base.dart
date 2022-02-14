@@ -13,6 +13,7 @@ export 'package:sembast/timestamp.dart';
 export 'src/data/_index.dart';
 export 'src/domain/entity/_index.dart';
 export 'src/presentation/bloc/base/_index.dart';
+export 'src/presentation/bloc/navigation/_index.dart';
 export 'src/presentation/bloc/provider/_index.dart';
 export 'src/presentation/bloc/user/base_user_bloc.dart';
 export 'src/presentation/bloc/user/base_user_state.dart';

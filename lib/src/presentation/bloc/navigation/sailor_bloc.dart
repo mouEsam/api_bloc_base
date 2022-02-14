@@ -3,18 +3,21 @@ import 'dart:async';
 import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:listenable_stream/listenable_stream.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:uni_links/uni_links.dart' as uni_links;
 import 'package:universal_platform/universal_platform.dart';
 import 'package:url_launcher/url_launcher.dart' as launcher;
 
+import 'compass.dart';
+
 abstract class Sailor {
   GlobalKey<NavigatorState> get navKey;
-  Future<T?> pushDestructively<T>(String routeName);
-  Future<T?> push<T>(String routeName);
+  Compass get compass;
+  Future<T?> pushDestructively<T>(String routeName, {args});
+  Future<T?> push<T>(String routeName, {args});
   Future<void> goHome();
   Future<void> popNum(int routes);
+  Future<void> popUntil(RoutePredicate withName);
 }
 
 abstract class SailorBloc extends BaseCubit<NavigationState> implements Sailor {
@@ -146,17 +149,23 @@ abstract class SailorBloc extends BaseCubit<NavigationState> implements Sailor {
 
   FutureOr<NavigationState>? generateNavigationState(List events);
 
-  Future<T?> pushDestructively<T>(String routeName) async {
+  Future<T?> pushDestructively<T>(String routeName, {args}) async {
     final key = await ensureInitialized();
     final result = await key.currentState!
-        .pushNamedAndRemoveUntil(routeName, (r) => false);
+        .pushNamedAndRemoveUntil(routeName, (r) => false, arguments: args);
     return result as T?;
   }
 
-  Future<T?> push<T>(String routeName) async {
+  Future<T?> push<T>(String routeName, {args}) async {
     final key = await ensureInitialized();
-    final result = await key.currentState!.pushNamed(routeName);
+    final result =
+        await key.currentState!.pushNamed(routeName, arguments: args);
     return result as T?;
+  }
+
+  Future<void> popUntil(RoutePredicate withName) async {
+    final key = await ensureInitialized();
+    return key.currentState!.popUntil(withName);
   }
 
   Future<void> goHome() async {
@@ -192,97 +201,3 @@ abstract class NavigationState extends Equatable implements Type {
 }
 
 class MainPageState extends NavigationState {}
-
-enum _NavEventType { Add, Remove }
-
-class _NavEvent {
-  final _NavEventType type;
-  final Route route;
-
-  const _NavEvent(this.type, this.route);
-}
-
-abstract class Compass implements NavigatorObserver {
-  Route? get currentRoute;
-  FutureOr<Route> awaitRoute(bool Function(Route route) predicate);
-  FutureOr<Route> awaitAdded(bool Function(Route route) predicate);
-  FutureOr<Route> awaitRemoved(bool Function(Route route) predicate);
-  void didChange(Route? from, Route? to);
-}
-
-class CompassNavigatorObserver extends NavigatorObserver implements Compass {
-  final _currentRoute = ValueNotifier<Route?>(null);
-  final _currentEvent = ValueNotifier<_NavEvent?>(null);
-
-  Route? get currentRoute => _currentRoute.value;
-
-  FutureOr<Route> awaitRoute(bool Function(Route route) predicate) {
-    return _currentRoute
-        .toValueStream(replayValue: true)
-        .whereType<Route>()
-        .firstWhere(predicate);
-  }
-
-  FutureOr<Route> awaitAdded(bool Function(Route route) predicate) {
-    return _awaitEvent(predicate, _NavEventType.Add);
-  }
-
-  FutureOr<Route> awaitRemoved(bool Function(Route route) predicate) {
-    return _awaitEvent(predicate, _NavEventType.Remove);
-  }
-
-  FutureOr<Route> _awaitEvent(
-      bool Function(Route route) predicate, _NavEventType type) {
-    return _currentEvent
-        .toValueStream(replayValue: true)
-        .whereType<_NavEvent>()
-        .where((event) => event.type == type)
-        .map((event) => event.route)
-        .firstWhere(predicate);
-  }
-
-  @override
-  @mustCallSuper
-  void didPop(Route route, Route? previousRoute) {
-    _currentRoute.value = previousRoute;
-    _currentEvent.value = _NavEvent(_NavEventType.Remove, route);
-    didChange(previousRoute, route);
-  }
-
-  @override
-  @mustCallSuper
-  void didPush(Route route, Route? previousRoute) {
-    _currentRoute.value = route;
-    _currentEvent.value = _NavEvent(_NavEventType.Add, route);
-    didChange(previousRoute, route);
-  }
-
-  @override
-  @mustCallSuper
-  void didRemove(Route route, Route? previousRoute) {
-    _currentRoute.value = previousRoute;
-    _currentEvent.value = _NavEvent(_NavEventType.Remove, route);
-    didChange(previousRoute, route);
-  }
-
-  @override
-  @mustCallSuper
-  void didReplace({Route? newRoute, Route? oldRoute}) {
-    _currentRoute.value = newRoute;
-    if (oldRoute != null) {
-      _currentEvent.value = _NavEvent(_NavEventType.Remove, oldRoute);
-    }
-    if (newRoute != null) {
-      _currentEvent.value = _NavEvent(_NavEventType.Add, newRoute);
-    }
-    didChange(oldRoute, newRoute);
-  }
-
-  void didChange(Route? from, Route? to) {}
-
-  @override
-  void didStartUserGesture(Route route, Route? previousRoute) {}
-
-  @override
-  void didStopUserGesture() {}
-}

@@ -4,10 +4,10 @@ typedef _SourceType = BaseCubit<BlocState>;
 
 mixin StateHandlerMixin<Output, State extends BlocState>
     on StatefulBloc<Output, State> {
+  bool get handleStatesSequentially => false;
+  HandlerAction get defaultHandlerAction => HandlerAction.Handled;
   List<_SourceType> get triggers;
   late final List<StreamSubscription> _subscriptions;
-
-  bool get handleStatesSequentially => false;
 
   final Map<Type, List<_TriggerState>> _triggers = {};
   final Map<_HandlerKey, List<_HandlerWrapper>> _handlers = {};
@@ -27,12 +27,12 @@ mixin StateHandlerMixin<Output, State extends BlocState>
   }
 
   init() {
-    initializeTriggers();
+    _initializeTriggers();
     super.init();
   }
 
   bool _init = false;
-  void initializeTriggers() {
+  void _initializeTriggers() {
     if (_init) {
       return;
     }
@@ -76,9 +76,26 @@ mixin StateHandlerMixin<Output, State extends BlocState>
     return false;
   }
 
-  Cookie onTriggerState<Data>(
-      _SourceType trigger, _StateHandler<Data> handler, [bool Function(Data)? predicate,]) {
-    return _registerHandler<Data>(trigger.runtimeType, handler, predicate);
+  Cookie onSourceState<Data>(
+    _SourceType source,
+    _StateHandler<Data> handler, [
+    bool Function(Data)? predicate,
+  ]) {
+    return _registerHandler<Data>(source.runtimeType, handler, predicate);
+  }
+
+  Cookie onLoadedState<Data>(
+    _SourceType source,
+    _StateHandler<Data> handler, [
+    bool Function(Data)? predicate,
+  ]) {
+    return _registerHandler<Loaded<Data>>(
+      source.runtimeType,
+      (state) => handler(state.data),
+      (state) {
+        return predicate?.call(state.data) ?? true;
+      },
+    );
   }
 
   Cookie _registerHandler<Data>(
@@ -89,14 +106,18 @@ mixin StateHandlerMixin<Output, State extends BlocState>
     predicate ??= (_) => true;
     final h = _HandlerWrapper.wrap<Null, Data>(
         trigger, (output, trigger) => handler(trigger), (stateData) {
-      return stateData is Data && predicate(stateData);
+      return stateData is Data && predicate!(stateData);
     });
     _handlers[h.key] ??= [];
     _handlers[h.key]!.add(h);
     return Cookie._forHandler(h);
   }
 
-  FutureOr<void> handleRemainingTriggers() async {
+  void clearRemainingStates() {
+    _triggers.clear();
+  }
+
+  FutureOr<void> handleRemainingStates() async {
     for (final trigger in _triggers.entries) {
       final key = trigger.key;
       final value = trigger.value;
@@ -175,7 +196,8 @@ mixin StateHandlerMixin<Output, State extends BlocState>
     return trigger.setHandled(() async {
       bool isHandled = false;
       for (final handler in handlers) {
-        final result = await handler(source, trigger.data);
+        final result =
+            await handler(source, trigger.data) ?? defaultHandlerAction;
         if (result.isHandled) {
           trigger.addDoneHandler(handler.index);
         }

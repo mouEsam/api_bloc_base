@@ -35,9 +35,17 @@ abstract class BaseCubit<State> extends Cubit<State> implements Initializable {
 
   void stateChanged(State nextState) {}
 
-  FutureOr<S> awaitState<S extends State>([bool Function(S state)? f]) {
+  Future<S> awaitState<S extends State>([bool Function(S state)? f]) {
     f ??= (_) => true;
     return stream.whereType<S>().firstWhere(f);
+  }
+
+  Future<R> whenState<S extends State, R extends Object?>(
+      [FutureOr<R> Function()? f]) {
+    f ??= () => Future.value(null);
+    return exclusiveStream
+        .firstWhere((event) => event is S)
+        .then((value) => f!());
   }
 
   @override
