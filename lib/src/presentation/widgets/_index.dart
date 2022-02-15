@@ -12,6 +12,7 @@ export 'single_event.dart';
 export 'stadium_indicator.dart';
 export 'state_container.dart';
 export 'state_container_defs.dart';
+export 'stateful_bloc_builder.dart';
 export 'stateful_bloc_container.dart';
 export 'value_listener.dart';
 export 'visibility_builder.dart';
