@@ -37,7 +37,7 @@ typedef BlocOnGoingOperationBuilder<Bloc, Data> = Widget Function(
 typedef BlocStateBuilder<Bloc, T> = Widget Function(
     BuildContext context, Bloc bloc, T data, BaseErrors? errors);
 typedef BlocStateGenericBuilder<Bloc, T, State> = Widget Function(
-    BuildContext context, Bloc bloc, Loaded<T>? data, State state);
+    BuildContext context, Bloc bloc, T? data, State state);
 typedef BlocStateErrorBuilder<Bloc> = Widget Function(
     BuildContext context, Bloc bloc, Error error);
 typedef BlocStateListBuilder<Bloc, T> = List<Widget> Function(

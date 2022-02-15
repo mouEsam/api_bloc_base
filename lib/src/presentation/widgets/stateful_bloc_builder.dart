@@ -128,7 +128,7 @@ class _StatefulBlocBuilderState<Data, StateType extends BlocState,
                       ? (bloc as Refreshable).refetchData
                       : null));
         }
-        return widget.builder(context, bloc, _state, state);
+        return widget.builder(context, bloc, _state?.data, state);
       },
     );
   }
