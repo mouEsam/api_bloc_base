@@ -26,7 +26,7 @@ class StatefulBlocContainer<Data, StateType extends BlocState,
   final Widget Function(BuildContext context, Bloc bloc, Error error)
       errorBuilder;
 
-  const StatefulBlocContainer.custom({
+  const StatefulBlocContainer({
     Key? key,
     this.bodyBuilder,
     this.pageBuilder,

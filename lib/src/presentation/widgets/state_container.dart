@@ -28,7 +28,7 @@ class StateContainer<Data, StateType> extends StatefulWidget {
   final Widget? Function(BuildContext context, String? message,
       VoidCallback? retry, Widget? child) buildError;
 
-  const StateContainer.custom(
+  const StateContainer(
       {Key? key,
       required this.builder,
       required this.buildLoading,
