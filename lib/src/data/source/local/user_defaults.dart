@@ -4,6 +4,10 @@ import 'package:api_bloc_base/src/domain/entity/base_profile.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class UserDefaults {
+  static const _USER_TOKEN = 'user_token';
+  static const _FIRST_TIME = 'first_time';
+  static const _SIGNED_ACCOUNT = 'signed_in_account';
+
   final storage = const FlutterSecureStorage();
   final BaseProfile Function(Map<String, dynamic> json) profileFactory;
   const UserDefaults(this.profileFactory);
@@ -67,10 +71,4 @@ class UserDefaults {
       return null;
     });
   }
-}
-
-extension on UserDefaults {
-  static const _USER_TOKEN = 'user_token';
-  static const _FIRST_TIME = 'first_time';
-  static const _SIGNED_ACCOUNT = 'signed_in_account';
 }
