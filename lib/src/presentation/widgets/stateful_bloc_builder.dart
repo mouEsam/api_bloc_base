@@ -117,16 +117,17 @@ class _StatefulBlocBuilderState<Data, StateType extends BlocState,
         _state = state is Loaded<Data> ? state : _state;
         if (widget.treatErrorAsOperation && state is Error && _state != null) {
           _listenToErrorAsFailedOperation(
-              context,
-              bloc,
-              FailedOperationState<Data>.message(_state!.data,
-                  errors: BaseErrors(message: state.response.message),
-                  errorMessage: state.response.message,
-                  operationTag: "",
-                  silent: false,
-                  retry: bloc is Refreshable
-                      ? (bloc as Refreshable).refetchData
-                      : null));
+            context,
+            bloc,
+            FailedOperationState<Data>.message(_state!.data,
+                errors: BaseErrors(message: state.response.message),
+                errorMessage: state.response.message,
+                operationTag: "",
+                silent: false,
+                retry: bloc is Refreshable
+                    ? (bloc as Refreshable).refetchData
+                    : null),
+          );
         }
         return widget.builder(context, bloc, _state?.data, state);
       },
