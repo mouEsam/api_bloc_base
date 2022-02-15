@@ -1,8 +1,10 @@
 import 'dart:async';
 
-import 'package:api_bloc_base/api_bloc_base.dart';
 import 'package:flutter/material.dart';
 
+import '../../data/model/_index.dart';
+import '../bloc/base/_index.dart';
+import '../bloc/worker/_index.dart';
 import 'state_container_defs.dart';
 
 class StateContainer<Data, StateType> extends StatefulWidget {
@@ -19,13 +21,10 @@ class StateContainer<Data, StateType> extends StatefulWidget {
   final StateListener<SuccessfulOperationState<Data>>? onSuccess;
   final StateListener<FailedOperationState<Data>>? onFailure;
   final Widget Function(BuildContext context, Widget child)? buildChild;
-  final Widget? Function(
-      BuildContext context,
-      String? loadingMessage,
-      Stream<double>? progress,
-      VoidCallback? onCancel,
-      Widget? child) buildLoading;
-  final Widget? Function(BuildContext context, String? message,
+  final Widget Function(
+          BuildContext context, OperationData? operationData, Widget? child)
+      buildLoading;
+  final Widget Function(BuildContext context, String? message,
       VoidCallback? retry, Widget? child) buildError;
 
   const StateContainer(
@@ -144,12 +143,11 @@ class _StateContainerState<Data, StateType>
           child,
         );
       } else {
-        final loadingMessage = widget.defaultLoadingMessage;
         child = widget.buildLoading(
           context,
-          loadingMessage,
-          null,
-          null,
+          OperationData(
+            loadingMessage: widget.defaultLoadingMessage,
+          ),
           child,
         );
       }
@@ -163,9 +161,12 @@ class _StateContainerState<Data, StateType>
       } else if (!state.silent) {
         child = widget.buildLoading(
           context,
-          state.loadingMessage,
-          state.progress,
-          state.token != null ? () => state.token!.cancel() : null,
+          OperationData(
+            loadingMessage:
+                state.loadingMessage ?? widget.defaultLoadingMessage,
+            progress: state.progress,
+            onCancel: state.isCancellable ? () => state.cancel() : null,
+          ),
           child,
         );
       }

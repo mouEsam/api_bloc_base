@@ -1,3 +1,4 @@
+import 'package:api_bloc_base/api_bloc_base.dart';
 import 'package:api_bloc_base/src/data/model/remote/params/base_errors.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:dio/dio.dart';
@@ -56,6 +57,13 @@ class OnGoingOperationState<T> extends LoadedState<T> implements Operation {
       this.token,
       this.progress})
       : super(data);
+
+  bool get isCancellable =>
+      token != null &&
+      (token is! ChainedCancelToken ||
+          (token as ChainedCancelToken).isCancellable);
+
+  void cancel() => token?.cancel();
 
   @override
   List<Object?> get props => [

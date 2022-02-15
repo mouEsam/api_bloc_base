@@ -1,8 +1,11 @@
 import 'dart:async';
 
-import 'package:api_bloc_base/api_bloc_base.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../data/_index.dart';
+import '../bloc/worker/_index.dart';
 import 'state_container_defs.dart';
 
 class StatefulBlocContainer<Data, StateType extends BlocState,
@@ -11,27 +14,21 @@ class StatefulBlocContainer<Data, StateType extends BlocState,
   final String defaultLoadingMessage;
   final bool showCancelOnLoading;
   final bool treatErrorAsOperation;
-  final BlocStateBuilder<Bloc, Data>? bodyBuilder;
+  final BlocStateBuilder<Bloc, Data>? buildBody;
   final BlocStateListener<Bloc, StateType>? listener;
   final BlocStateListener<Bloc, SuccessfulOperationState<Data>>? onSuccess;
   final BlocStateListener<Bloc, FailedOperationState<Data>>? onFailure;
-  final BlocStateBuilder<Bloc, Data>? pageBuilder;
-  final Widget Function(
-      BuildContext context,
-      Bloc bloc,
-      String? loadingMessage,
-      Stream<double>? progress,
-      VoidCallback? onCancel,
-      Widget? body)? buildPage;
-  final Widget Function(BuildContext context, Bloc bloc, Error error)
-      errorBuilder;
+  final BlocStateBuilder<Bloc, Data>? buildPage;
+  final Widget Function(BuildContext context, Bloc bloc,
+      OperationData? operation, Widget? body)? buildWrapper;
+  final BlocStateErrorBuilder<Bloc> buildError;
 
   const StatefulBlocContainer({
     Key? key,
-    this.bodyBuilder,
-    this.pageBuilder,
-    required this.buildPage,
-    required this.errorBuilder,
+    this.buildBody,
+    this.buildPage,
+    this.buildWrapper,
+    required this.buildError,
     this.listener,
     this.onSuccess,
     this.onFailure,
@@ -127,24 +124,25 @@ class _StatefulBlocContainerState<Data, StateType extends BlocState,
       builder: (context, state) {
         final bloc = context.watch<Bloc>();
         VoidCallback? onCancel;
-        String? loadingMessage;
-        Stream<double>? progress;
+        OperationData? operationData;
         BaseErrors? errors;
         if (state is Loaded<Data>) {
           _state = state;
         }
         if (state is Loading) {
-          onCancel =
-              widget.showCancelOnLoading ? () => Navigator.pop(context) : null;
-          loadingMessage = widget.defaultLoadingMessage;
+          operationData = OperationData(
+              loadingMessage: widget.defaultLoadingMessage,
+              onCancel: widget.showCancelOnLoading
+                  ? () => Navigator.pop(context)
+                  : null);
         }
         if (state is OnGoingOperationState<Data> && !state.silent) {
-          loadingMessage = state.loadingMessage;
-          if (bloc is WorkerMixin<Data>) {
-            onCancel = () => (bloc as WorkerMixin<Data>)
-                .cancelOperation(operationTag: state.operationTag);
-          }
-          progress = state.progress;
+          operationData = OperationData(
+            loadingMessage:
+                state.loadingMessage ?? widget.defaultLoadingMessage,
+            progress: state.progress,
+            onCancel: state.isCancellable ? () => state.cancel() : null,
+          );
         } else if (state is FailedOperationState<Data>) {
           errors = state.errors;
           errors = errors?.withMessage(state.errorMessage);
@@ -154,12 +152,12 @@ class _StatefulBlocContainerState<Data, StateType extends BlocState,
         }
         Widget page;
         if (state is Error && _state == null) {
-          page = widget.errorBuilder(context, bloc, state);
+          page = widget.buildError(context, bloc, state);
         } else {
           final isLoaded = _state != null;
           Widget? body;
-          if (isLoaded && widget.bodyBuilder != null) {
-            body = widget.bodyBuilder!(context, bloc, _state!.data, errors);
+          if (isLoaded && widget.buildBody != null) {
+            body = widget.buildBody!(context, bloc, _state!.data, errors);
           }
           if (widget.treatErrorAsOperation && state is Error) {
             _listenToErrorAsFailedOperation(
@@ -171,14 +169,13 @@ class _StatefulBlocContainerState<Data, StateType extends BlocState,
                     operationTag: "",
                     silent: false,
                     retry: bloc is Refreshable
-                        ? () => (bloc as Refreshable).refetchData()
+                        ? (bloc as Refreshable).refetchData
                         : null));
           }
-          if (isLoaded && widget.pageBuilder != null) {
-            page = widget.pageBuilder!(context, bloc, _state!.data, errors);
-          } else if (widget.buildPage != null) {
-            page = widget.buildPage!(
-                context, bloc, loadingMessage, progress, onCancel, body);
+          if (isLoaded && widget.buildPage != null) {
+            page = widget.buildPage!(context, bloc, _state!.data, errors);
+          } else if (widget.buildWrapper != null) {
+            page = widget.buildWrapper!(context, bloc, operationData, body);
           } else {
             page = body ?? Container();
           }
