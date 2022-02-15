@@ -12,7 +12,6 @@ class StatefulBlocBuilder<Data, StateType extends BlocState,
     Bloc extends StatefulBloc<Data, StateType>> extends StatefulWidget {
   static const String _DefaultLoadingMessage = "loading";
   final String defaultLoadingMessage;
-  final bool showCancelOnLoading;
   final bool treatErrorAsOperation;
   final BlocStateGenericBuilder<Bloc, Data, StateType> builder;
   final BlocStateListener<Bloc, StateType>? listener;
@@ -25,7 +24,6 @@ class StatefulBlocBuilder<Data, StateType extends BlocState,
     this.listener,
     this.onSuccess,
     this.onFailure,
-    this.showCancelOnLoading = true,
     this.treatErrorAsOperation = true,
     this.defaultLoadingMessage = _DefaultLoadingMessage,
   }) : super(key: key);
