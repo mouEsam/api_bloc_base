@@ -7,10 +7,7 @@ class UserDefaults {
   final storage = const FlutterSecureStorage();
   final BaseProfile Function(Map<String, dynamic> json) profileFactory;
   const UserDefaults(this.profileFactory);
-}
 
-extension UserTokenUtils on UserDefaults {
-  static const _USER_TOKEN = 'user_token';
   Future<void> setUserToken(String? userToken) {
     if (userToken == null) {
       return storage.delete(key: _USER_TOKEN);
@@ -22,10 +19,7 @@ extension UserTokenUtils on UserDefaults {
   Future<String?> get userToken {
     return storage.read(key: _USER_TOKEN);
   }
-}
 
-extension SignedInAccountUtils on UserDefaults {
-  static const _SIGNED_ACCOUNT = 'signed_in_account';
   Future<void> setSignedAccount(BaseProfile? profile) {
     print('saving account $profile');
     final json = jsonEncode(profile?.toJson());
@@ -55,10 +49,7 @@ extension SignedInAccountUtils on UserDefaults {
       return null;
     });
   }
-}
 
-extension FirstTime on UserDefaults {
-  static const _FIRST_TIME = 'first_time';
   Future<void> setFirstTime(DateTime dataTime) {
     return storage.write(key: _FIRST_TIME, value: dataTime.toIso8601String());
   }
@@ -76,4 +67,10 @@ extension FirstTime on UserDefaults {
       return null;
     });
   }
+}
+
+extension on UserDefaults {
+  static const _USER_TOKEN = 'user_token';
+  static const _FIRST_TIME = 'first_time';
+  static const _SIGNED_ACCOUNT = 'signed_in_account';
 }
