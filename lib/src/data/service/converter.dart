@@ -130,3 +130,48 @@ abstract class BaseModelConverter<Input, Output>
     return Map.fromEntries(entries);
   }
 }
+
+mixin ReverseConverter<IN, OUT> on Converter<IN, OUT> {
+  IN? reverseConvert(OUT entity);
+
+  ReverseConverter? getReverseConverter(Type outputType, Type inputType) {
+    final converter = converters
+        .followedBy([this])
+        .whereType<ReverseConverter>()
+        .firstWhereOrNull((element) =>
+            element.acceptsInput(inputType) &&
+            element.returnsOutput(outputType));
+    return converter;
+  }
+
+  X requireReverseConverter<I, X>(I? input) {
+    return resolveReverseConverter(input)!;
+  }
+
+  X? resolveReverseConverter<I, X>(I? input) {
+    if (input == null) return null;
+    final converter = getReverseConverter(I, X);
+    return converter?.reverseConvert(input);
+  }
+
+  List<X> resolveListReverseConverter<X, Y>(List<Y>? input) {
+    final converter = getReverseConverter(Y, X);
+    List<X> result = input
+            ?.map((item) => converter?.reverseConvert(item))
+            .whereType<X>()
+            .toList() ??
+        <X>[];
+    return result;
+  }
+
+  Map<String, X> resolveMapReverseConverter<X, Y>(Map<String, Y>? input) {
+    final converter = getReverseConverter(Y, X);
+    final Iterable<MapEntry<String, X>> entries = input?.entries
+            .map((entry) =>
+                MapEntry(entry.key, converter?.reverseConvert(entry.value)))
+            .whereType<MapEntry<String, X>>()
+            .toList() ??
+        <MapEntry<String, X>>[];
+    return Map.fromEntries(entries);
+  }
+}

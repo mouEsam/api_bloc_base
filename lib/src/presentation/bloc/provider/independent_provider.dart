@@ -18,7 +18,8 @@ abstract class IndependentProvider<Input, Output>
   final Duration? retryInterval = Duration(seconds: 30);
 
   final Result<Either<ResponseEntity, Input>>? singleDataSource;
-  final Either<ResponseEntity, Stream<Input>>? streamDataSource;
+  final Either<ResponseEntity, Stream<Input>>? dataStreamSource;
+  final Stream<Either<ResponseEntity, Input>>? streamDataSource;
 
   final bool enableRefresh;
   final bool enableRetry;
@@ -29,6 +30,7 @@ abstract class IndependentProvider<Input, Output>
   IndependentProvider({
     Input? initialInput,
     this.singleDataSource,
+    this.dataStreamSource,
     this.streamDataSource,
     LifecycleObserver? appLifecycleObserver,
     List<ProviderMixin> providers = const [],

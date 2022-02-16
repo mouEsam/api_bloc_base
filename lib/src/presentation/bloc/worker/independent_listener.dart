@@ -18,7 +18,8 @@ abstract class IndependentListener<Input, Output>
         StreamInputWorkerMixin<Input, Output>,
         IndependenceWorkerMixin<Input, Output> {
   final Result<Either<ResponseEntity, Input>>? singleDataSource;
-  final Either<ResponseEntity, Stream<Input>>? streamDataSource;
+  final Either<ResponseEntity, Stream<Input>>? dataStreamSource;
+  final Stream<Either<ResponseEntity, Input>>? streamDataSource;
 
   final LifecycleObserver? appLifecycleObserver;
 
@@ -31,6 +32,7 @@ abstract class IndependentListener<Input, Output>
       {List<Stream<BlocState>> sources = const [],
       List<ProviderMixin> providers = const [],
       this.singleDataSource,
+      this.dataStreamSource,
       this.streamDataSource,
       this.appLifecycleObserver,
       this.enableRefresh = true,

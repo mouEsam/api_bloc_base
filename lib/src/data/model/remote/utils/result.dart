@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:api_bloc_base/src/domain/entity/_index.dart';
 import 'package:dio/dio.dart';
 
 import 'cancel_token.dart';
@@ -96,6 +97,12 @@ extension FutureResult<T> on FutureOr<T> {
   }
 
   Result<T> get asResult => Result(value: this);
+
+  Result<ResponseEntity> get asResponseResult => Result(
+      value: this
+          .future
+          .then<ResponseEntity>((value) => const Success())
+          .onError((error, stackTrace) => const Failure()));
 
   Result<S> result<S>(FutureOr<S> Function(T value) nextProcess) {
     return Result(value: this).next(nextProcess);

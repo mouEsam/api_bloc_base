@@ -29,17 +29,20 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   final Duration? retryInterval = Duration(seconds: 30);
 
   Result<Either<ResponseEntity, Input>>? get singleDataSource;
-  Either<ResponseEntity, Stream<Input>>? get streamDataSource;
+  Either<ResponseEntity, Stream<Input>>? get dataStreamSource;
+  Stream<Either<ResponseEntity, Input>>? get streamDataSource;
 
   bool get enableRefresh;
   bool get enableRetry;
   bool get refreshOnAppActive;
 
-  StreamSubscription<Input>? _streamSourceSubscription;
+  StreamSubscription<Either<ResponseEntity, Input>>? _streamSourceSubscription;
+  StreamSubscription<Input>? _dataSourceSubscription;
   bool _hasSingleSource = false;
 
   @override
-  get subscriptions => super.subscriptions..addAll([_streamSourceSubscription]);
+  get subscriptions => super.subscriptions
+    ..addAll([_streamSourceSubscription, _dataSourceSubscription]);
   @override
   get trafficLights => super.trafficLights..addAll([_canFetchData]);
   @override
@@ -77,12 +80,15 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
       }
       try {
         final singleSource = this.singleDataSource;
+        final dataSource = this.dataStreamSource;
         final streamSource = this.streamDataSource;
         _hasSingleSource = singleSource != null;
         if (_hasSingleSource) {
-          await _handleSingleSource(singleSource!, refresh);
+          await _handleSingleSource(singleSource!);
+        } else if (dataSource != null) {
+          _handleStreamSource(dataSource);
         } else if (streamSource != null) {
-          _handleStreamSource(streamSource);
+          _handleDataSource(streamSource);
         }
       } catch (e, s) {
         injectInputState(createErrorState(createFailure(e, s)));
@@ -106,7 +112,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   }
 
   FutureOr<void> _handleSingleSource(
-      Result<Either<ResponseEntity, Input>> singleSource, bool refresh) async {
+      Result<Either<ResponseEntity, Input>> singleSource) async {
     final future = await singleSource.value;
     return future.fold(
       (l) {
@@ -124,10 +130,17 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
         injectInputState(Error(l));
       },
       (r) {
-        _streamSourceSubscription?.cancel();
-        _streamSourceSubscription = r.listen(injectInput);
+        _dataSourceSubscription?.cancel();
+        _dataSourceSubscription = r.listen(injectInput);
       },
     );
+  }
+
+  void _handleDataSource(Stream<Either<ResponseEntity, Input>> streamSource) {
+    _streamSourceSubscription?.cancel();
+    _streamSourceSubscription = streamSource.listen((event) {
+      _handleSingleSource(event.asResult);
+    });
   }
 
   void setupTimer() {
