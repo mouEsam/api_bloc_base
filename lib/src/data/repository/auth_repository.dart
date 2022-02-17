@@ -15,11 +15,11 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
 
   RequestConversionOperation<BaseUserResponse, T> internalLogin(
       BaseAuthParams params);
-  RequestConversionOperation<BaseUserResponse, T> internalRefreshToken(
+  RequestConversionOperation<BaseUserResponse, T>? internalRefreshToken(
       T account);
-  RequestConversionOperation<BaseUserResponse, T> internalRefreshProfile(
+  RequestConversionOperation<BaseUserResponse, T>? internalRefreshProfile(
       T account);
-  RequestResult<BaseApiResponse> internalLogout(T account);
+  RequestResult<BaseApiResponse>? internalLogout(T account);
 
   Result<Either<ResponseEntity, T>> login(BaseAuthParams params) {
     final operation = internalLogin(params);
@@ -37,6 +37,24 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
   Result<Either<ResponseEntity, T>> autoLogin() {
     return dataRequireUser<T>((savedAccount) {
       final operation = internalRefreshToken(savedAccount);
+      if (operation != null) {
+        operation.converter ??= autoLoginConverter;
+        final _intercept = operation.interceptResult;
+        operation.interceptResult = (user) {
+          _intercept?.call(user);
+          overwriteSavedAccount(user);
+        };
+        final result = handleResponseOperation<BaseUserResponse, T>(operation);
+        return result.next((value) =>
+            value.leftMap((l) => handleReAuthFailure(l, savedAccount)));
+      }
+      return Result(value: Right(savedAccount));
+    });
+  }
+
+  Result<Either<ResponseEntity, T>> refreshToken(T profile) {
+    final operation = internalRefreshToken(profile);
+    if (operation != null) {
       operation.converter ??= autoLoginConverter;
       final _intercept = operation.interceptResult;
       operation.interceptResult = (user) {
@@ -44,35 +62,26 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
         overwriteSavedAccount(user);
       };
       final result = handleResponseOperation<BaseUserResponse, T>(operation);
-      return result.next((value) =>
-          value.leftMap((l) => handleReAuthFailure(l, savedAccount)));
-    });
-  }
-
-  Result<Either<ResponseEntity, T>> refreshToken(T profile) {
-    final operation = internalRefreshToken(profile);
-    operation.converter ??= autoLoginConverter;
-    final _intercept = operation.interceptResult;
-    operation.interceptResult = (user) {
-      _intercept?.call(user);
-      overwriteSavedAccount(user);
-    };
-    final result = handleResponseOperation<BaseUserResponse, T>(operation);
-    return result.next(
-      (value) => value.leftMap((l) => handleReAuthFailure(l, profile)),
-    );
+      return result.next(
+        (value) => value.leftMap((l) => handleReAuthFailure(l, profile)),
+      );
+    }
+    return Result(value: Left(RefreshFailure(null, profile)));
   }
 
   Result<Either<ResponseEntity, T>> refreshProfile(T profile) {
     final operation = internalRefreshProfile(profile);
-    operation.converter ??= refreshConverter;
-    operation.dataConverter ??= (r) => r.updateToken(
-          profile.userToken,
-        );
-    final result = handleResponseOperation(operation);
-    return result.next(
-      (value) => value.leftMap((l) => handleReAuthFailure(l, profile)),
-    );
+    if (operation != null) {
+      operation.converter ??= refreshConverter;
+      operation.dataConverter ??= (r) => r.updateToken(
+            profile.userToken,
+          );
+      final result = handleResponseOperation(operation);
+      return result.next(
+        (value) => value.leftMap((l) => handleReAuthFailure(l, profile)),
+      );
+    }
+    return Result(value: Left(Failure()));
   }
 
   ResponseEntity handleReAuthFailure(ResponseEntity responseEntity,
@@ -106,11 +115,14 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
 
   Result<ResponseEntity> signOut(T account) {
     final operation = internalLogout(account);
-    return handleApiResponse(
-      operation,
-      interceptData: (_) {
-        saveAccount(null);
-      },
-    );
+    if (operation != null) {
+      return handleApiResponse(
+        operation,
+        interceptData: (_) {
+          saveAccount(null);
+        },
+      );
+    }
+    return offlineSignOut();
   }
 }
