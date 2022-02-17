@@ -91,7 +91,7 @@ class BaseRestClient {
   RequestResult<T> request<T>(
     RequestMethod method,
     String path, {
-    T? mockedResult,
+    FutureOr<T>? mockedResult,
     CancelToken? cancelToken,
     String? authorizationToken,
     Params? params,
@@ -231,19 +231,22 @@ class BaseRestClient {
               responseType: responseType),
           data: body);
     } else {
-      result = Future.value(Response(
-        headers: Headers(),
-        //isRedirect: false,
-        extra: extra,
-        requestOptions: RequestOptions(
-            method: method.method,
-            headers: headers,
-            extra: extra,
-            baseUrl: newBaseUrl,
-            path: path),
-        statusCode: 200,
-        statusMessage: 'success',
-      ));
+      result = mockedResult.future.then((value) {
+        return Response(
+          data: value,
+          headers: Headers(),
+          //isRedirect: false,
+          extra: extra,
+          requestOptions: RequestOptions(
+              method: method.method,
+              headers: headers,
+              extra: extra,
+              baseUrl: newBaseUrl,
+              path: path),
+          statusCode: 200,
+          statusMessage: 'success',
+        );
+      });
       _progressListener(100, 100);
     }
     final response = result.then((result) {
@@ -256,7 +259,7 @@ class BaseRestClient {
           value = result.data;
         }
       } else {
-        value = mockedResult;
+        value = result.data;
       }
       return Response<T>(
           data: value,

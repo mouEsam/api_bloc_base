@@ -4,13 +4,11 @@ import 'package:api_bloc_base/src/presentation/bloc/base/state.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/work.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/worker/worker_bloc.dart';
-import 'package:async/async.dart' as async;
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../provider/provider.dart' as provider;
 import '_defs.dart';
-import 'worker_state.dart';
 
 export 'worker_state.dart';
 
@@ -30,19 +28,19 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
       .map((event) => event.state);
   StreamSink<Work> get _outputSink => _outputSubject.sink;
 
-  Stream<provider.ProviderState<Output>> get providerStream =>
-      async.LazyStream(() => stream
-          .map((event) {
-            if (event is LoadingState<Output>) {
-              return provider.ProviderLoading<Output>();
-            } else if (event is LoadedState<Output>) {
-              return provider.ProviderLoaded<Output>(event.data);
-            } else if (event is ErrorState<Output>) {
-              return provider.ProviderError<Output>(event.response);
-            }
-          })
-          .whereType<provider.ProviderState<Output>>()
-          .asBroadcastStream(onCancel: (sub) => sub.cancel()));
+  // Stream<provider.ProviderState<Output>> get providerStream =>
+  //     async.LazyStream(() => stream
+  //         .map((event) {
+  //           if (event is LoadingState<Output>) {
+  //             return provider.ProviderLoading<Output>();
+  //           } else if (event is LoadedState<Output>) {
+  //             return provider.ProviderLoaded<Output>(event.data);
+  //           } else if (event is ErrorState<Output>) {
+  //             return provider.ProviderError<Output>(event.response);
+  //           }
+  //         })
+  //         .whereType<provider.ProviderState<Output>>()
+  //         .asBroadcastStream(onCancel: (sub) => sub.cancel()));
 
   get sinks => super.sinks..addAll([_outputSubject]);
   get subscriptions => super.subscriptions..addAll([_outputSubscription]);

@@ -64,84 +64,75 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
   // }
 
   @override
-  void clean() {
-    super.clean();
-    _combined = false;
-  }
-
-  @override
   void init() {
     setupStreams();
     super.init();
   }
 
-  bool _combined = false;
   bool _init = false;
   void setupStreams() {
     if (_init) return;
     _init = true;
-    print(this.runtimeType);
     providers
         .whereType<ListenableMixin>()
         .forEach((element) => element.addListener(this));
-    final newSources = [...sources, ...providers.map((e) => e.stream)];
-    var _lastValue;
-    _dataSubscription = inputStream
-        .cast<BlocState>()
-        .doOnData((event) {
-          if (event is Loaded) {
-            if (event.data != _lastValue) {
-              _combined = false;
-            }
-            _lastValue = event.data;
-          }
-        })
-        .switchMap((event) {
-          if (newSources.isEmpty || event is Loading || event is Error) {
-            return Stream.value(Tuple2<BlocState, List<BlocState>>(event, []));
-          } else {
-            return CombineLatestStream<BlocState,
-                    Tuple2<BlocState, List<BlocState>>>(
-                newSources, (a) => Tuple2(event, a));
-          }
-        })
-        .asyncMap((event) => whenActive(() => event))
-        .throttleTime(throttleWindowDuration, trailing: true)
-        .asyncMap((event) async {
-          final work = Work.start(Loading());
-          lastWork = work;
-          var mainEvent = event.value1;
-          if (mainEvent is Loading || mainEvent is Error) {
-            return work.changeState(mainEvent);
-          } else {
-            mainEvent = mainEvent as Loaded<Input>;
-            Error? errorState = event.value2
-                .firstWhereOrNull((element) => element is Error) as Error?;
-            if (errorState != null) {
-              return work.changeState(Error(errorState.response));
-            } else {
-              final loaded = event.value2.whereType<Loaded>().toList();
-              if (loaded.length == event.value2.length) {
-                _combined = true;
-                final result =
-                    await combineDataWithStates(mainEvent.data, loaded);
-                return work.changeState(Loaded<Input>(result));
+    // final newSources = [...sources, ...providers.map((e) => e.stream)];
+    // _dataSubscription = inputStream
+    //     .cast<BlocState>()
+    //     .switchMap((event) {
+    //       if (newSources.isEmpty || event is Loading || event is Error) {
+    //         return Stream.value(Tuple2<BlocState, List<BlocState>>(event, []));
+    //       } else {
+    //         return CombineLatestStream<BlocState,
+    //             Tuple2<BlocState, List<BlocState>>>(newSources, (a) {
+    //           return Tuple2(event, a);
+    //         });
+    //       }
+    //     })
+    //     .asyncMap((event) {
+    //       return whenActive(() => event);
+    //     })
+    final newSources = [
+      inputStream.cast<BlocState>(),
+      ...sources,
+      ...providers.map((e) => e.stream.shareValue())
+    ];
+    _dataSubscription =
+        CombineLatestStream<BlocState, Tuple2<BlocState, List<BlocState>>>(
+                newSources, (a) {
+      return Tuple2(a[0], a.skip(1).toList());
+    })
+            .asyncMap((event) {
+              return whenActive(() => event);
+            })
+            .throttleTime(throttleWindowDuration, trailing: true)
+            .asyncMap((event) async {
+              final work = Work.start(state);
+              lastWork = work;
+              var mainEvent = event.value1;
+              if (mainEvent is Loading || mainEvent is Error) {
+                return work.changeState(mainEvent);
               } else {
-                if (_combined) {
+                mainEvent = mainEvent as Loaded<Input>;
+                Error? errorState = event.value2
+                    .firstWhereOrNull((element) => element is Error) as Error?;
+                if (errorState != null) {
+                  return work.changeState(errorState);
+                } else if (event.value2.whereType<Loading>().isNotEmpty) {
+                  return null;
+                } else {
+                  final loaded = event.value2.whereType<Loaded>().toList();
                   final result =
                       await combineDataWithStates(mainEvent.data, loaded);
                   return work.changeState(Loaded<Input>(result));
-                } else {
-                  return work.changeState(Loading());
                 }
               }
-            }
-          }
-        })
-        .where((event) => !event.isCancelled)
-        .listen((event) {
-          handleSourcesOutput(event);
-        }, onError: handleSourcesError);
+            })
+            .whereType<Work>()
+            .where((event) => !event.isCancelled)
+            .listen((event) {
+              handleSourcesOutput(event);
+            }, onError: handleSourcesError);
   }
 
   void handleSourcesError(e, s) {

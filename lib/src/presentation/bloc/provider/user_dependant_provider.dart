@@ -1,7 +1,6 @@
 import 'package:api_bloc_base/src/data/_index.dart';
 import 'package:api_bloc_base/src/domain/entity/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/_index.dart';
-import 'package:api_bloc_base/src/presentation/bloc/provider/independent_provider.dart';
 import 'package:api_bloc_base/src/presentation/bloc/user/base_user_bloc.dart';
 import 'package:dartz/dartz.dart';
 

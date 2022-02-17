@@ -85,9 +85,11 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
         _hasSingleSource = singleSource != null;
         if (_hasSingleSource) {
           await _handleSingleSource(singleSource!);
-        } else if (dataSource != null) {
+        }
+        if (dataSource != null) {
           _handleStreamSource(dataSource);
-        } else if (streamSource != null) {
+        }
+        if (streamSource != null) {
           _handleDataSource(streamSource);
         }
       } catch (e, s) {
@@ -111,6 +113,13 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     return fetchData(refresh: true);
   }
 
+  void _handleDataSource(Stream<Either<ResponseEntity, Input>> streamSource) {
+    _streamSourceSubscription?.cancel();
+    _streamSourceSubscription = streamSource.listen((event) {
+      _handleSingleSource(event.asResult);
+    });
+  }
+
   FutureOr<void> _handleSingleSource(
       Result<Either<ResponseEntity, Input>> singleSource) async {
     final future = await singleSource.value;
@@ -119,7 +128,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
         return injectInputState(Error(l));
       },
       (r) {
-        return _handleStreamSource(Right(Stream.value(r)));
+        return injectInput(r);
       },
     );
   }
@@ -134,13 +143,6 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
         _dataSourceSubscription = r.listen(injectInput);
       },
     );
-  }
-
-  void _handleDataSource(Stream<Either<ResponseEntity, Input>> streamSource) {
-    _streamSourceSubscription?.cancel();
-    _streamSourceSubscription = streamSource.listen((event) {
-      _handleSingleSource(event.asResult);
-    });
   }
 
   void setupTimer() {
