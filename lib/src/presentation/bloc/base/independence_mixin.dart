@@ -79,7 +79,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
         _alreadyFetchedData.value = true;
       }
       try {
-        await fetchSingleData();
+        _hasSingleSource = await fetchSingleData();
         if (!refresh) {
           fetchStream();
           fetchStreamData();
@@ -93,11 +93,10 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   @mustCallSuper
   FutureOr<bool> fetchSingleData() async {
     final singleSource = this.singleDataSource;
-    _hasSingleSource = singleSource != null;
-    if (_hasSingleSource) {
+    if (singleSource != null) {
       await _handleSingleSource(singleSource!);
     }
-    return _hasSingleSource;
+    return singleSource != null;
   }
 
   @mustCallSuper
