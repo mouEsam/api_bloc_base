@@ -79,23 +79,43 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
         _alreadyFetchedData.value = true;
       }
       try {
-        final singleSource = this.singleDataSource;
-        final dataSource = this.dataStreamSource;
-        final streamSource = this.streamDataSource;
-        _hasSingleSource = singleSource != null;
-        if (_hasSingleSource) {
-          await _handleSingleSource(singleSource!);
-        }
-        if (dataSource != null) {
-          _handleStreamSource(dataSource);
-        }
-        if (streamSource != null) {
-          _handleDataSource(streamSource);
+        await fetchSingleData();
+        if (!refresh) {
+          fetchStream();
+          fetchStreamData();
         }
       } catch (e, s) {
         injectInputState(createErrorState(createFailure(e, s)));
       }
     }
+  }
+
+  @mustCallSuper
+  FutureOr<bool> fetchSingleData() async {
+    final singleSource = this.singleDataSource;
+    _hasSingleSource = singleSource != null;
+    if (_hasSingleSource) {
+      await _handleSingleSource(singleSource!);
+    }
+    return _hasSingleSource;
+  }
+
+  @mustCallSuper
+  bool fetchStream() {
+    final dataSource = this.dataStreamSource;
+    if (dataSource != null) {
+      _handleStreamSource(dataSource);
+    }
+    return dataSource != null;
+  }
+
+  @mustCallSuper
+  bool fetchStreamData() {
+    final streamSource = this.streamDataSource;
+    if (streamSource != null) {
+      _handleDataSource(streamSource);
+    }
+    return streamSource != null;
   }
 
   void clean() {
