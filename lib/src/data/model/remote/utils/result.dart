@@ -101,9 +101,13 @@ extension FutureResult<T> on FutureOr<T> {
   T? get maybeValue => this is T ? (this as T) : null;
 
   FutureOr<T?> get maybe {
-    final value = maybeValue;
-    if (value != null) {
-      return value;
+    try {
+      final value = maybeValue;
+      if (value != null) {
+        return value;
+      }
+    } catch (_) {
+      return null;
     }
     return future.catchError((e, s) {}).then<T?>((value) => value);
   }
