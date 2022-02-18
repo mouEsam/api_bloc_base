@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:api_bloc_base/src/domain/entity/_index.dart';
+import 'package:api_bloc_base/src/utils/box.dart';
 import 'package:dio/dio.dart';
+import 'package:rxdart/rxdart.dart';
 
 import 'cancel_token.dart';
 
@@ -64,7 +66,12 @@ class ChainedResult<S, T> extends CompletableResult<T> {
     });
     if (first.progress != null) {
       if (!_progress.isClosed) {
-        _progress.addStream(first.progress!, cancelOnError: true);
+        Box<StreamSubscription> _sub = Box();
+        _sub.data = first.progress?.doOnEach((notification) {
+          if (notification.isOnDone || notification.isOnError) {
+            _sub.nullableData?.cancel();
+          }
+        }).listen(_progress.add);
       }
     }
     Future.value(first.value).then((value) {
@@ -74,7 +81,12 @@ class ChainedResult<S, T> extends CompletableResult<T> {
       cancelToken.second = _second.cancelToken;
       if (_second.progress != null) {
         if (!_progress.isClosed) {
-          _progress.addStream(_second.progress!, cancelOnError: true);
+          Box<StreamSubscription> _sub = Box();
+          _sub.data = _second.progress?.doOnEach((notification) {
+            if (notification.isOnDone || notification.isOnError) {
+              _sub.nullableData?.cancel();
+            }
+          }).listen(_progress.add);
         }
       }
     }, onError: (e, s) {
