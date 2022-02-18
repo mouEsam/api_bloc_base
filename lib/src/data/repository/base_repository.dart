@@ -8,17 +8,19 @@ import 'package:dio/dio.dart';
 class RequestConversionOperation<T extends BaseApiResponse, S> {
   final RequestResult<T> result;
   BaseResponseConverter<T, S>? converter;
-  FutureOr<S> Function(S data)? dataConverter;
   void Function(T)? interceptData;
   void Function(S)? interceptResult;
+  void Function(ResponseEntity)? interceptFailure;
+  FutureOr<S> Function(S data)? dataConverter;
   FutureOr<S> Function(ResponseEntity failure)? failureRecovery;
 
   RequestConversionOperation(
     this.result, {
     this.converter,
-    this.dataConverter,
     this.interceptData,
     this.interceptResult,
+    this.interceptFailure,
+    this.dataConverter,
     this.failureRecovery,
   });
 }
@@ -34,11 +36,12 @@ abstract class BaseRepository {
   Result<z.Either<ResponseEntity, S>>
       handleResponseOperation<T extends BaseApiResponse, S>(
           RequestConversionOperation<T, S> operation) {
-    return handleFullResponse(
+    return handleFullResponse<T, S>(
       operation.result,
       converter: operation.converter,
       interceptData: operation.interceptData,
       interceptResult: operation.interceptResult,
+      interceptFailure: operation.interceptFailure,
       dataConverter: operation.dataConverter,
       failureRecovery: operation.failureRecovery,
     );
@@ -50,6 +53,7 @@ abstract class BaseRepository {
     BaseResponseConverter<T, S>? converter,
     void Function(T)? interceptData,
     void Function(S)? interceptResult,
+    void Function(ResponseEntity)? interceptFailure,
     FutureOr<S> Function(S data)? dataConverter,
     FutureOr<S> Function(ResponseEntity failure)? failureRecovery,
   }) {
@@ -86,7 +90,7 @@ abstract class BaseRepository {
       if (result != null) {
         if (dataConverter != null) {
           try {
-            result = await (dataConverter(result));
+            result = await dataConverter(result);
           } catch (e, s) {
             print(e);
             print(s);
@@ -96,7 +100,6 @@ abstract class BaseRepository {
             ));
           }
         }
-        interceptResult?.call(result!);
         return z.Right<ResponseEntity, S>(result!);
       } else {
         print(data.runtimeType);
@@ -124,15 +127,28 @@ abstract class BaseRepository {
         }
       }
       return z.Left<ResponseEntity, S>(failure);
+    }).then((value) {
+      if (interceptFailure != null || interceptResult != null) {
+        value.fold((l) {
+          interceptFailure?.call(l);
+        }, (r) {
+          interceptResult?.call(r);
+        });
+      }
+      return value;
     });
     return Result<z.Either<ResponseEntity, S>>(
-        cancelToken: cancelToken, value: future, progress: result.progress);
+      cancelToken: cancelToken,
+      value: future,
+      progress: result.progress,
+    );
   }
 
   Result<ResponseEntity> handleApiResponse<T extends BaseApiResponse>(
     RequestResult<T> result, {
     BaseResponseConverter? converter,
     void Function(T)? interceptData,
+    void Function(ResponseEntity)? interceptResult,
   }) {
     final _converter = converter ?? this.converter;
     final cancelToken = result.cancelToken;
@@ -154,21 +170,27 @@ abstract class BaseRepository {
       } else {
         return Failure(defaultError);
       }
+    }).then((value) {
+      interceptResult?.call(value);
+      return value;
     });
     return Result<ResponseEntity>(
-        cancelToken: cancelToken, value: future, progress: result.progress);
+      cancelToken: cancelToken,
+      value: future,
+      progress: result.progress,
+    );
   }
 
   Result<z.Either<ResponseEntity, S>> handleOperation<S>(
     RequestResult<S> result, {
-    void Function(S?)? interceptResult,
+    void Function(S)? interceptResult,
+    void Function(ResponseEntity)? interceptFailure,
   }) {
     final cancelToken = result.cancelToken;
     final future = Future.value(result.value)
         .then<z.Either<ResponseEntity, S>>((value) async {
-      final data = value.data;
-      interceptResult?.call(data);
-      return z.Right<ResponseEntity, S>(data!);
+      final data = value.data!;
+      return z.Right<ResponseEntity, S>(data);
     }).catchError((e, s) async {
       print("Exception caught");
       print(e);
@@ -188,9 +210,21 @@ abstract class BaseRepository {
           Failure(defaultError),
         );
       }
+    }).then((value) {
+      if (interceptFailure != null || interceptResult != null) {
+        value.fold((l) {
+          interceptFailure?.call(l);
+        }, (r) {
+          interceptResult?.call(r);
+        });
+      }
+      return value;
     });
     return Result<z.Either<ResponseEntity, S>>(
-        cancelToken: cancelToken, value: future, progress: result.progress);
+      cancelToken: cancelToken,
+      value: future,
+      progress: result.progress,
+    );
   }
 
   FutureOr<z.Either<Failure, T>> tryWork<T>(FutureOr<T> work(),
