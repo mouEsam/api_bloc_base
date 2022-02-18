@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:api_bloc_base/src/domain/entity/base_profile.dart';
@@ -9,7 +10,8 @@ class UserDefaults {
   static const _SIGNED_ACCOUNT = 'signed_in_account';
 
   final storage = const FlutterSecureStorage();
-  final BaseProfile Function(Map<String, dynamic> json) profileFactory;
+  final FutureOr<BaseProfile> Function(Map<String, dynamic> json)
+      profileFactory;
   const UserDefaults(this.profileFactory);
 
   Future<void> setUserToken(String? userToken) {
@@ -35,13 +37,13 @@ class UserDefaults {
   }
 
   Future<BaseProfile?> get signedAccount {
-    return storage.read(key: _SIGNED_ACCOUNT).then((value) {
+    return storage.read(key: _SIGNED_ACCOUNT).then((value) async {
       if (value == null) {
         return null;
       } else {
         final json = jsonDecode(value);
         if (json != null) {
-          final profile = profileFactory(json);
+          final profile = await profileFactory(json);
           return profile;
         } else {
           return null;
@@ -63,12 +65,8 @@ class UserDefaults {
       if (value == null) {
         return null;
       } else {
-        return DateTime.tryParse(value)!;
+        return DateTime.tryParse(value);
       }
-    }, onError: (e, s) {
-      print(e);
-      print(s);
-      return null;
     });
   }
 }

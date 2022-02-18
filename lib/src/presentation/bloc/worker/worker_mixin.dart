@@ -89,14 +89,18 @@ mixin WorkerMixin<Output> on StatefulWorkerBloc<Output> {
       String? successMessage,
       bool announceFailure = true,
       bool announceSuccess = true,
+      bool announceLoading = true,
       bool emitFailure = true,
       bool emitSuccess = true,
+      bool emitLoading = true,
       String operationTag = _DEFAULT_OPERATION,
       bool Function(ResponseEntity response, String tag)?
           handleResponse}) async {
     startOperation(loadingMessage,
         cancelToken: result.cancelToken,
         progress: result.progress,
+        emitLoading: emitLoading,
+        announceLoading: announceLoading,
         operationTag: operationTag);
     final future = await result.value;
     return future.fold<T?>(
