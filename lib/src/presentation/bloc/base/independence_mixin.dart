@@ -94,7 +94,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   FutureOr<bool> fetchSingleData() async {
     final singleSource = this.singleDataSource;
     if (singleSource != null) {
-      await _handleSingleSource(singleSource!);
+      await _handleSingleSource(singleSource);
     }
     return singleSource != null;
   }
@@ -174,35 +174,45 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
         enableRefresh &&
         hasData &&
         _canFetchData.value) {
-      if (refreshInterval != null) {
+      if (refreshInterval != null && _timer?.isActive != true) {
         _timer?.cancel();
-        _timer = Timer.periodic(refreshInterval!, (_) => refreshData());
+        _timer = Timer(refreshInterval!, refreshData);
       }
     }
   }
 
-  void markNeedsRefetch() {
-    _needsToRefetch.value = true;
-    if (lastTrafficLightsValue) {
-      _performMarkedRefetch();
-    }
+  Future<void> markNeedsRefetch([Duration delay = Duration.zero]) {
+    return Future.delayed(delay, () {
+      if (!_needsToRefetch.value) {
+        _needsToRefetch.value = true;
+        if (lastTrafficLightsValue) {
+          return _performMarkedRefetch();
+        }
+      }
+    });
   }
 
-  void _performMarkedRefetch() {
+  FutureOr<void> _performMarkedRefetch() async {
+    if (!_needsToRefetch.value) return;
     _needsToRefetch.value = false;
-    refetchData();
+    return refetchData();
   }
 
-  void markNeedsRefresh() {
-    _needsToRefresh.value = true;
-    if (lastTrafficLightsValue) {
-      _performMarkedRefresh();
-    }
+  Future<void> markNeedsRefresh([Duration delay = Duration.zero]) {
+    return Future.delayed(delay, () {
+      if (!_needsToRefresh.value) {
+        _needsToRefresh.value = true;
+        if (lastTrafficLightsValue) {
+          return _performMarkedRefresh();
+        }
+      }
+    });
   }
 
-  void _performMarkedRefresh() {
+  FutureOr<void> _performMarkedRefresh() async {
+    if (!_needsToRefresh.value) return;
     _needsToRefresh.value = false;
-    refreshData();
+    return refreshData();
   }
 
   @mustCallSuper

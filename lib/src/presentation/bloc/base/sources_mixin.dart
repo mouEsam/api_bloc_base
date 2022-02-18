@@ -124,7 +124,7 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
                   final loaded = event.value2.whereType<Loaded>().toList();
                   final result =
                       await combineDataWithStates(mainEvent.data, loaded);
-                  return work.changeState(Loaded<Input>(result));
+                  return work.changeState(result);
                 }
               }
             })
@@ -142,12 +142,12 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
     handleSourcesOutput(_lastWork!);
   }
 
-  FutureOr<Input> combineDataWithStates(Input data, Iterable<Loaded> map) {
+  FutureOr<BlocState> combineDataWithStates(Input data, Iterable<Loaded> map) {
     return combineDataWithSources(data, map.map((e) => e.data));
   }
 
-  FutureOr<Input> combineDataWithSources(Input data, Iterable map) {
-    return data;
+  FutureOr<BlocState> combineDataWithSources(Input data, Iterable map) {
+    return Loaded<Input>(data);
   }
 
   @override
