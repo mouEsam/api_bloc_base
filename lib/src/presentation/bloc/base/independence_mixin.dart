@@ -28,8 +28,6 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   final Duration? refreshInterval = Duration(seconds: 30);
   final Duration? retryInterval = Duration(seconds: 30);
 
-  Completer _completer = Completer<void>();
-
   Result<Either<ResponseEntity, Input>>? get singleDataSource;
   Either<ResponseEntity, Stream<Input>>? get dataStreamSource;
   Stream<Either<ResponseEntity, Input>>? get streamDataSource;
