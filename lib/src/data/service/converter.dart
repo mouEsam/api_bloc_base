@@ -181,9 +181,7 @@ mixin ReverseModelConverter<IN, OUT> on BaseModelConverter<IN, OUT> {
     final converter = converters
         .followedBy([this])
         .whereType<ReverseModelConverter<I, O>>()
-        .firstWhereOrNull((element) =>
-            element.acceptsInput(inputType) &&
-            element.returnsOutput(outputType));
+        .firstOrNull;
     return converter;
   }
 
