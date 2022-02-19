@@ -28,6 +28,8 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   final Duration? refreshInterval = Duration(seconds: 30);
   final Duration? retryInterval = Duration(seconds: 30);
 
+  Completer _completer = Completer<void>();
+
   Result<Either<ResponseEntity, Input>>? get singleDataSource;
   Either<ResponseEntity, Stream<Input>>? get dataStreamSource;
   Stream<Either<ResponseEntity, Input>>? get streamDataSource;
@@ -167,26 +169,25 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   void setupTimer() {
     if (state is Error && enableRetry) {
       if (retryInterval != null) {
-        _timer?.cancel();
-        _timer = Timer(retryInterval!, fetchData);
+        markNeedsRefetch(delay: retryInterval!);
       }
     } else if (state is Loaded<Output> &&
         enableRefresh &&
         hasData &&
         _canFetchData.value) {
-      if (refreshInterval != null && _timer?.isActive != true) {
-        _timer?.cancel();
-        _timer = Timer(refreshInterval!, refreshData);
+      if (refreshInterval != null) {
+        markNeedsRefresh(delay: refreshInterval!);
       }
     }
   }
 
-  Future<void> markNeedsRefetch([Duration delay = Duration.zero]) {
-    return Future.delayed(delay, () {
+  void markNeedsRefetch({Duration delay = Duration.zero}) {
+    _timer?.cancel();
+    _timer = Timer(delay, () {
       if (!_needsToRefetch.value) {
         _needsToRefetch.value = true;
         if (lastTrafficLightsValue) {
-          return _performMarkedRefetch();
+          _performMarkedRefetch();
         }
       }
     });
@@ -198,12 +199,13 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     return refetchData();
   }
 
-  Future<void> markNeedsRefresh([Duration delay = Duration.zero]) {
-    return Future.delayed(delay, () {
+  void markNeedsRefresh({Duration delay = Duration.zero}) {
+    _timer?.cancel();
+    _timer = Timer(delay, () {
       if (!_needsToRefresh.value) {
         _needsToRefresh.value = true;
         if (lastTrafficLightsValue) {
-          return _performMarkedRefresh();
+          _performMarkedRefresh();
         }
       }
     });
@@ -234,7 +236,6 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
       }
     } else {
       _streamSourceSubscription?.pause();
-      _timer?.cancel();
     }
     super.trafficLightsChanged(green);
   }
