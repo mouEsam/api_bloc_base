@@ -74,11 +74,12 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output,
       ...parametersSourceStreams,
       ...parametersSources.map((e) => e.stream)
     ];
-    _streamParametersSubscription = listeningToParametersSources
-        .toValueStream(replayValue: true)
-        .where((event) => event)
-        .switchMap((value) => CombineLatestStream(newSources, (a) => a))
-        .map((event) {
+    _streamParametersSubscription = CombineLatestStream([
+      listeningToSources
+          .toValueStream(replayValue: true)
+          .where((event) => event),
+      ...newSources
+    ], (s) => s.skip(1).toList()).map((event) {
       Error? errorState =
           event.firstWhereOrNull((element) => element is Error) as Error?;
       if (errorState != null) {
@@ -115,8 +116,7 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output,
 
   @override
   Future<void> close() {
-    parametersSources
-        .forEach((element) => element.removeListener(this));
+    parametersSources.forEach((element) => element.removeListener(this));
     return super.close();
   }
 }

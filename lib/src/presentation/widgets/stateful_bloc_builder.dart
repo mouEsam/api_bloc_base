@@ -12,6 +12,7 @@ class StatefulBlocBuilder<Data, StateType extends BlocState,
     Bloc extends StatefulBloc<Data, StateType>> extends StatefulWidget {
   static const String _DefaultLoadingMessage = "loading";
   final String defaultLoadingMessage;
+  final Bloc? bloc;
   final bool treatErrorAsOperation;
   final BlocStateGenericBuilder<Bloc, Data, StateType> builder;
   final BlocStateListener<Bloc, StateType>? listener;
@@ -21,6 +22,7 @@ class StatefulBlocBuilder<Data, StateType extends BlocState,
   const StatefulBlocBuilder({
     Key? key,
     required this.builder,
+    this.bloc,
     this.listener,
     this.onSuccess,
     this.onFailure,
@@ -108,6 +110,7 @@ class _StatefulBlocBuilderState<Data, StateType extends BlocState,
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<Bloc, StateType>(
+      bloc: widget.bloc,
       listener: (context, state) {
         final bloc = context.read<Bloc>();
         _stateListener(context, bloc, state);
