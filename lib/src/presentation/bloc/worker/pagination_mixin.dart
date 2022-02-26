@@ -50,7 +50,12 @@ class PaginatedOutput<T> extends Equatable {
 
   PaginatedOutput<T> mapData(Paginated<T> Function(Paginated<T> data) mapper) {
     return PaginatedOutput(
-        dataMap, mapper(_data), isThereMore, currentPage, lastPage);
+      dataMap,
+      mapper(_data),
+      isThereMore,
+      currentPage,
+      lastPage,
+    );
   }
 
   @override
@@ -103,7 +108,7 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
     }
 
     final newData = createOutput(newMap, page);
-    final newOutput = PaginatedOutput(
+    final newOutput = createPaginatedOutput(
       newMap,
       newData,
       isThereMore,
@@ -117,7 +122,7 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
   PaginatedOutput<Output> _fixForPage(
       PaginatedOutput<Output> startData, int page) {
     final newData = createOutput(startData.dataMap, page);
-    return PaginatedOutput(
+    return createPaginatedOutput(
       startData.dataMap,
       newData,
       startData.isThereMore,
@@ -127,7 +132,7 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
   }
 
   PaginatedOutput<Output> createEmptyOutput(Output obj) {
-    return PaginatedOutput(
+    return createPaginatedOutput(
       {},
       createOutput({invalidPage: obj}, invalidPage),
       false,
@@ -144,27 +149,44 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
     return SimplePaginated(dataMap[page]!);
   }
 
+  PaginatedOutput<Output> createPaginatedOutput(
+    Map<int, Output> dataMap,
+    Paginated<Output> data,
+    bool isThereMore,
+    int currentPage,
+    int lastPage,
+  ) {
+    return PaginatedOutput(
+      dataMap,
+      data,
+      isThereMore,
+      currentPage,
+      lastPage,
+    );
+  }
+
   Future<void> next() async {
     if (canGoForward) {
-      _shownPage = currentPage + 1;
-      final nextData = safeData?.dataMap[nextPage];
-      if (safeData != null && nextData != null) {
-        injectOutput(_createOutput(nextData, nextPage));
-        emitCurrent();
-      } else {
-        fetchData(refresh: true);
-      }
+      final page = currentPage + 1;
+      getPage(page);
     }
   }
 
   Future<void> back() async {
-    if (canGoBack && safeData != null) {
-      _shownPage = currentPage + 1;
-      final previousData = safeData?.dataMap[nextPage];
-      if (previousData != null) {
-        injectOutput(_createOutput(previousData, nextPage));
-        emitCurrent();
-      }
+    if (canGoBack) {
+      final page = currentPage - 1;
+      getPage(page);
+    }
+  }
+
+  void getPage(int page) {
+    _shownPage = page;
+    final previousData = safeData?.dataMap[nextPage];
+    if (safeData != null && previousData != null) {
+      injectOutput(_createOutput(previousData, nextPage));
+      emitCurrent();
+    } else {
+      fetchData(refresh: false);
     }
   }
 
