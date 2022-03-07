@@ -1,9 +1,12 @@
-import 'dart:io';
-
+import 'package:api_bloc_base/src/data/service/_index.dart' as api;
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 
 class MediaPicker {
+  final api.FileManager _fileManager;
+
+  const MediaPicker(this._fileManager);
+
   Future<String?> _pickFileFromDevice() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -29,7 +32,7 @@ class MediaPicker {
     return photo.file?.path;
   }
 
-  Future<File?> pickPhoto(bool camera) async {
+  Future<api.XFile?> pickPhoto(bool camera) async {
     String? path;
     if (camera) {
       path = await _snapPhoto();
@@ -37,7 +40,7 @@ class MediaPicker {
       path = await _pickFileFromDevice();
     }
     if (path != null) {
-      return File(path);
+      return _fileManager.getFile(path);
     }
     return null;
   }

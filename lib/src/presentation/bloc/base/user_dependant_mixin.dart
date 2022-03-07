@@ -8,7 +8,8 @@ import 'package:flutter/foundation.dart';
 import 'state.dart';
 
 mixin UserDependantMixin<Input, Output, State extends BlocState,
-    Profile extends BaseProfile<Profile>> on IndependenceMixin<Input, Output, State> {
+        Profile extends BaseProfile<Profile>>
+    on IndependenceMixin<Input, Output, State> {
   DateTime? lastLogin;
   BaseUserBloc<Profile> get userBloc;
   Profile? get safeCurrentUser => userBloc.currentUser;
@@ -45,12 +46,12 @@ mixin UserDependantMixin<Input, Output, State extends BlocState,
       (user) {
         final newToken = user?.accessToken;
         if (newToken != null) {
-          if (newToken != authToken) {
-            authToken = newToken;
-            if (shouldStart(user!)) {
-              lastLogin = DateTime.now();
-              userIsGreen.value = true;
-            }
+          authToken = newToken;
+          if (shouldStart(user!)) {
+            lastLogin = DateTime.now();
+            userIsGreen.value = true;
+          } else {
+            userIsGreen.value = false;
           }
         } else {
           authToken = null;
