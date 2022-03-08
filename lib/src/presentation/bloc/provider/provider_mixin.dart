@@ -69,7 +69,9 @@ mixin ProviderMixin<Data> on StatefulProviderBloc<Data> implements Refreshable {
   }
 
   void emitState(BlocState state) {
-    if (state is Loading) {
+    if (state is ProviderState<Data>) {
+      emit(state);
+    } else if (state is Loading) {
       emitLoading();
     } else if (state is Loaded<Data>) {
       emitLoaded(state.data);

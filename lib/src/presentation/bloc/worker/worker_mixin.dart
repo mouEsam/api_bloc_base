@@ -30,7 +30,9 @@ mixin WorkerMixin<Output> on StatefulWorkerBloc<Output> {
   Map<String, _Work> _operationStack = {};
 
   void emitState(BlocState state) {
-    if (state is Loading) {
+    if (state is WorkerState<Output>) {
+      emit(state);
+    } else if (state is Loading) {
       emitLoading();
     } else if (state is Loaded<Output>) {
       emitData(state.data);
