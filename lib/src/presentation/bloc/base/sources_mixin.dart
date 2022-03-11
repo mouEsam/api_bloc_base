@@ -103,7 +103,7 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
       return Tuple2(a[0], a.skip(1).toList());
     })
             .asyncMap((event) {
-              return whenActive(() => event);
+              return whenActive(producer: (_) => event);
             })
             .throttleTime(throttleWindowDuration, trailing: true)
             .asyncMap((event) async {

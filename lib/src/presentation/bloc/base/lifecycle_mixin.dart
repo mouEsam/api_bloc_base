@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:api_bloc_base/src/presentation/bloc/provider/lifecycle_observer.dart';
 import 'package:flutter/foundation.dart';
+import 'package:listenable_stream/listenable_stream.dart';
 
 import 'traffic_lights_mixin.dart';
 
@@ -14,6 +17,17 @@ mixin LifecycleMixin<State> on TrafficLightsMixin<State>
   init() {
     appLifecycleObserver?.addListener(this);
     super.init();
+  }
+
+  Future<R> whenAppActive<R extends Object?>({
+    FutureOr<R> Function(bool isActive)? producer,
+    bool isActive = true,
+  }) {
+    producer ??= (_) => Future.value(null);
+    return isAppGreen
+        .toValueStream(replayValue: true)
+        .firstWhere((event) => event == isActive)
+        .then((value) => producer!(value));
   }
 
   @override

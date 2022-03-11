@@ -45,12 +45,15 @@ mixin TrafficLightsMixin<State> on BaseCubit<State>, Initializable {
     isGreen.value = _trafficLightsValue;
   }
 
-  Future<R> whenActive<R extends Object?>([FutureOr<R> Function()? f]) {
-    f ??= () => Future.value(null);
+  Future<R> whenActive<R extends Object?>({
+    FutureOr<R> Function(bool isActive)? producer,
+    bool isActive = true,
+  }) {
+    producer ??= (_) => Future.value(null);
     return isGreen
         .toValueStream(replayValue: true)
-        .firstWhere((event) => event)
-        .then((value) => f!());
+        .firstWhere((event) => event == isActive)
+        .then((value) => producer!(value));
   }
 
   @override

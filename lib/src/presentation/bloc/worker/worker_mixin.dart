@@ -54,7 +54,7 @@ mixin WorkerMixin<Output>
       }
     } else {
       if (!_nextState.hasData) {
-        whenActive(() {
+        whenActive(producer: (_) {
           emitState(_nextState.data);
         });
       }
