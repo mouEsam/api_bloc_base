@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:api_bloc_base/src/data/_index.dart';
 import 'package:api_bloc_base/src/domain/entity/entity.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
+import 'package:api_bloc_base/src/utils/_index.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -38,15 +39,25 @@ mixin WorkerMixin<Output>
   @override
   get notifiers => super.notifiers..add(_isNotOperation);
 
+  Box<BlocState> _nextState = Box();
   void emitState(BlocState state) {
-    if (state is WorkerState<Output>) {
-      emit(state);
-    } else if (state is Loading) {
-      emitLoading();
-    } else if (state is Loaded<Output>) {
-      emitData(state.data);
-    } else if (state is Error) {
-      emitError(state.response);
+    if (state is Operation || lastTrafficLightsValue) {
+      if (state is WorkerState<Output>) {
+        emit(state);
+      } else if (state is Loading) {
+        emitLoading();
+      } else if (state is Loaded<Output>) {
+        emitData(state.data);
+      } else if (state is Error) {
+        emitError(state.response);
+      }
+    } else {
+      if (!_nextState.hasData) {
+        whenActive(() {
+          emitState(_nextState.data);
+        });
+      }
+      _nextState.data = state;
     }
   }
 
