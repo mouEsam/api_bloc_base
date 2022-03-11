@@ -17,9 +17,10 @@ class _Work {
   final CancelToken? cancelToken;
   final Stream<double>? progress;
   final bool announceLoading;
+  final bool emitLoading;
 
   const _Work(this.loadingMessage, this.cancelToken, this.progress,
-      this.announceLoading);
+      this.emitLoading, this.announceLoading);
 }
 
 mixin WorkerMixin<Output>
@@ -99,11 +100,16 @@ mixin WorkerMixin<Output>
     _isNotOperation.value = !hasOperations;
     if (hasOperations && state is! OnGoingOperationState) {
       final item = _operationStack.entries.first;
-      startOperation(item.value.loadingMessage,
-          cancelToken: item.value.cancelToken,
+      if (item.value.emitLoading) {
+        emit(OnGoingOperationState(
+          currentData,
+          loadingMessage: item.value.loadingMessage,
+          operationTag: item.key,
           progress: item.value.progress,
-          announceLoading: item.value.announceLoading,
-          operationTag: item.key);
+          token: item.value.cancelToken,
+          silent: !item.value.announceLoading,
+        ));
+      }
     }
   }
 
@@ -213,18 +219,13 @@ mixin WorkerMixin<Output>
     message ??= loading;
     print(announceLoading);
     print("operationTag");
-    if (emitLoading) {
-      emit(OnGoingOperationState(
-        currentData,
-        loadingMessage: message,
-        operationTag: operationTag,
-        progress: progress,
-        token: cancelToken,
-        silent: !announceLoading,
-      ));
-      _operationStack[operationTag] =
-          _Work(message, cancelToken, progress, announceLoading);
-    }
+    _operationStack[operationTag] = _Work(
+      message,
+      cancelToken,
+      progress,
+      emitLoading,
+      announceLoading,
+    );
     checkOperations();
   }
 
