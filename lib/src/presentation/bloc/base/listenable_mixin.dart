@@ -1,10 +1,25 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 
 import 'listener_mixin.dart';
 import 'traffic_lights_mixin.dart';
 
-mixin ListenableMixin<State> on TrafficLightsMixin<State> {
+mixin BlocListenerStateMixin<T extends StatefulWidget> on State<T> {
+  ListenableMixin get listenable;
+
+  @override
+  void initState() {
+    listenable.addStateListener(this);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    listenable.removeStateListener(this);
+    super.dispose();
+  }
+}
+
+mixin ListenableMixin<BlocState> on TrafficLightsMixin<BlocState> {
   bool get canRunWithoutListeners;
 
   late final ValueNotifier<bool> _canRunWithoutListeners =
@@ -15,6 +30,7 @@ mixin ListenableMixin<State> on TrafficLightsMixin<State> {
   final List<ListenerMixin> _listeners = [];
   final List<ListenableMixin> _listenableListeners = [];
   final List<TrafficLightsMixin> _generalListeners = [];
+  final List<State> _widgetListeners = [];
 
   @override
   get notifiers => super.notifiers..add(_isListenedTo);
@@ -34,6 +50,11 @@ mixin ListenableMixin<State> on TrafficLightsMixin<State> {
     _changed();
   }
 
+  void addStateListener(State listener) {
+    _widgetListeners.add(listener);
+    _changed();
+  }
+
   void removeListener(TrafficLightsMixin listener) {
     if (listener is ListenableMixin) {
       _listenableListeners.remove(listener);
@@ -44,6 +65,11 @@ mixin ListenableMixin<State> on TrafficLightsMixin<State> {
     } else {
       _generalListeners.remove(listener);
     }
+    _changed();
+  }
+
+  void removeStateListener(State listener) {
+    _widgetListeners.remove(listener);
     _changed();
   }
 
@@ -71,6 +97,15 @@ mixin ListenableMixin<State> on TrafficLightsMixin<State> {
         return true;
       }
     }
-    return false;
+    return _widgetListeners.isNotEmpty;
+  }
+
+  @override
+  Future<void> close() {
+    _listeners.clear();
+    _listenableListeners.clear();
+    _generalListeners.clear();
+    _widgetListeners.clear();
+    return super.close();
   }
 }

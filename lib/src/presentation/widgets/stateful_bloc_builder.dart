@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/listenable_mixin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -41,6 +42,30 @@ class _StatefulBlocBuilderState<Data, StateType extends BlocState,
   Loaded<Data>? _state;
   final List<StateType> _operationStates = [];
   Operation? _operation;
+
+  Bloc get bloc {
+    return widget.bloc ?? context.read<Bloc>();
+  }
+
+  @override
+  void initState() {
+    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      final listenable = bloc;
+      if (listenable is ListenableMixin) {
+        (listenable as ListenableMixin).addStateListener(this);
+      }
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    final listenable = bloc;
+    if (listenable is ListenableMixin) {
+      (listenable as ListenableMixin).removeStateListener(this);
+    }
+    super.dispose();
+  }
 
   Future<void> checkOperations(BuildContext context, Bloc bloc) async {
     if (_operationStates.isNotEmpty && _operation == null) {
