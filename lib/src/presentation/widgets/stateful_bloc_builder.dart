@@ -134,14 +134,25 @@ class _StatefulBlocBuilderState<Data, StateType extends BlocState,
 
   @override
   Widget build(BuildContext context) {
+    final Bloc bloc = widget.bloc ?? context.read<Bloc>();
+    final child = buildBloc(context, bloc);
+    if (widget.bloc == null) {
+      return child;
+    } else {
+      return BlocProvider.value(
+        value: bloc,
+        child: child,
+      );
+    }
+  }
+
+  Widget buildBloc(BuildContext context, Bloc bloc) {
     return BlocConsumer<Bloc, StateType>(
-      bloc: widget.bloc,
+      bloc: bloc,
       listener: (context, state) {
-        final bloc = context.read<Bloc>();
         _stateListener(context, bloc, state);
       },
       builder: (context, state) {
-        final bloc = context.watch<Bloc>();
         _state = state is Loaded<Data> ? state : _state;
         if (widget.treatErrorAsOperation && state is Error && _state != null) {
           _listenToErrorAsFailedOperation(

@@ -15,6 +15,7 @@ class StatefulBlocContainer<Data, StateType extends BlocState,
   final String defaultLoadingMessage;
   final bool showCancelOnLoading;
   final bool treatErrorAsOperation;
+  final Bloc? bloc;
   final BlocStateBuilder<Bloc, Data>? buildBody;
   final BlocStateListener<Bloc, StateType>? listener;
   final BlocStateListener<Bloc, SuccessfulOperationState<Data>>? onSuccess;
@@ -30,6 +31,7 @@ class StatefulBlocContainer<Data, StateType extends BlocState,
     this.buildPage,
     this.buildWrapper,
     required this.buildError,
+    this.bloc,
     this.listener,
     this.onSuccess,
     this.onFailure,
@@ -141,13 +143,25 @@ class _StatefulBlocContainerState<Data, StateType extends BlocState,
 
   @override
   Widget build(BuildContext context) {
+    final Bloc bloc = widget.bloc ?? context.read<Bloc>();
+    final child = buildBloc(context, bloc);
+    if (widget.bloc == null) {
+      return child;
+    } else {
+      return BlocProvider.value(
+        value: bloc,
+        child: child,
+      );
+    }
+  }
+
+  Widget buildBloc(BuildContext context, Bloc bloc) {
     return BlocConsumer<Bloc, StateType>(
+      bloc: bloc,
       listener: (context, state) {
-        final bloc = context.read<Bloc>();
         _stateListener(context, bloc, state);
       },
       builder: (context, state) {
-        final bloc = context.watch<Bloc>();
         VoidCallback? onCancel;
         OperationData? operationData;
         BaseErrors? errors;
