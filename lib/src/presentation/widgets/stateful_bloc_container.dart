@@ -143,7 +143,7 @@ class _StatefulBlocContainerState<Data, StateType extends BlocState,
 
   @override
   Widget build(BuildContext context) {
-    final Bloc bloc = widget.bloc ?? context.read<Bloc>();
+    final Bloc bloc = this.bloc;
     final child = buildBloc(context, bloc);
     if (widget.bloc == null) {
       return child;
