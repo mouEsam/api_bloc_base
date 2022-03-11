@@ -2,6 +2,7 @@ export 'anchored_overlay.dart';
 export 'default_animation_controller.dart';
 export 'disposer.dart';
 export 'dots_indicator.dart';
+export 'family_builder.dart';
 export 'go_up_fab.dart';
 export 'lists/_index.dart';
 export 'loading_more.dart';
