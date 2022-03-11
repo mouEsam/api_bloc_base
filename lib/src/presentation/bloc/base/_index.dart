@@ -1,4 +1,5 @@
 export 'base_bloc.dart';
+export 'family.dart';
 export 'form_mixin.dart';
 export 'handlation.dart';
 export 'initializable.dart';

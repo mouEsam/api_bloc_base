@@ -58,6 +58,14 @@ class _StateContainerState<Data, StateType>
   final List<StateType> _operationStates = [];
   Operation? _operation;
 
+  @override
+  void didUpdateWidget(covariant oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.state != oldWidget.state) {
+      setState(() {});
+    }
+  }
+
   Future<void> checkOperations(BuildContext context) async {
     if (_operationStates.isNotEmpty && _operation == null) {
       final state = _operationStates.first;
