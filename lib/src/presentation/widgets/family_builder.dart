@@ -52,13 +52,13 @@ class _FamilyBlocProviderState<Arg, Bloc extends BaseCubit>
 
   @override
   void initState() {
-    _bloc = widget.family.getBloc(widget.arg, this);
+    _bloc = widget.family(widget.arg, this);
     super.initState();
   }
 
   @override
   void dispose() {
-    widget.family.clearBloc(widget.arg, this);
+    widget.family.clear(widget.arg, this);
     super.dispose();
   }
 

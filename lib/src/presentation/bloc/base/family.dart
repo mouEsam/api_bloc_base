@@ -18,14 +18,18 @@ abstract class Family<Arg, Bloc extends BaseCubit>
     extends Cubit<Map<Arg, BlocMember<Bloc>>> {
   Family() : super({});
 
-  Bloc operator [](Arg arg) {
-    return getBloc(arg);
-  }
-
-  Bloc getBloc(Arg arg, [FamilyListener? listener]) {
+  Bloc? operator [](Arg arg) {
     final existingBloc = state[arg];
     if (existingBloc != null && !existingBloc.bloc.isClosed) {
-      if (listener != null) existingBloc._listeners.add(listener);
+      return existingBloc.bloc;
+    }
+    return null;
+  }
+
+  Bloc call(Arg arg, FamilyListener listener) {
+    final existingBloc = state[arg];
+    if (existingBloc != null && !existingBloc.bloc.isClosed) {
+      existingBloc._listeners.add(listener);
       return existingBloc.bloc;
     } else {
       final newBloc = BlocMember._(createBloc(arg));
@@ -44,11 +48,11 @@ abstract class Family<Arg, Bloc extends BaseCubit>
     }
   }
 
-  void clearBloc(Arg arg, [FamilyListener? listener]) {
+  void clear(Arg arg, FamilyListener listener) {
     final newMap = Map.of(state);
     final existingBloc = state[arg];
     if (existingBloc != null && !existingBloc.bloc.isClosed) {
-      if (listener != null) existingBloc._listeners.remove(listener);
+      existingBloc._listeners.remove(listener);
       if (existingBloc._listeners.isEmpty) {
         existingBloc.bloc.close();
         newMap.remove(arg);
