@@ -26,6 +26,7 @@ abstract class IndependentProvider<Input, Output>
   final bool canRunWithoutListeners;
 
   final bool refreshOnActive;
+  final bool refreshOnAppActive;
 
   IndependentProvider({
     Input? initialInput,
@@ -38,7 +39,8 @@ abstract class IndependentProvider<Input, Output>
     this.enableRefresh = false,
     this.enableRetry = false,
     this.canRunWithoutListeners = true,
-    this.refreshOnActive = true,
+    this.refreshOnAppActive = true,
+    this.refreshOnActive = false,
     bool fetchOnCreate = true,
   }) : super(
           appLifecycleObserver: appLifecycleObserver,
