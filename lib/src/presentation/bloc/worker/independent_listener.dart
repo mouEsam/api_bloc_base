@@ -26,6 +26,7 @@ abstract class IndependentListener<Input, Output>
   final bool enableRefresh;
   final bool enableRetry;
   final bool canRunWithoutListeners;
+  final bool refreshOnActive;
   final bool refreshOnAppActive;
 
   IndependentListener(
@@ -39,6 +40,7 @@ abstract class IndependentListener<Input, Output>
       this.enableRetry = true,
       this.canRunWithoutListeners = true,
       this.refreshOnAppActive = true,
+      this.refreshOnActive = false,
       bool fetchOnCreate = true,
       Output? currentData})
       : super(sources, providers, currentData: currentData) {

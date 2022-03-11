@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:api_bloc_base/src/data/model/_index.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
+import 'package:api_bloc_base/src/presentation/bloc/base/lifecycle_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/listenable_mixin.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/refreshable.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
@@ -17,6 +18,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     on
         StatefulBloc<Output, State>,
         TrafficLightsMixin<State>,
+        LifecycleMixin<State>,
         ListenableMixin<State>,
         InputSinkMixin<Input, Output, State>,
         StreamInputMixin<Input, Output, State>
@@ -34,6 +36,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
 
   bool get enableRefresh;
   bool get enableRetry;
+  bool get refreshOnActive;
   bool get refreshOnAppActive;
 
   StreamSubscription<Either<ResponseEntity, Input>>? _streamSourceSubscription;
@@ -215,6 +218,14 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     return refreshData();
   }
 
+  @override
+  void onAppState(bool isActive) {
+    super.onAppState(isActive);
+    if (isActive && refreshOnAppActive && !refreshOnActive) {
+      markNeedsRefresh();
+    }
+  }
+
   @mustCallSuper
   void trafficLightsChanged(bool green) {
     if (green) {
@@ -226,7 +237,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
       } else if (_needsToRefresh.value) {
         _performMarkedRefresh();
       }
-      if (refreshOnAppActive) {
+      if (refreshOnActive) {
         markNeedsRefresh();
       }
       if (_hasSingleSource) {

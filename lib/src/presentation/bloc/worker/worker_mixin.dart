@@ -5,6 +5,7 @@ import 'package:api_bloc_base/src/domain/entity/entity.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../base/state.dart';
 import '_defs.dart';
@@ -20,14 +21,22 @@ class _Work {
       this.announceLoading);
 }
 
-mixin WorkerMixin<Output> on StatefulWorkerBloc<Output> {
+mixin WorkerMixin<Output>
+    on StatefulWorkerBloc<Output>, TrafficLightsWorkerMixin<Output> {
   static const _DEFAULT_OPERATION = '_DEFAULT_OPERATION';
+  final ValueNotifier<bool> _isNotOperation = ValueNotifier(true);
 
   String get loading => 'loading';
 
   Output get currentData;
 
   Map<String, _Work> _operationStack = {};
+
+  @override
+  get trafficLights => super.trafficLights..add(_isNotOperation);
+
+  @override
+  get notifiers => super.notifiers..add(_isNotOperation);
 
   void emitState(BlocState state) {
     if (state is WorkerState<Output>) {
@@ -75,7 +84,9 @@ mixin WorkerMixin<Output> on StatefulWorkerBloc<Output> {
   }
 
   void checkOperations() {
-    if (_operationStack.isNotEmpty && state is! OnGoingOperationState) {
+    final hasOperations = _operationStack.isNotEmpty;
+    _isNotOperation.value = !hasOperations;
+    if (hasOperations && state is! OnGoingOperationState) {
       final item = _operationStack.entries.first;
       startOperation(item.value.loadingMessage,
           cancelToken: item.value.cancelToken,

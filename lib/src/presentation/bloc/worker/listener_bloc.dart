@@ -14,7 +14,6 @@ export 'worker_state.dart';
 
 abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
     with
-        TrafficLightsWorkerMixin<Output>,
         ListenerWorkerMixin<Output>,
         VisibilityWorkerMixin<Output>,
         SourcesWorkerMixin<Input, Output>,

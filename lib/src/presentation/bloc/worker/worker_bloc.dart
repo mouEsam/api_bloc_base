@@ -6,7 +6,7 @@ import 'worker_mixin.dart';
 import 'worker_state.dart';
 
 class WorkerBloc<Output> extends StatefulWorkerBloc<Output>
-    with WorkerMixin<Output> {
+    with TrafficLightsWorkerMixin<Output>, WorkerMixin<Output> {
   WorkerState<Output> get initialState =>
       hasData ? createLoadedState(currentData) : createLoadingState();
 
