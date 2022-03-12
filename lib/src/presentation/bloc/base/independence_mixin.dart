@@ -91,6 +91,11 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
         injectInputState(createErrorState(createFailure(e, s)));
       }
     }
+    if (refresh) {
+      markNeedsRefresh();
+    } else {
+      markNeedsRefetch();
+    }
   }
 
   @mustCallSuper
