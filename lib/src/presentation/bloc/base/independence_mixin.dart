@@ -70,14 +70,16 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   }
 
   @mustCallSuper
-  FutureOr<void> fetchData({bool refresh = false}) async {
+  FutureOr<void> fetchData({
+    bool refresh = false,
+    bool remember = false,
+    VoidCallback? preCall,
+  }) async {
     if (!_canFetchData.value) {
       _canFetchData.value = true;
     }
     if (lastTrafficLightsValue) {
-      if (!refresh) {
-        emitLoading();
-      }
+      preCall?.call();
       if (!_alreadyFetchedData.value) {
         _alreadyFetchedData.value = true;
       }
@@ -90,11 +92,12 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
       } catch (e, s) {
         injectInputState(createErrorState(createFailure(e, s)));
       }
-    }
-    if (refresh) {
-      markNeedsRefresh();
-    } else {
-      markNeedsRefetch();
+    } else if (remember) {
+      if (refresh) {
+        markNeedsRefresh();
+      } else {
+        markNeedsRefetch();
+      }
     }
   }
 
@@ -130,14 +133,19 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     super.clean();
   }
 
-  FutureOr<void> refetchData() {
-    print("called refetchData");
-    clean();
-    return fetchData(refresh: false);
+  FutureOr<void> refetchData({bool remember = false}) {
+    return fetchData(
+      refresh: false,
+      remember: remember,
+      preCall: () {
+        clean();
+        emitLoading();
+      },
+    );
   }
 
-  FutureOr<void> refreshData() {
-    return fetchData(refresh: true);
+  FutureOr<void> refreshData({bool remember = false}) {
+    return fetchData(refresh: true, remember: remember);
   }
 
   void _handleDataSource(Stream<Either<ResponseEntity, Input>> streamSource) {
