@@ -157,17 +157,41 @@ class BaseRestClient {
             if (entry.value != null) {
               if (entry.value is UploadFile) {
                 final file = entry.value as UploadFile;
+                // _data.files.add(MapEntry(
+                //     entry.key,
+                //     MultipartFile.fromFileSync(file.file.path,
+                //         filename: file.fileName)));
+                // _data.files.add(MapEntry(
+                //     entry.key,
+                //     MultipartFile.fromBytes(
+                //       file.file.readAsBytesSync(),
+                //       filename: file.fileName,
+                //       contentType: file.contentType,
+                //     )));
                 _data.files.add(MapEntry(
-                    entry.key,
-                    MultipartFile.fromFileSync(file.file.path,
-                        filename: file.fileName)));
+                  entry.key,
+                  MultipartFile(
+                    file.file.openRead(),
+                    file.file.lengthSync(),
+                    filename: file.fileName,
+                    contentType: file.contentType,
+                  ),
+                ));
               } else if (entry.value is File) {
                 final file = entry.value as File;
+                // _data.files.add(MapEntry(
+                //   entry.key,
+                //   MultipartFile.fromFileSync(file.path,
+                //       filename: file.path.split(Platform.pathSeparator).last),
+                // ));
                 _data.files.add(MapEntry(
-                    entry.key,
-                    MultipartFile.fromFileSync(file.path,
-                        filename:
-                            file.path.split(Platform.pathSeparator).last)));
+                  entry.key,
+                  MultipartFile(
+                    file.openRead(),
+                    file.lengthSync(),
+                    filename: file.path.split(Platform.pathSeparator).last,
+                  ),
+                ));
               } else if (entry.value is List) {
                 final list = entry.value as List;
                 list.where((e) => e != null).forEach((value) => _data.fields

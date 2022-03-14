@@ -14,7 +14,7 @@ abstract class FamilyListener {}
 mixin FamilyListenerMixin<T extends StatefulWidget> on State<T>
     implements FamilyListener {}
 
-abstract class Family<Arg, Bloc extends BaseCubit>
+abstract class Family<Arg, Bloc extends Cubit>
     extends Cubit<Map<Arg, BlocMember<Bloc>>> {
   Family() : super({});
 
