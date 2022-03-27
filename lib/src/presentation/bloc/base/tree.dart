@@ -3,44 +3,39 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class FamilyMember<Bloc> {
+class TreeMember<Bloc> {
   final Bloc bloc;
-  final Set<FamilyListener> _listeners = {};
+  final Set<TreeListener> _listeners = {};
 
-  FamilyMember._(this.bloc);
+  TreeMember._(this.bloc);
 }
 
-class FamilyArgKey<Arg> extends Equatable {
-  final Arg arg;
-  final FamilyListener? _unique;
+class TreeArgKey extends Equatable {
+  final TreeListener? _unique;
 
-  const FamilyArgKey._(this.arg, this._unique);
+  const TreeArgKey._(this._unique);
 
   @override
-  get props => [arg, _unique?.key];
+  get props => [_unique?.key];
 }
 
-abstract class FamilyListener {
+abstract class TreeListener {
   Key get key;
 }
 
-mixin FamilyListenerMixin<T extends StatefulWidget> on State<T>
-    implements FamilyListener {
+mixin TreeListenerMixin<T extends StatefulWidget> on State<T>
+    implements TreeListener {
   Key get key => ValueKey(this);
 }
 
-abstract class Family<Arg, Bloc extends Cubit>
-    extends Cubit<Map<FamilyArgKey<Arg>, FamilyMember<Bloc>>> {
+abstract class Tree<Bloc extends Cubit>
+    extends Cubit<Map<TreeArgKey, TreeMember<Bloc>>> {
   final bool autoDispose;
 
-  Family([this.autoDispose = true]) : super({});
+  Tree([this.autoDispose = true]) : super({});
 
-  Bloc? operator [](Arg arg) {
-    return get(arg);
-  }
-
-  Bloc? get(Arg arg, {FamilyListener? listener}) {
-    final argKey = FamilyArgKey._(arg, listener);
+  Bloc? operator [](TreeListener? arg) {
+    final argKey = TreeArgKey._(arg);
     final existingBloc = state[argKey];
     if (existingBloc != null && !existingBloc.bloc.isClosed) {
       return existingBloc.bloc;
@@ -48,14 +43,14 @@ abstract class Family<Arg, Bloc extends Cubit>
     return null;
   }
 
-  Bloc call(Arg arg, FamilyListener listener, {bool? unique}) {
-    final argKey = FamilyArgKey._(arg, unique == true ? listener : null);
+  Bloc call(TreeListener listener, {bool? unique}) {
+    final argKey = TreeArgKey._(unique == true ? listener : null);
     final existingBloc = state[argKey];
     if (existingBloc != null && !existingBloc.bloc.isClosed) {
       existingBloc._listeners.add(listener);
       return existingBloc.bloc;
     } else {
-      final newBloc = FamilyMember._(createBloc(arg));
+      final newBloc = TreeMember._(createBloc());
       final newMap = Map.of(state);
       newMap.update(argKey, (value) {
         final oldBloc = value.bloc;
@@ -71,8 +66,8 @@ abstract class Family<Arg, Bloc extends Cubit>
     }
   }
 
-  void clear(Arg arg, FamilyListener listener, {bool? unique}) {
-    final argKey = FamilyArgKey._(arg, unique == true ? listener : null);
+  void clear(TreeListener listener, {bool? unique}) {
+    final argKey = TreeArgKey._(unique == true ? listener : null);
     final newMap = Map.of(state);
     final existingBloc = state[argKey];
     if (existingBloc != null && !existingBloc.bloc.isClosed) {
@@ -85,7 +80,7 @@ abstract class Family<Arg, Bloc extends Cubit>
     emit(newMap);
   }
 
-  Bloc createBloc(Arg arg);
+  Bloc createBloc();
 
   @override
   Future<void> close() async {
@@ -97,13 +92,13 @@ abstract class Family<Arg, Bloc extends Cubit>
   }
 }
 
-class SimpleFamily<Arg, Bloc extends BaseCubit> extends Family<Arg, Bloc> {
-  final Bloc Function(Arg) creator;
+class SimpleTree<Bloc extends BaseCubit> extends Tree<Bloc> {
+  final Bloc Function() creator;
 
-  SimpleFamily(this.creator, {bool autoDispose = true}) : super(autoDispose);
+  SimpleTree(this.creator, {bool autoDispose = true}) : super(autoDispose);
 
   @override
-  Bloc createBloc(Arg arg) {
-    return creator(arg);
+  Bloc createBloc() {
+    return creator();
   }
 }

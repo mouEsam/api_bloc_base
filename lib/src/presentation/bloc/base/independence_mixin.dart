@@ -79,6 +79,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
       _canFetchData.value = true;
     }
     if (lastTrafficLightsValue) {
+      _timer?.cancel();
       preCall?.call();
       if (!_alreadyFetchedData.value) {
         _alreadyFetchedData.value = true;
@@ -209,6 +210,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
 
   FutureOr<void> _performMarkedRefetch() async {
     if (!_needsToRefetch.value) return;
+    _timer?.cancel();
     _needsToRefetch.value = false;
     return refetchData();
   }
@@ -227,6 +229,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
 
   FutureOr<void> _performMarkedRefresh() async {
     if (!_needsToRefresh.value) return;
+    _timer?.cancel();
     _needsToRefresh.value = false;
     return refreshData();
   }

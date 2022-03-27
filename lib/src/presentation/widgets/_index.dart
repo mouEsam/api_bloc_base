@@ -15,6 +15,7 @@ export 'state_container.dart';
 export 'state_container_defs.dart';
 export 'stateful_bloc_builder.dart';
 export 'stateful_bloc_container.dart';
+export 'tree_builder.dart';
 export 'value_listener.dart';
 export 'visibility_builder.dart';
 export 'visibility_wrapper.dart';
