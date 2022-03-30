@@ -72,6 +72,7 @@ abstract class ScreenRoute<T, A extends RouteArguments>
   RouteInfo<T, A> get route;
 
   void setResult(T? result, {bool? updateState});
+  bool canBeResult(dynamic data);
 
   static ScreenRoute<T, A>? maybeOf<T, A extends RouteArguments>(
       BuildContext context) {
@@ -90,6 +91,9 @@ abstract class ScreenRoute<T, A extends RouteArguments>
 
 mixin ScreenRouteMixin<T, A extends RouteArguments> on PageRoute<T>
     implements ScreenRoute<T, A> {
+  @override
+  bool canBeResult(dynamic data) => route.canBeResult(data);
+
   T? _result;
   @override
   void setResult(T? result, {bool? updateState}) {
