@@ -10,7 +10,7 @@ class MaterialPageResultRoute<T, A extends RouteArguments,
         Route extends RouteInfo<T, A>> extends MaterialPageRoute<T>
     with ScreenRouteMixin<T, A> {
   @override
-  final RouteParameters params;
+  final Uri uri;
   @override
   final A arguments;
   @override
@@ -20,7 +20,7 @@ class MaterialPageResultRoute<T, A extends RouteArguments,
   MaterialPageResultRoute({
     required ScreenBuilder<Route> builder,
     required this.arguments,
-    required this.params,
+    required this.uri,
     required this.route,
     this.defaultResult,
     String? title,
@@ -39,7 +39,7 @@ class CupertinoPageResultRoute<T, A extends RouteArguments,
         Route extends RouteInfo<T, A>> extends CupertinoPageRoute<T>
     with ScreenRouteMixin<T, A> {
   @override
-  final RouteParameters params;
+  final Uri uri;
   @override
   final A arguments;
   @override
@@ -49,7 +49,7 @@ class CupertinoPageResultRoute<T, A extends RouteArguments,
   CupertinoPageResultRoute({
     required ScreenBuilder<Route> builder,
     required this.arguments,
-    required this.params,
+    required this.uri,
     required this.route,
     this.defaultResult,
     String? title,
@@ -67,7 +67,7 @@ class CupertinoPageResultRoute<T, A extends RouteArguments,
 
 abstract class ScreenRoute<T, A extends RouteArguments>
     implements PageRoute<T> {
-  RouteParameters get params;
+  Uri get uri;
   A get arguments;
   RouteInfo<T, A> get route;
 

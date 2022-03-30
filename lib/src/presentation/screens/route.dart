@@ -174,7 +174,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
         return build(context, arguments);
       },
       route: this,
-      params: params,
+      uri: params.uri,
       arguments: arguments,
       settings: params.settings,
       fullscreenDialog: params.fullscreenDialog,
