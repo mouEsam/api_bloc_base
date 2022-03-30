@@ -102,6 +102,12 @@ abstract class RouteInfo<T, A extends RouteArguments> {
   @protected
   IPageScreen<RouteInfo<T, A>> build(BuildContext context, A argument);
 
+  Type get resultType => T;
+
+  bool canBeResult(dynamic data) {
+    return data is T?;
+  }
+
   dynamic parseArgument(String parameter) {
     final integer = int.tryParse(parameter);
     if (integer != null) return integer;
