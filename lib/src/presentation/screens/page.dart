@@ -1,10 +1,28 @@
+import 'package:api_bloc_base/src/presentation/screens/route.dart';
+import 'package:api_bloc_base/src/presentation/screens/screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class MaterialPageResultRoute<T> extends MaterialPageRoute<T>
-    with ContentBuilder, PageRouteMixin<T> {
+typedef ScreenBuilder<Route extends RouteInfo> = IPageScreen<Route> Function(
+    BuildContext context);
+
+class MaterialPageResultRoute<T, A extends RouteArguments,
+        Route extends RouteInfo<T, A>> extends MaterialPageRoute<T>
+    with ContentBuilder, ScreenRoute<T, A> {
+  @override
+  final RouteParameters params;
+  @override
+  final A arguments;
+  @override
+  final Route route;
+  final T? defaultResult;
+
   MaterialPageResultRoute({
-    required WidgetBuilder builder,
+    required ScreenBuilder<Route> builder,
+    required this.arguments,
+    required this.params,
+    required this.route,
+    this.defaultResult,
     String? title,
     RouteSettings? settings,
     bool maintainState = true,
@@ -17,10 +35,23 @@ class MaterialPageResultRoute<T> extends MaterialPageRoute<T>
         );
 }
 
-class CupertinoPageResultRoute<T> extends CupertinoPageRoute<T>
-    with ContentBuilder, PageRouteMixin<T> {
+class CupertinoPageResultRoute<T, A extends RouteArguments,
+        Route extends RouteInfo<T, A>> extends CupertinoPageRoute<T>
+    with ContentBuilder, ScreenRoute<T, A> {
+  @override
+  final RouteParameters params;
+  @override
+  final A arguments;
+  @override
+  final Route route;
+  final T? defaultResult;
+
   CupertinoPageResultRoute({
-    required WidgetBuilder builder,
+    required ScreenBuilder<Route> builder,
+    required this.arguments,
+    required this.params,
+    required this.route,
+    this.defaultResult,
     String? title,
     RouteSettings? settings,
     bool maintainState = true,
@@ -38,39 +69,35 @@ mixin ContentBuilder {
   Widget buildContent(BuildContext context);
 }
 
-mixin PageRouteMixin<T> on PageRoute<T>, ContentBuilder {
+mixin ScreenRoute<T, A extends RouteArguments> on PageRoute<T>, ContentBuilder {
+  RouteParameters get params;
+  A get arguments;
+  RouteInfo<T, A> get route;
+
   T? _result;
   @override
   T? get currentResult => _result;
-  void setResult(T? result) {
+
+  void setResult(T? result, {bool? updateState}) {
     _result = result;
+    if (updateState == true) {
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        setState(() {});
+      });
+    }
   }
 
-  @override
-  Widget buildContent(BuildContext context) {
-    return PageRouteScope(
-      page: this,
-      child: super.buildContent(context),
-    );
-  }
-}
-
-class PageRouteScope extends InheritedWidget {
-  const PageRouteScope({
-    Key? key,
-    required this.page,
-    required Widget child,
-  }) : super(key: key, child: child);
-
-  final PageRouteMixin page;
-
-  @override
-  bool updateShouldNotify(oldWidget) {
-    return false;
+  static ScreenRoute<T, A>? maybeOf<T, A extends RouteArguments>(
+      BuildContext context) {
+    final route = ModalRoute.of(context);
+    if (route is ScreenRoute<T, A>) {
+      return route;
+    }
+    return null;
   }
 
-  static PageRouteMixin<T> of<T>(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<PageRouteScope>()!.page
-        as PageRouteMixin<T>;
+  static ScreenRoute<T, A> of<T, A extends RouteArguments>(
+      BuildContext context) {
+    return ScreenRoute.maybeOf<T, A>(context)!;
   }
 }

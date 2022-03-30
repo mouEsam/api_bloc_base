@@ -159,21 +159,6 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     );
   }
 
-  RouteScope buildRoot(
-    BuildContext context,
-    RouteParameters params,
-    A arguments,
-  ) {
-    return RouteScope(
-      route: this,
-      screen: RouteScreen<T, A>(
-        params: params,
-        arguments: arguments,
-        screen: build(context, arguments),
-      ),
-    );
-  }
-
   Route<T> buildPageRoute(RouteParameters params, A arguments) {
     final builder = () {
       if (params.routeType == PlatformRouteType.cupertino ||
@@ -186,8 +171,11 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     }();
     return builder(
       builder: (context) {
-        return buildRoot(context, params, arguments);
+        return build(context, arguments);
       },
+      route: this,
+      params: params,
+      arguments: arguments,
       settings: params.settings,
       fullscreenDialog: params.fullscreenDialog,
     );
@@ -218,7 +206,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
   }
 
   void popSaved(BuildContext context, {T? result}) {
-    result = stateOf(context).result;
+    result = stateOf(context).currentResult;
     return pop(context, result: result!);
   }
 
@@ -227,7 +215,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
   }
 
   Future<bool> maybePopSaved(BuildContext context, {T? result}) {
-    result = stateOf(context).result;
+    result = stateOf(context).currentResult;
     return maybePop(context, result: result!);
   }
 
@@ -281,7 +269,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     T? result,
     bool? popAndPush,
   }) {
-    final argument = this(context).argument;
+    final argument = this(context).arguments;
     return replace<T>(
       context,
       argument: argument,
@@ -290,21 +278,24 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     );
   }
 
-  RouteScreenState<T, A> call(BuildContext context) {
+  ScreenRoute<T, A> call(BuildContext context) {
     return stateOf(context);
   }
 
-  RouteScreenState<T, A> stateOf(BuildContext context) {
-    return RouteScreen.of(context);
+  ScreenRoute<T, A> stateOf(BuildContext context) {
+    return ScreenRoute.of(context);
   }
 
   static Route? maybeOf<Route extends RouteInfo>(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<RouteScope>()!.route
-        as Route;
+    final route = ScreenRoute.maybeOf(context)?.route;
+    if (route is Route) {
+      return route;
+    }
+    return null;
   }
 
   static Route of<Route extends RouteInfo>(BuildContext context) {
-    return maybeOf(context)!;
+    return maybeOf<Route>(context)!;
   }
 }
 
