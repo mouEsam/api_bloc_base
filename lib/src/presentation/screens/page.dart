@@ -8,7 +8,7 @@ typedef ScreenBuilder<Route extends RouteInfo> = IPageScreen<Route> Function(
 
 class MaterialPageResultRoute<T, A extends RouteArguments,
         Route extends RouteInfo<T, A>> extends MaterialPageRoute<T>
-    with ContentBuilder, ScreenRoute<T, A> {
+    with ScreenRouteMixin<T, A> {
   @override
   final RouteParameters params;
   @override
@@ -37,7 +37,7 @@ class MaterialPageResultRoute<T, A extends RouteArguments,
 
 class CupertinoPageResultRoute<T, A extends RouteArguments,
         Route extends RouteInfo<T, A>> extends CupertinoPageRoute<T>
-    with ContentBuilder, ScreenRoute<T, A> {
+    with ScreenRouteMixin<T, A> {
   @override
   final RouteParameters params;
   @override
@@ -65,27 +65,13 @@ class CupertinoPageResultRoute<T, A extends RouteArguments,
         );
 }
 
-mixin ContentBuilder {
-  Widget buildContent(BuildContext context);
-}
-
-mixin ScreenRoute<T, A extends RouteArguments> on PageRoute<T>, ContentBuilder {
+abstract class ScreenRoute<T, A extends RouteArguments>
+    implements PageRoute<T> {
   RouteParameters get params;
   A get arguments;
   RouteInfo<T, A> get route;
 
-  T? _result;
-  @override
-  T? get currentResult => _result;
-
-  void setResult(T? result, {bool? updateState}) {
-    _result = result;
-    if (updateState == true) {
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        setState(() {});
-      });
-    }
-  }
+  void setResult(T? result, {bool? updateState});
 
   static ScreenRoute<T, A>? maybeOf<T, A extends RouteArguments>(
       BuildContext context) {
@@ -100,4 +86,21 @@ mixin ScreenRoute<T, A extends RouteArguments> on PageRoute<T>, ContentBuilder {
       BuildContext context) {
     return ScreenRoute.maybeOf<T, A>(context)!;
   }
+}
+
+mixin ScreenRouteMixin<T, A extends RouteArguments> on PageRoute<T>
+    implements ScreenRoute<T, A> {
+  T? _result;
+  @override
+  void setResult(T? result, {bool? updateState}) {
+    _result = result;
+    if (updateState == true) {
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        setState(() {});
+      });
+    }
+  }
+
+  @override
+  T? get currentResult => _result;
 }
