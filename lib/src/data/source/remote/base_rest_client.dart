@@ -5,7 +5,8 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:api_bloc_base/src/data/model/_index.dart';
-import 'package:api_bloc_base/src/data/service/dio_flutter_transformer.dart';
+import 'package:api_bloc_base/src/data/service/isolate_transformer.dart';
+import 'package:api_bloc_base/src/data/service/json_convertor.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 
@@ -66,6 +67,8 @@ class BaseRestClient {
     );
   }
 
+  static final _jsonConvertor = JsonConvertor();
+
   BaseRestClient(this.baseUrl,
       {Iterable<Interceptor> interceptors = const [],
       CacheOptions? cacheOptions,
@@ -81,8 +84,7 @@ class BaseRestClient {
       dio.options.headers[HttpHeaders.acceptHeader] = 'application/json';
       dio.options.receiveDataWhenStatusError = true;
       dio.options.validateStatus = (_) => true;
-      // dio.transformer = CustomTransformer();
-      dio.transformer = FlutterTransformer();
+      dio.transformer = IsolateTransformer(_jsonConvertor);
     } else {
       dio.options = options;
     }
