@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+
 import 'page.dart';
 import 'route.dart';
 
@@ -13,5 +14,13 @@ extension RouteScreenUtils<T, A extends RouteArguments,
   ScreenRoute<T, A> getRouteState(BuildContext context) {
     final info = ScreenRoute.of<T, A>(context);
     return info;
+  }
+
+  void setResult(BuildContext context, T? result) {
+    getRouteState(context).setResult(result);
+  }
+
+  bool hasResult(BuildContext context) {
+    return getRoute(context).hasResult(context);
   }
 }

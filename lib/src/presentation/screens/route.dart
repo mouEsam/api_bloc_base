@@ -504,6 +504,14 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     );
   }
 
+  void setResult(BuildContext context, T? result) {
+    return stateOf(context).setResult(result);
+  }
+
+  bool hasResult(BuildContext context) {
+    return stateOf(context).currentResult is T;
+  }
+
   ScreenRoute<T, A> call(BuildContext context) {
     return stateOf(context);
   }
