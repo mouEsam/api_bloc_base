@@ -1,10 +1,10 @@
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:universal_platform/universal_platform.dart';
+
 import 'page.dart';
 import 'screen.dart';
-import 'package:universal_platform/universal_platform.dart';
 
 abstract class RouteName {
   const RouteName._();
@@ -150,7 +150,8 @@ class RouteParameters {
   final Uri uri;
   final RouteSettings settings;
   final PlatformRouteType routeType;
-  final bool? fullscreenDialog;
+  final bool rootNavigator;
+  final bool fullscreenDialog;
   final bool? barrierDismissible;
   final Color? barrierColor;
   final String? barrierLabel;
@@ -159,7 +160,8 @@ class RouteParameters {
     required this.uri,
     required this.settings,
     required this.routeType,
-    this.fullscreenDialog,
+    required this.rootNavigator,
+    required this.fullscreenDialog,
     this.barrierDismissible,
     this.barrierColor,
     this.barrierLabel,
@@ -173,6 +175,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
   final RouteName _name;
   final ArgumentFactory<A> _argumentsFactory;
   final PlatformRouteType routeType;
+  final RouteBuilder<T, A> routeBuilder;
   final bool fullscreenDialog;
   final bool isDialog;
   final bool? barrierDismissible;
@@ -185,6 +188,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     this._name,
     this._argumentsFactory, {
     this.routeType = PlatformRouteType.material,
+    this.routeBuilder = const RouteBuilder(),
     this.fullscreenDialog = false,
     this.isDialog = false,
     this.barrierDismissible,
@@ -268,14 +272,17 @@ abstract class RouteInfo<T, A extends RouteArguments> {
       final json = fixQuery(uri.queryParametersAll);
       routeArgs = _argumentsFactory.fromMap(json);
     }
-    return buildPageRoute(
+    return routeBuilder.buildPageRoute(
       RouteParameters(
         uri: uri,
         settings: settings,
+        rootNavigator: false,
         routeType: routeType ?? this.routeType,
         fullscreenDialog: fullscreenDialog ?? this.fullscreenDialog,
       ),
       routeArgs,
+      this,
+      build,
     );
   }
 
@@ -283,6 +290,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     BuildContext context, {
     required Uri uri,
     required RouteSettings settings,
+    bool rootNavigator = true,
     PlatformRouteType? routeType,
     bool? barrierDismissible,
     Color? barrierColor,
@@ -296,68 +304,21 @@ abstract class RouteInfo<T, A extends RouteArguments> {
       final json = fixQuery(uri.queryParametersAll);
       routeArgs = _argumentsFactory.fromMap(json);
     }
-    return buildDialogRoute(
+    return routeBuilder.buildDialogRoute(
       context,
       RouteParameters(
         uri: uri,
         settings: settings,
         routeType: routeType ?? this.routeType,
+        fullscreenDialog: false,
         barrierDismissible: barrierDismissible ?? this.barrierDismissible,
+        rootNavigator: rootNavigator,
         barrierColor: barrierColor ?? this.barrierColor,
         barrierLabel: barrierLabel ?? this.barrierLabel,
       ),
       routeArgs,
-    );
-  }
-
-  Route<T> buildPageRoute(RouteParameters params, A arguments) {
-    final builder = () {
-      if (params.routeType == PlatformRouteType.cupertino ||
-          (params.routeType == PlatformRouteType.adaptive &&
-              (UniversalPlatform.isIOS || UniversalPlatform.isMacOS))) {
-        return CupertinoPageResultRoute.new;
-      } else {
-        return MaterialPageResultRoute.new;
-      }
-    }();
-    return builder(
-      builder: (context) {
-        return build(context, arguments);
-      },
-      route: this,
-      uri: params.uri,
-      arguments: arguments,
-      settings: params.settings,
-      fullscreenDialog: params.fullscreenDialog ?? fullscreenDialog,
-    );
-  }
-
-  Route<T> buildDialogRoute(
-    BuildContext context,
-    RouteParameters params,
-    A arguments,
-  ) {
-    final builder = () {
-      if (params.routeType == PlatformRouteType.cupertino ||
-          (params.routeType == PlatformRouteType.adaptive &&
-              (UniversalPlatform.isIOS || UniversalPlatform.isMacOS))) {
-        return CupertinoDialogResultRoute.new;
-      } else {
-        return MaterialDialogResultRoute.new;
-      }
-    }();
-    return builder(
-      context: context,
-      builder: (context) {
-        return build(context, arguments);
-      },
-      route: this,
-      uri: params.uri,
-      arguments: arguments,
-      settings: params.settings,
-      barrierColor: params.barrierColor,
-      barrierLabel: params.barrierLabel,
-      barrierDismissible: params.barrierDismissible ?? true,
+      this,
+      build,
     );
   }
 
@@ -381,55 +342,78 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     );
   }
 
-  void pop(BuildContext context, {required T result}) {
-    return Navigator.pop(context, result);
+  void pop(
+    BuildContext context, {
+    required T result,
+    bool rootNavigator = false,
+  }) {
+    return Navigator.of(context, rootNavigator: rootNavigator).pop(result);
   }
 
-  void popSaved(BuildContext context, {T? result}) {
+  void popSaved(
+    BuildContext context, {
+    T? result,
+    bool rootNavigator = false,
+  }) {
     result = stateOf(context).currentResult;
-    return pop(context, result: result as T);
+    return pop(context, result: result as T, rootNavigator: rootNavigator);
   }
 
-  Future<bool> maybePop(BuildContext context, {required T result}) {
-    return Navigator.maybePop(context, result);
+  Future<bool> maybePop(
+    BuildContext context, {
+    required T result,
+    bool rootNavigator = false,
+  }) {
+    return Navigator.of(context, rootNavigator: rootNavigator).maybePop(result);
   }
 
-  Future<bool> maybePopSaved(BuildContext context, {T? result}) {
+  Future<bool> maybePopSaved(
+    BuildContext context, {
+    T? result,
+    bool rootNavigator = false,
+  }) {
     result = stateOf(context).currentResult;
-    return maybePop(context, result: result as T);
+    return maybePop(context, result: result as T, rootNavigator: rootNavigator);
   }
 
   Future<T?> pushClearTop<R>(
     BuildContext context, {
     required A arguments,
+    bool rootNavigator = false,
     R? result,
   }) async {
     if (result != null) {
-      await Navigator.maybePop(context, result);
+      await Navigator.of(context, rootNavigator: rootNavigator)
+          .maybePop(result);
     }
-    return Navigator.pushNamedAndRemoveUntil<T>(
-      context,
+    return Navigator.of(context, rootNavigator: rootNavigator)
+        .pushNamedAndRemoveUntil<T>(
       createUri(arguments).toString(),
       (route) => false,
       arguments: arguments,
     );
   }
 
-  Future<T?> push(BuildContext context, {required A arguments}) {
+  Future<T?> push(
+    BuildContext context, {
+    required A arguments,
+    bool? rootNavigator,
+  }) {
     if (isDialog) {
-      return Navigator.push<T>(
-        context,
+      rootNavigator ??= true;
+      return Navigator.of(context, rootNavigator: rootNavigator).push<T>(
         buildDialog(
           context,
           uri: createUri(arguments),
           settings: RouteSettings(
             arguments: arguments,
           ),
+          rootNavigator: rootNavigator,
         ),
       );
     } else {
-      return Navigator.pushNamed<T>(
-        context,
+      rootNavigator ??= false;
+      return Navigator.of(context, rootNavigator: rootNavigator).pushNamed<T>(
         createUri(arguments).toString(),
         arguments: arguments,
       );
@@ -439,6 +423,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
   Future<T?> replace<R>(
     BuildContext context, {
     required A arguments,
+    bool? rootNavigator,
     R? result,
     bool? popAndPush,
   }) {
@@ -447,6 +432,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
         context,
         arguments: arguments,
         result: result,
+        rootNavigator: rootNavigator ?? true,
       );
     } else {
       return _replacePage<R>(
@@ -454,6 +440,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
         arguments: arguments,
         result: result,
         popAndPush: popAndPush,
+        rootNavigator: rootNavigator ?? false,
       );
     }
   }
@@ -461,18 +448,20 @@ abstract class RouteInfo<T, A extends RouteArguments> {
   Future<T?> _replacePage<R>(
     BuildContext context, {
     required A arguments,
+    required bool rootNavigator,
     R? result,
     bool? popAndPush,
   }) {
     final action = () {
       if (popAndPush == true) {
-        return Navigator.popAndPushNamed;
+        return Navigator.of(context, rootNavigator: rootNavigator)
+            .popAndPushNamed;
       } else {
-        return Navigator.pushReplacementNamed;
+        return Navigator.of(context, rootNavigator: rootNavigator)
+            .pushReplacementNamed;
       }
     }();
     return action<T, R>(
-      context,
       createUri(arguments).toString(),
       arguments: arguments,
       result: result,
@@ -482,16 +471,18 @@ abstract class RouteInfo<T, A extends RouteArguments> {
   Future<T?> _replaceDialog<R>(
     BuildContext context, {
     required A arguments,
+    required bool rootNavigator,
     R? result,
   }) {
-    return Navigator.pushReplacement<T, R>(
-      context,
+    return Navigator.of(context, rootNavigator: rootNavigator)
+        .pushReplacement<T, R>(
       buildDialog(
         context,
         uri: createUri(arguments),
         settings: RouteSettings(
           arguments: arguments,
         ),
+        rootNavigator: rootNavigator,
       ),
       result: result,
     );
@@ -499,6 +490,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
 
   Future<T?> refresh(
     BuildContext context, {
+    bool? rootNavigator,
     T? result,
     bool? popAndPush,
   }) {
@@ -508,6 +500,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
       arguments: arguments,
       result: result,
       popAndPush: popAndPush,
+      rootNavigator: rootNavigator,
     );
   }
 
@@ -532,15 +525,152 @@ abstract class RouteInfo<T, A extends RouteArguments> {
   }
 }
 
-mixin NoResultRouteMixin on RouteInfo<void, RouteZeroArguments> {
+typedef RouteScreenBuilder<T, A extends RouteArguments>
+    = IPageScreen<RouteInfo<T, A>> Function(
+  BuildContext context,
+  A arguments,
+);
+
+abstract class RouteBuilder<T, A extends RouteArguments> {
+  const factory RouteBuilder() = DefaultRouteBuilder.new;
+
+  Route<T> buildPageRoute(
+    RouteParameters params,
+    A arguments,
+    RouteInfo<T, A> route,
+    RouteScreenBuilder<T, A> builder,
+  );
+
+  Route<T> buildDialogRoute(
+    BuildContext context,
+    RouteParameters params,
+    A arguments,
+    RouteInfo<T, A> route,
+    RouteScreenBuilder<T, A> builder,
+  );
+}
+
+class DefaultRouteBuilder<T, A extends RouteArguments>
+    implements RouteBuilder<T, A> {
+  const DefaultRouteBuilder();
+
   @override
-  void pop(BuildContext context, {void result}) {
-    return super.pop(context, result: null);
+  Route<T> buildPageRoute(
+    RouteParameters params,
+    A arguments,
+    RouteInfo<T, A> route,
+    RouteScreenBuilder<T, A> builder,
+  ) {
+    final routeBuilder = () {
+      if (params.routeType == PlatformRouteType.cupertino ||
+          (params.routeType == PlatformRouteType.adaptive &&
+              (UniversalPlatform.isIOS || UniversalPlatform.isMacOS))) {
+        return CupertinoPageResultRoute.new;
+      } else {
+        return MaterialPageResultRoute.new;
+      }
+    }();
+    return routeBuilder(
+      builder: (context) {
+        return builder(context, arguments);
+      },
+      route: route,
+      uri: params.uri,
+      arguments: arguments,
+      settings: params.settings,
+      fullscreenDialog: params.fullscreenDialog,
+    );
   }
 
   @override
-  Future<bool> maybePop(BuildContext context, {required void result}) {
-    return super.maybePop(context, result: null);
+  Route<T> buildDialogRoute(
+    BuildContext context,
+    RouteParameters params,
+    A arguments,
+    RouteInfo<T, A> route,
+    RouteScreenBuilder<T, A> builder,
+  ) {
+    if (params.routeType == PlatformRouteType.cupertino ||
+        (params.routeType == PlatformRouteType.adaptive &&
+            (UniversalPlatform.isIOS || UniversalPlatform.isMacOS))) {
+      return buildCupertinoDialogRoute(
+          context, params, arguments, route, builder);
+    } else {
+      return buildMaterialDialogRoute(
+          context, params, arguments, route, builder);
+    }
+  }
+
+  Route<T> buildMaterialDialogRoute(
+    BuildContext context,
+    RouteParameters params,
+    A arguments,
+    RouteInfo<T, A> route,
+    RouteScreenBuilder<T, A> builder,
+  ) {
+    final CapturedThemes themes = InheritedTheme.capture(
+      from: context,
+      to: Navigator.of(
+        context,
+        rootNavigator: params.rootNavigator,
+      ).context,
+    );
+    return MaterialDialogResultRoute(
+      context: context,
+      builder: (context) {
+        return builder(context, arguments);
+      },
+      route: route,
+      uri: params.uri,
+      themes: themes,
+      arguments: arguments,
+      settings: params.settings,
+      barrierColor: params.barrierColor ?? Colors.black54,
+      barrierLabel: params.barrierLabel,
+      barrierDismissible: params.barrierDismissible ?? true,
+    );
+  }
+
+  Route<T> buildCupertinoDialogRoute(
+    BuildContext context,
+    RouteParameters params,
+    A arguments,
+    RouteInfo<T, A> route,
+    RouteScreenBuilder<T, A> builder,
+  ) {
+    return CupertinoDialogResultRoute(
+      context: context,
+      builder: (context) {
+        return builder(context, arguments);
+      },
+      route: route,
+      uri: params.uri,
+      arguments: arguments,
+      settings: params.settings,
+      barrierColor: params.barrierColor,
+      barrierLabel: params.barrierLabel,
+      barrierDismissible: params.barrierDismissible ?? true,
+    );
+  }
+}
+
+mixin NoResultRouteMixin on RouteInfo<void, RouteZeroArguments> {
+  @override
+  void pop(
+    BuildContext context, {
+    void result,
+    bool rootNavigator = false,
+  }) {
+    return super.pop(context, result: null, rootNavigator: rootNavigator);
+  }
+
+  @override
+  Future<bool> maybePop(
+    BuildContext context, {
+    required void result,
+    bool rootNavigator = false,
+  }) {
+    return super.maybePop(context, result: null, rootNavigator: rootNavigator);
   }
 }
 
@@ -586,27 +716,44 @@ abstract class NoArgumentsRouteInfo<T>
   Future<T?> pushClearTop<R>(
     BuildContext context, {
     RouteZeroArguments arguments = RouteInfo.noArgs,
+    bool rootNavigator = false,
     R? result,
   }) {
-    return super.pushClearTop(context, arguments: arguments, result: result);
+    return super.pushClearTop(
+      context,
+      arguments: arguments,
+      result: result,
+      rootNavigator: rootNavigator,
+    );
   }
 
   @override
   Future<T?> push(
     BuildContext context, {
     RouteZeroArguments arguments = RouteInfo.noArgs,
+    bool? rootNavigator,
   }) {
-    return super.push(context, arguments: arguments);
+    return super.push(
+      context,
+      arguments: arguments,
+      rootNavigator: rootNavigator,
+    );
   }
 
   @override
   Future<T?> replace<R>(
     BuildContext context, {
     RouteZeroArguments arguments = RouteInfo.noArgs,
+    bool? rootNavigator,
     R? result,
     bool? popAndPush,
   }) {
-    return super.replace(context, arguments: arguments, result: result);
+    return super.replace(
+      context,
+      arguments: arguments,
+      result: result,
+      rootNavigator: rootNavigator,
+    );
   }
 }
 

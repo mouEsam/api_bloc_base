@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
 import 'route.dart';
 import 'screen.dart';
 
@@ -76,7 +77,7 @@ class MaterialDialogResultRoute<T, A extends RouteArguments,
   final Route route;
   final T? defaultResult;
 
-  MaterialDialogResultRoute._({
+  MaterialDialogResultRoute({
     required BuildContext context,
     required ScreenPageBuilder<Route> builder,
     required this.arguments,
@@ -84,51 +85,19 @@ class MaterialDialogResultRoute<T, A extends RouteArguments,
     required this.route,
     this.defaultResult,
     RouteSettings? settings,
+    CapturedThemes? themes,
     bool barrierDismissible = true,
     Color? barrierColor,
     String? barrierLabel,
   }) : super(
           context: context,
           builder: builder,
+          themes: themes,
           barrierDismissible: barrierDismissible,
           barrierColor: barrierColor,
           barrierLabel: barrierLabel,
           settings: settings,
         );
-
-  factory MaterialDialogResultRoute({
-    required BuildContext context,
-    required ScreenPageBuilder<Route> builder,
-    required A arguments,
-    required Uri uri,
-    required Route route,
-    T? defaultResult,
-    RouteSettings? settings,
-    bool barrierDismissible = true,
-    bool rootNavigator = true,
-    Color? barrierColor,
-    String? barrierLabel,
-  }) {
-    final CapturedThemes themes = InheritedTheme.capture(
-      from: context,
-      to: Navigator.of(
-        context,
-        rootNavigator: rootNavigator,
-      ).context,
-    );
-    return MaterialDialogResultRoute._(
-      context: context,
-      builder: builder,
-      arguments: arguments,
-      uri: uri,
-      route: route,
-      defaultResult: defaultResult,
-      settings: settings,
-      barrierDismissible: barrierDismissible,
-      barrierColor: barrierColor ?? Colors.black54,
-      barrierLabel: barrierLabel,
-    );
-  }
 }
 
 class CupertinoDialogResultRoute<T, A extends RouteArguments,
