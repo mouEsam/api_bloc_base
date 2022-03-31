@@ -175,7 +175,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
   final RouteName _name;
   final ArgumentFactory<A> _argumentsFactory;
   final PlatformRouteType routeType;
-  final RouteBuilder<T, A> routeBuilder;
+  final RouteBuilder<T, A>? routeBuilder;
   final bool fullscreenDialog;
   final bool isDialog;
   final bool? barrierDismissible;
@@ -188,7 +188,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     this._name,
     this._argumentsFactory, {
     this.routeType = PlatformRouteType.material,
-    this.routeBuilder = const RouteBuilder(),
+    this.routeBuilder,
     this.fullscreenDialog = false,
     this.isDialog = false,
     this.barrierDismissible,
@@ -203,7 +203,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     PlatformRouteType routeType,
     bool fullscreenDialog,
     bool isDialog,
-  }) = RouteInfoBuilder._;
+  }) = RouteInfoBuilder<T, A>._;
 
   const factory RouteInfo.simple({
     required RouteName name,
@@ -212,7 +212,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     PlatformRouteType routeType,
     bool fullscreenDialog,
     bool isDialog,
-  }) = SimpleRouteInfo._;
+  }) = SimpleRouteInfo<T, A>._;
 
   const factory RouteInfo.argument({
     required RouteName name,
@@ -221,7 +221,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     PlatformRouteType routeType,
     bool fullscreenDialog,
     bool isDialog,
-  }) = SimpleArgumentRouteInfo._;
+  }) = SimpleArgumentRouteInfo<T, A>._;
 
   @protected
   IPageScreen<RouteInfo<T, A>> build(BuildContext context, A arguments);
@@ -258,6 +258,10 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     });
   }
 
+  RouteBuilder<T, A> getRouteBuilder() {
+    return routeBuilder ?? RouteBuilder<T, A>();
+  }
+
   Route<T> buildRoute({
     required Uri uri,
     required RouteSettings settings,
@@ -272,7 +276,8 @@ abstract class RouteInfo<T, A extends RouteArguments> {
       final json = fixQuery(uri.queryParametersAll);
       routeArgs = _argumentsFactory.fromMap(json);
     }
-    return routeBuilder.buildPageRoute(
+
+    return getRouteBuilder().buildPageRoute(
       RouteParameters(
         uri: uri,
         settings: settings,
@@ -282,7 +287,9 @@ abstract class RouteInfo<T, A extends RouteArguments> {
       ),
       routeArgs,
       this,
-      build,
+      (context, arguments) {
+        return build(context, arguments);
+      },
     );
   }
 
@@ -304,7 +311,8 @@ abstract class RouteInfo<T, A extends RouteArguments> {
       final json = fixQuery(uri.queryParametersAll);
       routeArgs = _argumentsFactory.fromMap(json);
     }
-    return routeBuilder.buildDialogRoute(
+
+    return getRouteBuilder().buildDialogRoute(
       context,
       RouteParameters(
         uri: uri,
@@ -318,7 +326,9 @@ abstract class RouteInfo<T, A extends RouteArguments> {
       ),
       routeArgs,
       this,
-      build,
+      (context, arguments) {
+        return build(context, arguments);
+      },
     );
   }
 
@@ -540,7 +550,7 @@ typedef RouteScreenBuilder<T, A extends RouteArguments>
 );
 
 abstract class RouteBuilder<T, A extends RouteArguments> {
-  const factory RouteBuilder() = DefaultRouteBuilder.new;
+  const factory RouteBuilder() = DefaultRouteBuilder<T, A>.new;
 
   Route<T> buildPageRoute(
     RouteParameters params,
@@ -573,11 +583,12 @@ class DefaultRouteBuilder<T, A extends RouteArguments>
       if (params.routeType == PlatformRouteType.cupertino ||
           (params.routeType == PlatformRouteType.adaptive &&
               (UniversalPlatform.isIOS || UniversalPlatform.isMacOS))) {
-        return CupertinoPageResultRoute.new;
+        return CupertinoPageResultRoute<T, A, RouteInfo<T, A>>.new;
       } else {
-        return MaterialPageResultRoute.new;
+        return MaterialPageResultRoute<T, A, RouteInfo<T, A>>.new;
       }
     }();
+
     return routeBuilder(
       builder: (context) {
         return builder(context, arguments);
@@ -623,7 +634,7 @@ class DefaultRouteBuilder<T, A extends RouteArguments>
         rootNavigator: params.rootNavigator,
       ).context,
     );
-    return MaterialDialogResultRoute(
+    return MaterialDialogResultRoute<T, A, RouteInfo<T, A>>(
       context: context,
       builder: (context) {
         return builder(context, arguments);
@@ -646,7 +657,7 @@ class DefaultRouteBuilder<T, A extends RouteArguments>
     RouteInfo<T, A> route,
     RouteScreenBuilder<T, A> builder,
   ) {
-    return CupertinoDialogResultRoute(
+    return CupertinoDialogResultRoute<T, A, RouteInfo<T, A>>(
       context: context,
       builder: (context) {
         return builder(context, arguments);
@@ -703,7 +714,7 @@ abstract class NoArgumentsRouteInfo<T>
     PlatformRouteType routeType,
     bool fullscreenDialog,
     bool isDialog,
-  }) = NoArgumentRouteInfoBuilder._;
+  }) = NoArgumentRouteInfoBuilder<T>._;
 
   const factory NoArgumentsRouteInfo.simple({
     required RouteName name,
@@ -711,13 +722,13 @@ abstract class NoArgumentsRouteInfo<T>
     PlatformRouteType routeType,
     bool fullscreenDialog,
     bool isDialog,
-  }) = SimpleNoArgumentRouteInfo._;
+  }) = SimpleNoArgumentRouteInfo<T>._;
 
   @override
   @protected
   IPageScreen<NoArgumentsRouteInfo<T>> build(
     BuildContext context, [
-    RouteZeroArguments? arguments = RouteInfo.noArgs,
+    RouteZeroArguments arguments = RouteInfo.noArgs,
   ]);
 
   @override
@@ -870,7 +881,7 @@ class SimpleNoArgumentRouteInfo<T> extends NoArgumentsRouteInfo<T> {
         );
 
   @override
-  build(BuildContext context, [arguments]) {
+  build(BuildContext context, [arguments = RouteInfo.noArgs]) {
     return screen();
   }
 }
@@ -895,7 +906,7 @@ class NoArgumentRouteInfoBuilder<T> extends NoArgumentsRouteInfo<T> {
         );
 
   @override
-  build(BuildContext context, [arguments]) {
+  build(BuildContext context, [arguments = RouteInfo.noArgs]) {
     return builder(context);
   }
 }
