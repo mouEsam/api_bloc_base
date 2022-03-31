@@ -1,10 +1,10 @@
-import 'package:api_bloc_base/src/presentation/screens/route.dart';
-import 'package:api_bloc_base/src/presentation/screens/screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'route.dart';
+import 'screen.dart';
 
-typedef ScreenBuilder<Route extends RouteInfo> = IPageScreen<Route> Function(
-    BuildContext context);
+typedef ScreenPageBuilder<Route extends RouteInfo> = IPageScreen<Route>
+    Function(BuildContext context);
 
 class MaterialPageResultRoute<T, A extends RouteArguments,
         Route extends RouteInfo<T, A>> extends MaterialPageRoute<T>
@@ -18,7 +18,7 @@ class MaterialPageResultRoute<T, A extends RouteArguments,
   final T? defaultResult;
 
   MaterialPageResultRoute({
-    required ScreenBuilder<Route> builder,
+    required ScreenPageBuilder<Route> builder,
     required this.arguments,
     required this.uri,
     required this.route,
@@ -47,7 +47,7 @@ class CupertinoPageResultRoute<T, A extends RouteArguments,
   final T? defaultResult;
 
   CupertinoPageResultRoute({
-    required ScreenBuilder<Route> builder,
+    required ScreenPageBuilder<Route> builder,
     required this.arguments,
     required this.uri,
     required this.route,
@@ -65,8 +65,106 @@ class CupertinoPageResultRoute<T, A extends RouteArguments,
         );
 }
 
+class MaterialDialogResultRoute<T, A extends RouteArguments,
+        Route extends RouteInfo<T, A>> extends DialogRoute<T>
+    with ScreenRouteMixin<T, A> {
+  @override
+  final Uri uri;
+  @override
+  final A arguments;
+  @override
+  final Route route;
+  final T? defaultResult;
+
+  MaterialDialogResultRoute._({
+    required BuildContext context,
+    required ScreenPageBuilder<Route> builder,
+    required this.arguments,
+    required this.uri,
+    required this.route,
+    this.defaultResult,
+    RouteSettings? settings,
+    bool barrierDismissible = true,
+    Color? barrierColor,
+    String? barrierLabel,
+  }) : super(
+          context: context,
+          builder: builder,
+          barrierDismissible: barrierDismissible,
+          barrierColor: barrierColor,
+          barrierLabel: barrierLabel,
+          settings: settings,
+        );
+
+  factory MaterialDialogResultRoute({
+    required BuildContext context,
+    required ScreenPageBuilder<Route> builder,
+    required A arguments,
+    required Uri uri,
+    required Route route,
+    T? defaultResult,
+    RouteSettings? settings,
+    bool barrierDismissible = true,
+    bool rootNavigator = true,
+    Color? barrierColor,
+    String? barrierLabel,
+  }) {
+    final CapturedThemes themes = InheritedTheme.capture(
+      from: context,
+      to: Navigator.of(
+        context,
+        rootNavigator: rootNavigator,
+      ).context,
+    );
+    return MaterialDialogResultRoute._(
+      context: context,
+      builder: builder,
+      arguments: arguments,
+      uri: uri,
+      route: route,
+      defaultResult: defaultResult,
+      settings: settings,
+      barrierDismissible: barrierDismissible,
+      barrierColor: barrierColor ?? Colors.black54,
+      barrierLabel: barrierLabel,
+    );
+  }
+}
+
+class CupertinoDialogResultRoute<T, A extends RouteArguments,
+        Route extends RouteInfo<T, A>> extends CupertinoDialogRoute<T>
+    with ScreenRouteMixin<T, A> {
+  @override
+  final Uri uri;
+  @override
+  final A arguments;
+  @override
+  final Route route;
+  final T? defaultResult;
+
+  CupertinoDialogResultRoute({
+    required BuildContext context,
+    required ScreenPageBuilder<Route> builder,
+    required this.arguments,
+    required this.uri,
+    required this.route,
+    this.defaultResult,
+    RouteSettings? settings,
+    bool barrierDismissible = true,
+    Color? barrierColor,
+    String? barrierLabel,
+  }) : super(
+          context: context,
+          builder: builder,
+          barrierDismissible: barrierDismissible,
+          barrierColor: barrierColor,
+          barrierLabel: barrierLabel,
+          settings: settings,
+        );
+}
+
 abstract class ScreenRoute<T, A extends RouteArguments>
-    implements PageRoute<T> {
+    implements ModalRoute<T> {
   Uri get uri;
   A get arguments;
   RouteInfo<T, A> get route;
@@ -89,7 +187,7 @@ abstract class ScreenRoute<T, A extends RouteArguments>
   }
 }
 
-mixin ScreenRouteMixin<T, A extends RouteArguments> on PageRoute<T>
+mixin ScreenRouteMixin<T, A extends RouteArguments> on ModalRoute<T>
     implements ScreenRoute<T, A> {
   @override
   bool canBeResult(dynamic data) => route.canBeResult(data);

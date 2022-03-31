@@ -1,6 +1,6 @@
-import 'package:api_bloc_base/src/presentation/screens/page.dart';
-import 'package:api_bloc_base/src/presentation/screens/route.dart';
 import 'package:flutter/widgets.dart';
+import 'page.dart';
+import 'route.dart';
 
 abstract class IPageScreen<Route extends RouteInfo> implements Widget {}
 

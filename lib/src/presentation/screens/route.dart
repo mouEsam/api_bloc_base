@@ -1,27 +1,64 @@
 import 'dart:convert';
 
-import 'package:api_bloc_base/src/presentation/screens/page.dart';
-import 'package:api_bloc_base/src/presentation/screens/screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'page.dart';
+import 'screen.dart';
 import 'package:universal_platform/universal_platform.dart';
 
 abstract class RouteName {
-  static const auto = AutoName();
-  static const autoWithoutRoute = AutoNameWithOptions(withoutRoute: true);
-  static const autoWithoutScreen = AutoNameWithOptions(withoutScreen: true);
   const RouteName._();
+
+  const factory RouteName.autoReplace({
+    Type? type,
+    Map<Pattern, String> replacements,
+  }) = AutoName._;
+
+  const factory RouteName.auto({
+    Type? type,
+    bool? withoutRoute,
+    bool? withoutScreen,
+    bool? withoutDialog,
+    bool? ignoreCase,
+  }) = AutoNameWithOptions._;
+
+  const factory RouteName.trim({
+    Type? type,
+    bool? withoutRoute,
+    bool? withoutScreen,
+    bool? withoutDialog,
+    bool? ignoreCase,
+  }) = AutoNameWithOptions._trim;
+
+  const factory RouteName.withoutRoute({
+    Type? type,
+    bool? ignoreCase,
+  }) = AutoNameWithOptions._withoutRoute;
+
+  const factory RouteName.withoutScreen({
+    Type? type,
+    bool? ignoreCase,
+  }) = AutoNameWithOptions._withoutScreen;
+
+  const factory RouteName.withoutDialog({
+    Type? type,
+    bool? ignoreCase,
+  }) = AutoNameWithOptions._withoutDialog;
+
+  const factory RouteName(String name) = ManualName.new;
 
   String getName(RouteInfo route);
 }
 
 class AutoName extends RouteName {
+  final Type? type;
   final Map<Pattern, String> replacements;
-  const AutoName({this.replacements = const {}}) : super._();
+  const AutoName._({this.type, this.replacements = const {}}) : super._();
 
   @override
   String getName(RouteInfo route) {
-    final routeTypeName = route.runtimeType.toString();
+    final type = this.type ?? route.runtimeType;
+    final routeTypeName = type.toString();
     var routeName = routeTypeName;
     replacements.forEach((key, value) {
       routeName = routeName.replaceAll(key, value);
@@ -31,18 +68,56 @@ class AutoName extends RouteName {
 }
 
 class AutoNameWithOptions extends RouteName {
+  final Type? type;
   final bool? withoutRoute;
   final bool? withoutScreen;
+  final bool? withoutDialog;
   final bool? ignoreCase;
-  const AutoNameWithOptions({
+
+  const AutoNameWithOptions._({
+    this.type,
     this.withoutRoute,
     this.withoutScreen,
+    this.withoutDialog,
     this.ignoreCase,
+  }) : super._();
+
+  const AutoNameWithOptions._withoutRoute({
+    this.type,
+    this.ignoreCase,
+  })  : withoutRoute = true,
+        withoutScreen = null,
+        withoutDialog = null,
+        super._();
+
+  const AutoNameWithOptions._withoutScreen({
+    this.type,
+    this.ignoreCase,
+  })  : withoutScreen = true,
+        withoutRoute = null,
+        withoutDialog = null,
+        super._();
+
+  const AutoNameWithOptions._withoutDialog({
+    this.type,
+    this.ignoreCase,
+  })  : withoutDialog = true,
+        withoutScreen = null,
+        withoutRoute = null,
+        super._();
+
+  const AutoNameWithOptions._trim({
+    this.type,
+    this.ignoreCase,
+    this.withoutRoute = true,
+    this.withoutDialog = true,
+    this.withoutScreen = true,
   }) : super._();
 
   @override
   String getName(RouteInfo route) {
-    final routeTypeName = route.runtimeType.toString();
+    final type = this.type ?? route.runtimeType;
+    final routeTypeName = type.toString();
     var routeName = routeTypeName;
     final caseSensitive = ignoreCase != true;
     if (withoutRoute == true) {
@@ -52,6 +127,10 @@ class AutoNameWithOptions extends RouteName {
     if (withoutScreen == true) {
       routeName = routeName.replaceAll(
           RegExp(r'Screen$', caseSensitive: caseSensitive), '');
+    }
+    if (withoutDialog == true) {
+      routeName = routeName.replaceAll(
+          RegExp(r'Dialog$', caseSensitive: caseSensitive), '');
     }
     return routeName;
   }
@@ -71,13 +150,19 @@ class RouteParameters {
   final Uri uri;
   final RouteSettings settings;
   final PlatformRouteType routeType;
-  final bool fullscreenDialog;
+  final bool? fullscreenDialog;
+  final bool? barrierDismissible;
+  final Color? barrierColor;
+  final String? barrierLabel;
 
   const RouteParameters({
     required this.uri,
     required this.settings,
     required this.routeType,
-    required this.fullscreenDialog,
+    this.fullscreenDialog,
+    this.barrierDismissible,
+    this.barrierColor,
+    this.barrierLabel,
   });
 }
 
@@ -89,6 +174,10 @@ abstract class RouteInfo<T, A extends RouteArguments> {
   final ArgumentFactory<A> _argumentsFactory;
   final PlatformRouteType routeType;
   final bool fullscreenDialog;
+  final bool isDialog;
+  final bool? barrierDismissible;
+  final Color? barrierColor;
+  final String? barrierLabel;
 
   String get name => _name.getName(this);
 
@@ -97,10 +186,41 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     this._argumentsFactory, {
     this.routeType = PlatformRouteType.material,
     this.fullscreenDialog = false,
+    this.isDialog = false,
+    this.barrierDismissible,
+    this.barrierColor,
+    this.barrierLabel,
   });
 
+  const factory RouteInfo.builder({
+    required RouteName name,
+    required ArgumentFactory<A> argumentsFactory,
+    required ScreenBuilder<T, A> builder,
+    PlatformRouteType routeType,
+    bool fullscreenDialog,
+    bool isDialog,
+  }) = RouteInfoBuilder._;
+
+  const factory RouteInfo.simple({
+    required RouteName name,
+    required ArgumentFactory<A> argumentsFactory,
+    required SimpleScreenBuilder<T, A> screen,
+    PlatformRouteType routeType,
+    bool fullscreenDialog,
+    bool isDialog,
+  }) = SimpleRouteInfo._;
+
+  const factory RouteInfo.argument({
+    required RouteName name,
+    required ArgumentFactory<A> argumentsFactory,
+    required SimpleArgumentScreenBuilder<T, A> screen,
+    PlatformRouteType routeType,
+    bool fullscreenDialog,
+    bool isDialog,
+  }) = SimpleArgumentRouteInfo._;
+
   @protected
-  IPageScreen<RouteInfo<T, A>> build(BuildContext context, A argument);
+  IPageScreen<RouteInfo<T, A>> build(BuildContext context, A arguments);
 
   Type get resultType => T;
 
@@ -159,6 +279,37 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     );
   }
 
+  Route<T> buildDialog(
+    BuildContext context, {
+    required Uri uri,
+    required RouteSettings settings,
+    PlatformRouteType? routeType,
+    bool? barrierDismissible,
+    Color? barrierColor,
+    String? barrierLabel,
+  }) {
+    A routeArgs;
+    final args = settings.arguments;
+    if (args is A) {
+      routeArgs = args;
+    } else {
+      final json = fixQuery(uri.queryParametersAll);
+      routeArgs = _argumentsFactory.fromMap(json);
+    }
+    return buildDialogRoute(
+      context,
+      RouteParameters(
+        uri: uri,
+        settings: settings,
+        routeType: routeType ?? this.routeType,
+        barrierDismissible: barrierDismissible ?? this.barrierDismissible,
+        barrierColor: barrierColor ?? this.barrierColor,
+        barrierLabel: barrierLabel ?? this.barrierLabel,
+      ),
+      routeArgs,
+    );
+  }
+
   Route<T> buildPageRoute(RouteParameters params, A arguments) {
     final builder = () {
       if (params.routeType == PlatformRouteType.cupertino ||
@@ -177,11 +328,40 @@ abstract class RouteInfo<T, A extends RouteArguments> {
       uri: params.uri,
       arguments: arguments,
       settings: params.settings,
-      fullscreenDialog: params.fullscreenDialog,
+      fullscreenDialog: params.fullscreenDialog ?? fullscreenDialog,
     );
   }
 
-  String createUri(A argument) {
+  Route<T> buildDialogRoute(
+    BuildContext context,
+    RouteParameters params,
+    A arguments,
+  ) {
+    final builder = () {
+      if (params.routeType == PlatformRouteType.cupertino ||
+          (params.routeType == PlatformRouteType.adaptive &&
+              (UniversalPlatform.isIOS || UniversalPlatform.isMacOS))) {
+        return CupertinoDialogResultRoute.new;
+      } else {
+        return MaterialDialogResultRoute.new;
+      }
+    }();
+    return builder(
+      context: context,
+      builder: (context) {
+        return build(context, arguments);
+      },
+      route: this,
+      uri: params.uri,
+      arguments: arguments,
+      settings: params.settings,
+      barrierColor: params.barrierColor,
+      barrierLabel: params.barrierLabel,
+      barrierDismissible: params.barrierDismissible ?? true,
+    );
+  }
+
+  Uri createUri(A argument) {
     final query = argument.toJson();
     return Uri(
       path: name,
@@ -198,7 +378,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
           }
         },
       )..removeWhere((key, value) => value == null),
-    ).toString();
+    );
   }
 
   void pop(BuildContext context, {required T result}) {
@@ -207,7 +387,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
 
   void popSaved(BuildContext context, {T? result}) {
     result = stateOf(context).currentResult;
-    return pop(context, result: result!);
+    return pop(context, result: result as T);
   }
 
   Future<bool> maybePop(BuildContext context, {required T result}) {
@@ -216,12 +396,12 @@ abstract class RouteInfo<T, A extends RouteArguments> {
 
   Future<bool> maybePopSaved(BuildContext context, {T? result}) {
     result = stateOf(context).currentResult;
-    return maybePop(context, result: result!);
+    return maybePop(context, result: result as T);
   }
 
   Future<T?> pushClearTop<R>(
     BuildContext context, {
-    required A argument,
+    required A arguments,
     R? result,
   }) async {
     if (result != null) {
@@ -229,23 +409,58 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     }
     return Navigator.pushNamedAndRemoveUntil<T>(
       context,
-      createUri(argument),
+      createUri(arguments).toString(),
       (route) => false,
-      arguments: argument,
+      arguments: arguments,
     );
   }
 
-  Future<T?> push(BuildContext context, {required A argument}) {
-    return Navigator.pushNamed<T>(
-      context,
-      createUri(argument),
-      arguments: argument,
-    );
+  Future<T?> push(BuildContext context, {required A arguments}) {
+    if (isDialog) {
+      return Navigator.push<T>(
+        context,
+        buildDialog(
+          context,
+          uri: createUri(arguments),
+          settings: RouteSettings(
+            arguments: arguments,
+          ),
+        ),
+      );
+    } else {
+      return Navigator.pushNamed<T>(
+        context,
+        createUri(arguments).toString(),
+        arguments: arguments,
+      );
+    }
   }
 
   Future<T?> replace<R>(
     BuildContext context, {
-    required A argument,
+    required A arguments,
+    R? result,
+    bool? popAndPush,
+  }) {
+    if (isDialog) {
+      return _replaceDialog<R>(
+        context,
+        arguments: arguments,
+        result: result,
+      );
+    } else {
+      return _replacePage<R>(
+        context,
+        arguments: arguments,
+        result: result,
+        popAndPush: popAndPush,
+      );
+    }
+  }
+
+  Future<T?> _replacePage<R>(
+    BuildContext context, {
+    required A arguments,
     R? result,
     bool? popAndPush,
   }) {
@@ -258,8 +473,26 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     }();
     return action<T, R>(
       context,
-      createUri(argument),
-      arguments: argument,
+      createUri(arguments).toString(),
+      arguments: arguments,
+      result: result,
+    );
+  }
+
+  Future<T?> _replaceDialog<R>(
+    BuildContext context, {
+    required A arguments,
+    R? result,
+  }) {
+    return Navigator.pushReplacement<T, R>(
+      context,
+      buildDialog(
+        context,
+        uri: createUri(arguments),
+        settings: RouteSettings(
+          arguments: arguments,
+        ),
+      ),
       result: result,
     );
   }
@@ -269,10 +502,10 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     T? result,
     bool? popAndPush,
   }) {
-    final argument = this(context).arguments;
+    final arguments = this(context).arguments;
     return replace<T>(
       context,
-      argument: argument,
+      arguments: arguments,
       result: result,
       popAndPush: popAndPush,
     );
@@ -313,48 +546,206 @@ mixin NoResultRouteMixin on RouteInfo<void, RouteZeroArguments> {
 
 abstract class NoArgumentsRouteInfo<T>
     extends RouteInfo<T, RouteZeroArguments> {
-  const NoArgumentsRouteInfo(RouteName name)
-      : super(
+  const NoArgumentsRouteInfo(
+    RouteName name, {
+    PlatformRouteType routeType = PlatformRouteType.material,
+    bool fullscreenDialog = false,
+    bool isDialog = false,
+  }) : super(
           name,
           const RouteZeroArgumentsFactory(),
+          routeType: routeType,
+          fullscreenDialog: fullscreenDialog,
+          isDialog: isDialog,
         );
+
+  const factory NoArgumentsRouteInfo.builder({
+    required RouteName name,
+    required NoArgumentScreenBuilder<T> builder,
+    PlatformRouteType routeType,
+    bool fullscreenDialog,
+    bool isDialog,
+  }) = NoArgumentRouteInfoBuilder._;
+
+  const factory NoArgumentsRouteInfo.simple({
+    required RouteName name,
+    required ZeroArgumentScreenBuilder<T> screen,
+    PlatformRouteType routeType,
+    bool fullscreenDialog,
+    bool isDialog,
+  }) = SimpleNoArgumentRouteInfo._;
 
   @override
   @protected
   IPageScreen<NoArgumentsRouteInfo<T>> build(
     BuildContext context, [
-    RouteZeroArguments? argument = RouteInfo.noArgs,
+    RouteZeroArguments? arguments = RouteInfo.noArgs,
   ]);
 
   @override
   Future<T?> pushClearTop<R>(
     BuildContext context, {
-    RouteZeroArguments argument = RouteInfo.noArgs,
+    RouteZeroArguments arguments = RouteInfo.noArgs,
     R? result,
   }) {
-    return super.pushClearTop(context, argument: argument, result: result);
+    return super.pushClearTop(context, arguments: arguments, result: result);
   }
 
   @override
   Future<T?> push(
     BuildContext context, {
-    RouteZeroArguments argument = RouteInfo.noArgs,
+    RouteZeroArguments arguments = RouteInfo.noArgs,
   }) {
-    return super.push(context, argument: argument);
+    return super.push(context, arguments: arguments);
   }
 
   @override
   Future<T?> replace<R>(
     BuildContext context, {
-    RouteZeroArguments argument = RouteInfo.noArgs,
+    RouteZeroArguments arguments = RouteInfo.noArgs,
     R? result,
     bool? popAndPush,
   }) {
-    return super.replace(context, argument: argument, result: result);
+    return super.replace(context, arguments: arguments, result: result);
   }
 }
 
-abstract class RouteArguments<T> {
+typedef ScreenBuilder<T, A extends RouteArguments>
+    = IPageScreen<RouteInfo<T, A>> Function(
+  BuildContext context,
+  A argument,
+);
+
+class RouteInfoBuilder<T, A extends RouteArguments> extends RouteInfo<T, A> {
+  final ScreenBuilder<T, A> builder;
+
+  const RouteInfoBuilder._({
+    required RouteName name,
+    required ArgumentFactory<A> argumentsFactory,
+    required this.builder,
+    PlatformRouteType routeType = PlatformRouteType.material,
+    bool fullscreenDialog = false,
+    bool isDialog = false,
+  }) : super(
+          name,
+          argumentsFactory,
+          routeType: routeType,
+          fullscreenDialog: fullscreenDialog,
+          isDialog: isDialog,
+        );
+
+  @override
+  IPageScreen<RouteInfo<T, A>> build(BuildContext context, A arguments) {
+    return builder(context, arguments);
+  }
+}
+
+typedef SimpleScreenBuilder<T, A extends RouteArguments>
+    = IPageScreen<RouteInfo<T, A>> Function();
+
+class SimpleRouteInfo<T, A extends RouteArguments> extends RouteInfo<T, A> {
+  final SimpleScreenBuilder<T, A> screen;
+
+  const SimpleRouteInfo._({
+    required RouteName name,
+    required ArgumentFactory<A> argumentsFactory,
+    required this.screen,
+    PlatformRouteType routeType = PlatformRouteType.material,
+    bool fullscreenDialog = false,
+    bool isDialog = false,
+  }) : super(
+          name,
+          argumentsFactory,
+          routeType: routeType,
+          fullscreenDialog: fullscreenDialog,
+          isDialog: isDialog,
+        );
+
+  @override
+  IPageScreen<RouteInfo<T, A>> build(BuildContext context, A arguments) {
+    return screen();
+  }
+}
+
+typedef SimpleArgumentScreenBuilder<T, A extends RouteArguments>
+    = IPageScreen<RouteInfo<T, A>> Function({required A arguments});
+
+class SimpleArgumentRouteInfo<T, A extends RouteArguments>
+    extends RouteInfo<T, A> {
+  final SimpleArgumentScreenBuilder<T, A> screen;
+
+  const SimpleArgumentRouteInfo._({
+    required RouteName name,
+    required ArgumentFactory<A> argumentsFactory,
+    required this.screen,
+    PlatformRouteType routeType = PlatformRouteType.material,
+    bool fullscreenDialog = false,
+    bool isDialog = false,
+  }) : super(
+          name,
+          argumentsFactory,
+          routeType: routeType,
+          fullscreenDialog: fullscreenDialog,
+          isDialog: isDialog,
+        );
+
+  @override
+  IPageScreen<RouteInfo<T, A>> build(BuildContext context, A arguments) {
+    return screen(arguments: arguments);
+  }
+}
+
+typedef ZeroArgumentScreenBuilder<T> = IPageScreen<NoArgumentsRouteInfo<T>>
+    Function();
+
+class SimpleNoArgumentRouteInfo<T> extends NoArgumentsRouteInfo<T> {
+  final ZeroArgumentScreenBuilder<T> screen;
+
+  const SimpleNoArgumentRouteInfo._({
+    required RouteName name,
+    required this.screen,
+    PlatformRouteType routeType = PlatformRouteType.material,
+    bool fullscreenDialog = false,
+    bool isDialog = false,
+  }) : super(
+          name,
+          routeType: routeType,
+          fullscreenDialog: fullscreenDialog,
+          isDialog: isDialog,
+        );
+
+  @override
+  build(BuildContext context, [arguments]) {
+    return screen();
+  }
+}
+
+typedef NoArgumentScreenBuilder<T> = IPageScreen<NoArgumentsRouteInfo<T>>
+    Function(BuildContext context);
+
+class NoArgumentRouteInfoBuilder<T> extends NoArgumentsRouteInfo<T> {
+  final NoArgumentScreenBuilder<T> builder;
+
+  const NoArgumentRouteInfoBuilder._({
+    required RouteName name,
+    required this.builder,
+    PlatformRouteType routeType = PlatformRouteType.material,
+    bool fullscreenDialog = false,
+    bool isDialog = false,
+  }) : super(
+          name,
+          routeType: routeType,
+          fullscreenDialog: fullscreenDialog,
+          isDialog: isDialog,
+        );
+
+  @override
+  build(BuildContext context, [arguments]) {
+    return builder(context);
+  }
+}
+
+abstract class RouteArguments {
   Map<String, dynamic> toJson();
 }
 
@@ -362,7 +753,7 @@ abstract class ArgumentFactory<T> {
   T fromMap(Map<String, dynamic> map);
 }
 
-class RouteZeroArguments implements RouteArguments<RouteZeroArguments> {
+class RouteZeroArguments implements RouteArguments {
   const RouteZeroArguments();
 
   @override
@@ -379,7 +770,7 @@ class RouteZeroArgumentsFactory implements ArgumentFactory<RouteZeroArguments> {
   }
 }
 
-class RouteArgument<X> implements RouteArguments<RouteArgument<X>> {
+class RouteArgument<X> implements RouteArguments {
   final X arg;
   final String name;
   const RouteArgument(this.arg, {this.name = 'arg'});
@@ -404,7 +795,7 @@ abstract class Json {
 
 typedef Factory<J extends Json> = J Function(Map<String, dynamic> json);
 
-abstract class JsonArgument<T> implements RouteArguments<T>, Json {}
+abstract class JsonArgument<T> implements RouteArguments, Json {}
 
 class JsonArgumentFactory<A extends JsonArgument<A>>
     implements ArgumentFactory<A> {
@@ -416,8 +807,7 @@ class JsonArgumentFactory<A extends JsonArgument<A>>
   }
 }
 
-class SimpleArgument<A extends Json>
-    implements RouteArguments<SimpleArgument<A>> {
+class SimpleArgument<A extends Json> implements RouteArguments {
   final A arg;
   const SimpleArgument(this.arg);
   @override
@@ -436,7 +826,7 @@ class SimpleArgumentFactory<A extends Json>
   }
 }
 
-class MapArgument implements RouteArguments<MapArgument> {
+class MapArgument implements RouteArguments {
   final Map<String, dynamic> arg;
   const MapArgument(this.arg);
   @override
