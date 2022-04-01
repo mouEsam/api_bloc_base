@@ -10,12 +10,12 @@ abstract class RouteName {
   const RouteName._();
 
   const factory RouteName.autoReplace({
-    Type? type,
+    Iterable<Type>? types,
     Map<Pattern, String> replacements,
   }) = AutoName._;
 
   const factory RouteName.auto({
-    Type? type,
+    Iterable<Type>? types,
     bool? withoutRoute,
     bool? withoutScreen,
     bool? withoutDialog,
@@ -23,7 +23,7 @@ abstract class RouteName {
   }) = AutoNameWithOptions._;
 
   const factory RouteName.trim({
-    Type? type,
+    Iterable<Type>? types,
     bool? withoutRoute,
     bool? withoutScreen,
     bool? withoutDialog,
@@ -31,17 +31,17 @@ abstract class RouteName {
   }) = AutoNameWithOptions._trim;
 
   const factory RouteName.withoutRoute({
-    Type? type,
+    Iterable<Type>? types,
     bool? ignoreCase,
   }) = AutoNameWithOptions._withoutRoute;
 
   const factory RouteName.withoutScreen({
-    Type? type,
+    Iterable<Type>? types,
     bool? ignoreCase,
   }) = AutoNameWithOptions._withoutScreen;
 
   const factory RouteName.withoutDialog({
-    Type? type,
+    Iterable<Type>? types,
     bool? ignoreCase,
   }) = AutoNameWithOptions._withoutDialog;
 
@@ -51,31 +51,33 @@ abstract class RouteName {
 }
 
 class AutoName extends RouteName {
-  final Type? type;
+  final Iterable<Type>? types;
   final Map<Pattern, String> replacements;
-  const AutoName._({this.type, this.replacements = const {}}) : super._();
+  const AutoName._({this.types, this.replacements = const {}}) : super._();
 
   @override
   String getName(RouteInfo route) {
-    final type = this.type ?? route.runtimeType;
-    final routeTypeName = type.toString();
-    var routeName = routeTypeName;
-    replacements.forEach((key, value) {
-      routeName = routeName.replaceAll(key, value);
-    });
-    return routeName;
+    final types = this.types ?? [route.runtimeType];
+    return types.map((type) {
+      final routeTypeName = type.toString();
+      var routeName = routeTypeName;
+      replacements.forEach((key, value) {
+        routeName = routeName.replaceAll(key, value);
+      });
+      return routeName;
+    }).join('/');
   }
 }
 
 class AutoNameWithOptions extends RouteName {
-  final Type? type;
+  final Iterable<Type>? types;
   final bool? withoutRoute;
   final bool? withoutScreen;
   final bool? withoutDialog;
   final bool? ignoreCase;
 
   const AutoNameWithOptions._({
-    this.type,
+    this.types,
     this.withoutRoute,
     this.withoutScreen,
     this.withoutDialog,
@@ -83,7 +85,7 @@ class AutoNameWithOptions extends RouteName {
   }) : super._();
 
   const AutoNameWithOptions._withoutRoute({
-    this.type,
+    this.types,
     this.ignoreCase,
   })  : withoutRoute = true,
         withoutScreen = null,
@@ -91,7 +93,7 @@ class AutoNameWithOptions extends RouteName {
         super._();
 
   const AutoNameWithOptions._withoutScreen({
-    this.type,
+    this.types,
     this.ignoreCase,
   })  : withoutScreen = true,
         withoutRoute = null,
@@ -99,7 +101,7 @@ class AutoNameWithOptions extends RouteName {
         super._();
 
   const AutoNameWithOptions._withoutDialog({
-    this.type,
+    this.types,
     this.ignoreCase,
   })  : withoutDialog = true,
         withoutScreen = null,
@@ -107,7 +109,7 @@ class AutoNameWithOptions extends RouteName {
         super._();
 
   const AutoNameWithOptions._trim({
-    this.type,
+    this.types,
     this.ignoreCase,
     this.withoutRoute = true,
     this.withoutDialog = true,
@@ -116,23 +118,25 @@ class AutoNameWithOptions extends RouteName {
 
   @override
   String getName(RouteInfo route) {
-    final type = this.type ?? route.runtimeType;
-    final routeTypeName = type.toString();
-    var routeName = routeTypeName;
-    final caseSensitive = ignoreCase != true;
-    if (withoutRoute == true) {
-      routeName = routeName.replaceAll(
-          RegExp(r'Route$', caseSensitive: caseSensitive), '');
-    }
-    if (withoutScreen == true) {
-      routeName = routeName.replaceAll(
-          RegExp(r'Screen$', caseSensitive: caseSensitive), '');
-    }
-    if (withoutDialog == true) {
-      routeName = routeName.replaceAll(
-          RegExp(r'Dialog$', caseSensitive: caseSensitive), '');
-    }
-    return routeName;
+    final types = this.types ?? [route.runtimeType];
+    return types.map((type) {
+      final routeTypeName = type.toString();
+      var routeName = routeTypeName;
+      final caseSensitive = ignoreCase != true;
+      if (withoutRoute == true) {
+        routeName = routeName.replaceAll(
+            RegExp(r'Route$', caseSensitive: caseSensitive), '');
+      }
+      if (withoutScreen == true) {
+        routeName = routeName.replaceAll(
+            RegExp(r'Screen$', caseSensitive: caseSensitive), '');
+      }
+      if (withoutDialog == true) {
+        routeName = routeName.replaceAll(
+            RegExp(r'Dialog$', caseSensitive: caseSensitive), '');
+      }
+      return routeName;
+    }).join('/');
   }
 }
 
