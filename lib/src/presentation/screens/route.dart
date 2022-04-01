@@ -963,13 +963,13 @@ abstract class Json {
   Map<String, dynamic> toJson();
 }
 
-typedef Factory<J extends Json> = J Function(Map<String, dynamic> json);
+typedef FromJsonFactory<J extends Json> = J Function(Map<String, dynamic> json);
 
 abstract class JsonArgument<T> implements RouteArguments, Json {}
 
 class JsonArgumentFactory<A extends JsonArgument<A>>
     implements ArgumentFactory<A> {
-  final Factory<A> creator;
+  final FromJsonFactory<A> creator;
   const JsonArgumentFactory(this.creator);
   @override
   A fromMap(Map<String, dynamic> map) {
