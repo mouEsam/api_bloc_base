@@ -150,7 +150,7 @@ mixin WorkerMixin<Output>
       },
       (r) {
         successfulOperation(
-          successMessage,
+          SuccessWithData(r, successMessage),
           emitSuccess: emitSuccess,
           announceSuccess: announceSuccess,
           operationTag: operationTag,
@@ -200,10 +200,12 @@ mixin WorkerMixin<Output>
           retry: retry,
           operationTag: operationTag);
     } else if (l is Success) {
-      return successfulOperation(l.message,
-          announceSuccess: announceSuccess,
-          emitSuccess: emitSuccess,
-          operationTag: operationTag);
+      return successfulOperation(
+        l,
+        announceSuccess: announceSuccess,
+        emitSuccess: emitSuccess,
+        operationTag: operationTag,
+      );
     } else {
       removeOperation(operationTag: operationTag);
     }
@@ -244,14 +246,18 @@ mixin WorkerMixin<Output>
     checkOperations();
   }
 
-  Operation successfulOperation(String? message,
-      {bool announceSuccess = true,
-      bool emitSuccess = true,
-      String operationTag = _DEFAULT_OPERATION}) {
-    final op = SuccessfulOperationState(currentData,
-        silent: !announceSuccess,
-        successMessage: message,
-        operationTag: operationTag);
+  Operation successfulOperation<R>(
+    Success success, {
+    bool announceSuccess = true,
+    bool emitSuccess = true,
+    String operationTag = _DEFAULT_OPERATION,
+  }) {
+    final op = SuccessfulOperationState<Output>(
+      currentData,
+      success: success,
+      silent: !announceSuccess,
+      operationTag: operationTag,
+    );
     if (emitSuccess) emit(op);
     _operationStack.remove(operationTag);
     checkOperations();

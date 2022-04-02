@@ -42,12 +42,19 @@ class JsonConvertor {
         for (final entry in message.entries) {
           final key = entry.key;
           final value = entry.value;
-          if (value is String) {
-            final obj = jsonDecode(value);
-            sendPort.send({key: obj});
-          } else {
-            final json = jsonEncode(value);
-            sendPort.send({key: json});
+          try {
+            if (value is String) {
+              final obj = jsonDecode(value);
+              sendPort.send({key: obj});
+            } else {
+              final json = jsonEncode(value);
+              sendPort.send({key: json});
+            }
+          } on Exception catch (e) {
+            sendPort.send({key: e});
+            // ignore: avoid_catching_errors
+          } on Error catch (e) {
+            sendPort.send({key: e});
           }
         }
       }
@@ -62,7 +69,16 @@ class JsonConvertor {
           return event is Map<String, dynamic> && event[key] != null;
         })
         .cast<Map<String, dynamic>>()
-        .map((value) => value[key] as T)
+        .map((value) {
+          final result = value[key];
+          if (result is Object && (result is Exception || result is Error)) {
+            throw result;
+          } else if (result is T) {
+            return result;
+          } else {
+            throw 'error';
+          }
+        })
         .first;
   }
 

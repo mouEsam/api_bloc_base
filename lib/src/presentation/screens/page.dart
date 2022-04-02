@@ -1,11 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 import 'route.dart';
 import 'screen.dart';
-
-typedef ScreenPageBuilder<Route extends RouteInfo> = IPageScreen<Route>
-    Function(BuildContext context);
 
 class MaterialPageResultRoute<T, A extends RouteArguments,
         Route extends RouteInfo<T, A>> extends MaterialPageRoute<T>
@@ -19,7 +15,7 @@ class MaterialPageResultRoute<T, A extends RouteArguments,
   final T? defaultResult;
 
   MaterialPageResultRoute({
-    required ScreenPageBuilder<Route> builder,
+    required WidgetBuilder builder,
     required this.arguments,
     required this.uri,
     required this.route,
@@ -48,7 +44,7 @@ class CupertinoPageResultRoute<T, A extends RouteArguments,
   final T? defaultResult;
 
   CupertinoPageResultRoute({
-    required ScreenPageBuilder<Route> builder,
+    required WidgetBuilder builder,
     required this.arguments,
     required this.uri,
     required this.route,
@@ -79,7 +75,7 @@ class MaterialDialogResultRoute<T, A extends RouteArguments,
 
   MaterialDialogResultRoute({
     required BuildContext context,
-    required ScreenPageBuilder<Route> builder,
+    required WidgetBuilder builder,
     required this.arguments,
     required this.uri,
     required this.route,
@@ -113,7 +109,7 @@ class CupertinoDialogResultRoute<T, A extends RouteArguments,
 
   CupertinoDialogResultRoute({
     required BuildContext context,
-    required ScreenPageBuilder<Route> builder,
+    required WidgetBuilder builder,
     required this.arguments,
     required this.uri,
     required this.route,

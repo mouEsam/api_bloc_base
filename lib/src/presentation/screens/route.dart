@@ -204,6 +204,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     required RouteName name,
     required ArgumentFactory<A> argumentsFactory,
     required ScreenBuilder<T, A> builder,
+    ScreenWrapper<T, A, RouteInfo<T, A>>? wrapper,
     PlatformRouteType routeType,
     bool fullscreenDialog,
     bool isDialog,
@@ -213,6 +214,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     required RouteName name,
     required ArgumentFactory<A> argumentsFactory,
     required SimpleScreenBuilder<T, A> screen,
+    ScreenWrapper<T, A, RouteInfo<T, A>>? wrapper,
     PlatformRouteType routeType,
     bool fullscreenDialog,
     bool isDialog,
@@ -222,6 +224,7 @@ abstract class RouteInfo<T, A extends RouteArguments> {
     required RouteName name,
     required ArgumentFactory<A> argumentsFactory,
     required SimpleArgumentScreenBuilder<T, A> screen,
+    ScreenWrapper<T, A, RouteInfo<T, A>>? wrapper,
     PlatformRouteType routeType,
     bool fullscreenDialog,
     bool isDialog,
@@ -229,6 +232,14 @@ abstract class RouteInfo<T, A extends RouteArguments> {
 
   @protected
   IPageScreen<RouteInfo<T, A>> build(BuildContext context, A arguments);
+
+  Widget wrapScreen(
+    BuildContext context,
+    IPageScreen<RouteInfo<T, A>> screen,
+    A arguments,
+  ) {
+    return screen;
+  }
 
   Type get resultType => T;
 
@@ -291,9 +302,8 @@ abstract class RouteInfo<T, A extends RouteArguments> {
       ),
       routeArgs,
       this,
-      (context, arguments) {
-        return build(context, arguments);
-      },
+      build,
+      wrapScreen,
     );
   }
 
@@ -330,9 +340,8 @@ abstract class RouteInfo<T, A extends RouteArguments> {
       ),
       routeArgs,
       this,
-      (context, arguments) {
-        return build(context, arguments);
-      },
+      build,
+      wrapScreen,
     );
   }
 
@@ -553,6 +562,15 @@ typedef RouteScreenBuilder<T, A extends RouteArguments>
   A arguments,
 );
 
+typedef ScreenWrapper<T, A extends RouteArguments,
+        Route extends RouteInfo<T, A>>
+    = Widget Function(
+        BuildContext context, IPageScreen<Route> screen, A arguments);
+
+typedef ScreenWrapperNoArguments<T,
+        Route extends RouteInfo<T, RouteZeroArguments>>
+    = Widget Function(BuildContext context, IPageScreen<Route> screen);
+
 abstract class RouteBuilder<T, A extends RouteArguments> {
   const factory RouteBuilder() = DefaultRouteBuilder<T, A>.new;
 
@@ -561,6 +579,7 @@ abstract class RouteBuilder<T, A extends RouteArguments> {
     A arguments,
     RouteInfo<T, A> route,
     RouteScreenBuilder<T, A> builder,
+    ScreenWrapper<T, A, RouteInfo<T, A>> wrapper,
   );
 
   Route<T> buildDialogRoute(
@@ -569,6 +588,7 @@ abstract class RouteBuilder<T, A extends RouteArguments> {
     A arguments,
     RouteInfo<T, A> route,
     RouteScreenBuilder<T, A> builder,
+    ScreenWrapper<T, A, RouteInfo<T, A>> wrapper,
   );
 }
 
@@ -582,6 +602,7 @@ class DefaultRouteBuilder<T, A extends RouteArguments>
     A arguments,
     RouteInfo<T, A> route,
     RouteScreenBuilder<T, A> builder,
+    ScreenWrapper<T, A, RouteInfo<T, A>> wrapper,
   ) {
     final routeBuilder = () {
       if (params.routeType == PlatformRouteType.cupertino ||
@@ -595,7 +616,7 @@ class DefaultRouteBuilder<T, A extends RouteArguments>
 
     return routeBuilder(
       builder: (context) {
-        return builder(context, arguments);
+        return wrapper(context, builder(context, arguments), arguments);
       },
       route: route,
       uri: params.uri,
@@ -612,15 +633,16 @@ class DefaultRouteBuilder<T, A extends RouteArguments>
     A arguments,
     RouteInfo<T, A> route,
     RouteScreenBuilder<T, A> builder,
+    ScreenWrapper<T, A, RouteInfo<T, A>> wrapper,
   ) {
     if (params.routeType == PlatformRouteType.cupertino ||
         (params.routeType == PlatformRouteType.adaptive &&
             (UniversalPlatform.isIOS || UniversalPlatform.isMacOS))) {
       return buildCupertinoDialogRoute(
-          context, params, arguments, route, builder);
+          context, params, arguments, route, builder, wrapper);
     } else {
       return buildMaterialDialogRoute(
-          context, params, arguments, route, builder);
+          context, params, arguments, route, builder, wrapper);
     }
   }
 
@@ -630,6 +652,7 @@ class DefaultRouteBuilder<T, A extends RouteArguments>
     A arguments,
     RouteInfo<T, A> route,
     RouteScreenBuilder<T, A> builder,
+    ScreenWrapper<T, A, RouteInfo<T, A>> wrapper,
   ) {
     final CapturedThemes themes = InheritedTheme.capture(
       from: context,
@@ -641,7 +664,7 @@ class DefaultRouteBuilder<T, A extends RouteArguments>
     return MaterialDialogResultRoute<T, A, RouteInfo<T, A>>(
       context: context,
       builder: (context) {
-        return builder(context, arguments);
+        return wrapper(context, builder(context, arguments), arguments);
       },
       route: route,
       uri: params.uri,
@@ -660,11 +683,12 @@ class DefaultRouteBuilder<T, A extends RouteArguments>
     A arguments,
     RouteInfo<T, A> route,
     RouteScreenBuilder<T, A> builder,
+    ScreenWrapper<T, A, RouteInfo<T, A>> wrapper,
   ) {
     return CupertinoDialogResultRoute<T, A, RouteInfo<T, A>>(
       context: context,
       builder: (context) {
-        return builder(context, arguments);
+        return wrapper(context, builder(context, arguments), arguments);
       },
       route: route,
       uri: params.uri,
@@ -715,6 +739,7 @@ abstract class NoArgumentsRouteInfo<T>
   const factory NoArgumentsRouteInfo.builder({
     required RouteName name,
     required NoArgumentScreenBuilder<T> builder,
+    ScreenWrapperNoArguments<T, RouteInfo<T, RouteZeroArguments>>? wrapper,
     PlatformRouteType routeType,
     bool fullscreenDialog,
     bool isDialog,
@@ -723,6 +748,7 @@ abstract class NoArgumentsRouteInfo<T>
   const factory NoArgumentsRouteInfo.simple({
     required RouteName name,
     required ZeroArgumentScreenBuilder<T> screen,
+    ScreenWrapperNoArguments<T, RouteInfo<T, RouteZeroArguments>>? wrapper,
     PlatformRouteType routeType,
     bool fullscreenDialog,
     bool isDialog,
@@ -788,11 +814,13 @@ typedef ScreenBuilder<T, A extends RouteArguments>
 
 class RouteInfoBuilder<T, A extends RouteArguments> extends RouteInfo<T, A> {
   final ScreenBuilder<T, A> builder;
+  final ScreenWrapper<T, A, RouteInfo<T, A>>? wrapper;
 
   const RouteInfoBuilder._({
     required RouteName name,
     required ArgumentFactory<A> argumentsFactory,
     required this.builder,
+    this.wrapper,
     PlatformRouteType routeType = PlatformRouteType.material,
     bool fullscreenDialog = false,
     bool isDialog = false,
@@ -808,6 +836,16 @@ class RouteInfoBuilder<T, A extends RouteArguments> extends RouteInfo<T, A> {
   IPageScreen<RouteInfo<T, A>> build(BuildContext context, A arguments) {
     return builder(context, arguments);
   }
+
+  @override
+  Widget wrapScreen(
+    BuildContext context,
+    IPageScreen<RouteInfo<T, A>> screen,
+    A arguments,
+  ) {
+    final wrapper = this.wrapper ?? super.wrapScreen;
+    return wrapper(context, screen, arguments);
+  }
 }
 
 typedef SimpleScreenBuilder<T, A extends RouteArguments>
@@ -815,11 +853,13 @@ typedef SimpleScreenBuilder<T, A extends RouteArguments>
 
 class SimpleRouteInfo<T, A extends RouteArguments> extends RouteInfo<T, A> {
   final SimpleScreenBuilder<T, A> screen;
+  final ScreenWrapper<T, A, RouteInfo<T, A>>? wrapper;
 
   const SimpleRouteInfo._({
     required RouteName name,
     required ArgumentFactory<A> argumentsFactory,
     required this.screen,
+    this.wrapper,
     PlatformRouteType routeType = PlatformRouteType.material,
     bool fullscreenDialog = false,
     bool isDialog = false,
@@ -835,19 +875,31 @@ class SimpleRouteInfo<T, A extends RouteArguments> extends RouteInfo<T, A> {
   IPageScreen<RouteInfo<T, A>> build(BuildContext context, A arguments) {
     return screen();
   }
+
+  @override
+  Widget wrapScreen(
+    BuildContext context,
+    IPageScreen<RouteInfo<T, A>> screen,
+    A arguments,
+  ) {
+    final wrapper = this.wrapper ?? super.wrapScreen;
+    return wrapper(context, screen, arguments);
+  }
 }
 
 typedef SimpleArgumentScreenBuilder<T, A extends RouteArguments>
-    = IPageScreen<RouteInfo<T, A>> Function({required A arguments});
+    = IPageScreen<RouteInfo<T, A>> Function(A arguments);
 
 class SimpleArgumentRouteInfo<T, A extends RouteArguments>
     extends RouteInfo<T, A> {
   final SimpleArgumentScreenBuilder<T, A> screen;
+  final ScreenWrapper<T, A, RouteInfo<T, A>>? wrapper;
 
   const SimpleArgumentRouteInfo._({
     required RouteName name,
     required ArgumentFactory<A> argumentsFactory,
     required this.screen,
+    this.wrapper,
     PlatformRouteType routeType = PlatformRouteType.material,
     bool fullscreenDialog = false,
     bool isDialog = false,
@@ -861,7 +913,17 @@ class SimpleArgumentRouteInfo<T, A extends RouteArguments>
 
   @override
   IPageScreen<RouteInfo<T, A>> build(BuildContext context, A arguments) {
-    return screen(arguments: arguments);
+    return screen(arguments);
+  }
+
+  @override
+  Widget wrapScreen(
+    BuildContext context,
+    IPageScreen<RouteInfo<T, A>> screen,
+    A arguments,
+  ) {
+    final wrapper = this.wrapper ?? super.wrapScreen;
+    return wrapper(context, screen, arguments);
   }
 }
 
@@ -870,10 +932,12 @@ typedef ZeroArgumentScreenBuilder<T> = IPageScreen<NoArgumentsRouteInfo<T>>
 
 class SimpleNoArgumentRouteInfo<T> extends NoArgumentsRouteInfo<T> {
   final ZeroArgumentScreenBuilder<T> screen;
+  final ScreenWrapperNoArguments<T, RouteInfo<T, RouteZeroArguments>>? wrapper;
 
   const SimpleNoArgumentRouteInfo._({
     required RouteName name,
     required this.screen,
+    this.wrapper,
     PlatformRouteType routeType = PlatformRouteType.material,
     bool fullscreenDialog = false,
     bool isDialog = false,
@@ -888,6 +952,16 @@ class SimpleNoArgumentRouteInfo<T> extends NoArgumentsRouteInfo<T> {
   build(BuildContext context, [arguments = RouteInfo.noArgs]) {
     return screen();
   }
+
+  @override
+  Widget wrapScreen(
+    BuildContext context,
+    IPageScreen<RouteInfo<T, RouteZeroArguments>> screen,
+    RouteZeroArguments arguments,
+  ) {
+    return wrapper?.call(context, screen) ??
+        super.wrapScreen(context, screen, arguments);
+  }
 }
 
 typedef NoArgumentScreenBuilder<T> = IPageScreen<NoArgumentsRouteInfo<T>>
@@ -895,10 +969,12 @@ typedef NoArgumentScreenBuilder<T> = IPageScreen<NoArgumentsRouteInfo<T>>
 
 class NoArgumentRouteInfoBuilder<T> extends NoArgumentsRouteInfo<T> {
   final NoArgumentScreenBuilder<T> builder;
+  final ScreenWrapperNoArguments<T, RouteInfo<T, RouteZeroArguments>>? wrapper;
 
   const NoArgumentRouteInfoBuilder._({
     required RouteName name,
     required this.builder,
+    this.wrapper,
     PlatformRouteType routeType = PlatformRouteType.material,
     bool fullscreenDialog = false,
     bool isDialog = false,
@@ -912,6 +988,12 @@ class NoArgumentRouteInfoBuilder<T> extends NoArgumentsRouteInfo<T> {
   @override
   build(BuildContext context, [arguments = RouteInfo.noArgs]) {
     return builder(context);
+  }
+
+  @override
+  Widget wrapScreen(BuildContext context, screen, arguments) {
+    return wrapper?.call(context, screen) ??
+        super.wrapScreen(context, screen, arguments);
   }
 }
 

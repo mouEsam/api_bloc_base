@@ -117,20 +117,37 @@ class FailedOperationState<T> extends LoadedState<T> implements Operation {
         this.operationTag,
         this.failure,
         this.retry,
-        this.silent
+        this.silent,
       ];
 }
 
 class SuccessfulOperationState<T> extends LoadedState<T> implements Operation {
   final String operationTag;
-  final String? successMessage;
+  final Success success;
   final bool silent;
 
-  const SuccessfulOperationState(T data,
-      {required this.operationTag, required this.silent, this.successMessage})
-      : super(data);
+  const SuccessfulOperationState(
+    T data, {
+    required this.operationTag,
+    required this.silent,
+    required this.success,
+  }) : super(data);
+
+  SuccessfulOperationState.message(
+    T data, {
+    required this.operationTag,
+    required this.silent,
+    String? successMessage,
+  })  : success = Success(successMessage),
+        super(data);
+
+  String? get successMessage => success.message;
 
   @override
-  List<Object?> get props =>
-      [...super.props, this.operationTag, this.successMessage, this.silent];
+  List<Object?> get props => [
+        ...super.props,
+        this.operationTag,
+        this.success,
+        this.silent,
+      ];
 }

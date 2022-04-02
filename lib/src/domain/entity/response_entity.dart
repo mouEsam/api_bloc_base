@@ -20,6 +20,14 @@ class Success extends ResponseEntity {
   List<Object?> get props => [...super.props];
 }
 
+class SuccessWithData<D> extends Success {
+  final D data;
+  const SuccessWithData(this.data, [String? message = '']) : super(message);
+
+  @override
+  List<Object?> get props => [...super.props, this.data];
+}
+
 class Failure extends ResponseEntity {
   final BaseErrors? errors;
 
