@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:api_bloc_base/src/data/service/json_convertor.dart';
+import 'package:api_bloc_base/src/data/service/json/convertor.dart';
 import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
 
-class IsolateTransformer extends DefaultTransformer {
-  final JsonConvertor _convertor;
-  IsolateTransformer(this._convertor)
+class JsonTransformer extends DefaultTransformer {
+  final IJsonConvertor _convertor;
+  JsonTransformer(this._convertor)
       : super(jsonDecodeCallback: _convertor.deserialize);
 
   @override

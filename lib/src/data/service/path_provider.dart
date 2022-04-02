@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' show Directory;
 
 import 'package:path_provider/path_provider.dart' as Path;
 import 'package:universal_platform/universal_platform.dart';

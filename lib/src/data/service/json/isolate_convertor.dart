@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'dart:isolate';
 import 'dart:math' as math;
 
-class JsonConvertor {
+import 'package:api_bloc_base/src/data/service/json/convertor.dart';
+
+class JsonIsolateConvertor implements IJsonConvertor {
   static const _maxInt = 2 << 30;
 
   late final StreamController _rps;
@@ -12,7 +14,7 @@ class JsonConvertor {
   final ReceivePort _rp = ReceivePort();
   final math.Random _rg = math.Random.secure();
 
-  JsonConvertor() {
+  JsonIsolateConvertor() {
     _isolate.complete(
       () async {
         final isolate = await Isolate.spawn(_jsonWorker, _rp.sendPort);

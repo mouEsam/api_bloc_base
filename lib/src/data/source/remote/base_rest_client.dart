@@ -1,14 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io' as io show HttpHeaders, File;
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:api_bloc_base/src/data/model/_index.dart';
-import 'package:api_bloc_base/src/data/service/isolate_transformer.dart';
-import 'package:api_bloc_base/src/data/service/json_convertor.dart';
+import 'package:api_bloc_base/src/data/service/json/import.dart';
+import 'package:api_bloc_base/src/data/service/transformer.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
+import 'package:file/file.dart' as f;
+import 'package:path/path.dart' as p show basename;
 
 typedef RequestResult<T> = Result<Response<T>>;
 
@@ -67,7 +69,7 @@ class BaseRestClient {
     );
   }
 
-  static final _jsonConvertor = JsonConvertor();
+  static final _jsonConvertor = jsonConvertor;
 
   BaseRestClient(this.baseUrl,
       {Iterable<Interceptor> interceptors = const [],
@@ -81,10 +83,10 @@ class BaseRestClient {
     dio.interceptors.add(DioCacheInterceptor(options: _cacheOptions!));
     if (options == null) {
       dio.options.connectTimeout = 15000;
-      dio.options.headers[HttpHeaders.acceptHeader] = 'application/json';
+      dio.options.headers[io.HttpHeaders.acceptHeader] = 'application/json';
       dio.options.receiveDataWhenStatusError = true;
       dio.options.validateStatus = (_) => true;
-      dio.transformer = IsolateTransformer(_jsonConvertor);
+      dio.transformer = JsonTransformer(_jsonConvertor);
     } else {
       dio.options = options;
     }
@@ -141,12 +143,15 @@ class BaseRestClient {
     });
     headers ??= <String, dynamic>{};
     if (acceptedLanguage is ui.Locale) {
-      headers[HttpHeaders.acceptLanguageHeader] = acceptedLanguage.languageCode;
+      headers[io.HttpHeaders.acceptLanguageHeader] =
+          acceptedLanguage.languageCode;
     } else if (acceptedLanguage != null) {
-      headers[HttpHeaders.acceptLanguageHeader] = acceptedLanguage.toString();
+      headers[io.HttpHeaders.acceptLanguageHeader] =
+          acceptedLanguage.toString();
     }
     if (authorizationToken != null) {
-      headers[HttpHeaders.authorizationHeader] = 'Bearer $authorizationToken';
+      headers[io.HttpHeaders.authorizationHeader] =
+          'Bearer $authorizationToken';
     }
     dynamic body;
     final formData = params?.toMap();
@@ -159,17 +164,6 @@ class BaseRestClient {
             if (entry.value != null) {
               if (entry.value is UploadFile) {
                 final file = entry.value as UploadFile;
-                // _data.files.add(MapEntry(
-                //     entry.key,
-                //     MultipartFile.fromFileSync(file.file.path,
-                //         filename: file.fileName)));
-                // _data.files.add(MapEntry(
-                //     entry.key,
-                //     MultipartFile.fromBytes(
-                //       file.file.readAsBytesSync(),
-                //       filename: file.fileName,
-                //       contentType: file.contentType,
-                //     )));
                 _data.files.add(MapEntry(
                   entry.key,
                   MultipartFile(
@@ -179,19 +173,22 @@ class BaseRestClient {
                     contentType: file.contentType,
                   ),
                 ));
-              } else if (entry.value is File) {
-                final file = entry.value as File;
-                // _data.files.add(MapEntry(
-                //   entry.key,
-                //   MultipartFile.fromFileSync(file.path,
-                //       filename: file.path.split(Platform.pathSeparator).last),
-                // ));
+              } else if (entry.value is f.File) {
+                final file = entry.value as f.File;
                 _data.files.add(MapEntry(
                   entry.key,
-                  MultipartFile(
-                    file.openRead(),
-                    file.lengthSync(),
-                    filename: file.path.split(Platform.pathSeparator).last,
+                  MultipartFile.fromFileSync(
+                    file.path,
+                    filename: file.basename,
+                  ),
+                ));
+              } else if (entry.value is io.File) {
+                final file = entry.value as io.File;
+                _data.files.add(MapEntry(
+                  entry.key,
+                  MultipartFile.fromFileSync(
+                    file.path,
+                    filename: p.basename(file.path),
                   ),
                 ));
               } else if (entry.value is List) {
@@ -338,12 +335,15 @@ class BaseRestClient {
     queryParameters.removeWhere((k, v) => v == null);
     headers ??= <String, dynamic>{};
     if (acceptedLanguage is ui.Locale) {
-      headers[HttpHeaders.acceptLanguageHeader] = acceptedLanguage.languageCode;
+      headers[io.HttpHeaders.acceptLanguageHeader] =
+          acceptedLanguage.languageCode;
     } else if (acceptedLanguage != null) {
-      headers[HttpHeaders.acceptLanguageHeader] = acceptedLanguage.toString();
+      headers[io.HttpHeaders.acceptLanguageHeader] =
+          acceptedLanguage.toString();
     }
     if (authorizationToken != null) {
-      headers[HttpHeaders.authorizationHeader] = 'Bearer $authorizationToken';
+      headers[io.HttpHeaders.authorizationHeader] =
+          'Bearer $authorizationToken';
     }
     dynamic body;
     final formData = params?.toMap();
@@ -354,13 +354,24 @@ class BaseRestClient {
           final _data = FormData();
           for (final entry in formData.entries) {
             if (entry.value != null) {
-              if (entry.value is File) {
-                final file = entry.value as File;
+              if (entry.value is f.File) {
+                final file = entry.value as f.File;
                 _data.files.add(MapEntry(
-                    entry.key,
-                    MultipartFile.fromFileSync(file.path,
-                        filename:
-                            file.path.split(Platform.pathSeparator).last)));
+                  entry.key,
+                  MultipartFile.fromFileSync(
+                    file.path,
+                    filename: file.basename,
+                  ),
+                ));
+              } else if (entry.value is io.File) {
+                final file = entry.value as io.File;
+                _data.files.add(MapEntry(
+                  entry.key,
+                  MultipartFile.fromFileSync(
+                    file.path,
+                    filename: p.basename(file.path),
+                  ),
+                ));
               } else if (entry.value is List) {
                 final list = entry.value as List;
                 list.where((e) => e != null).forEach((value) =>
