@@ -113,7 +113,7 @@ mixin WorkerMixin<Output>
     }
   }
 
-  Future<T?> handleDataOperation<T extends Entity>(
+  Future<T?> handleDataOperation<T>(
       Result<Either<ResponseEntity, T>> result,
       {String? loadingMessage,
       String? successMessage,
