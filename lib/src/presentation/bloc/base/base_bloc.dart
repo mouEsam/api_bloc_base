@@ -21,6 +21,7 @@ abstract class BaseCubit<State> extends Cubit<State> implements Initializable {
   Set<StreamSubscription?> get subscriptions => {};
   Set<StreamSink> get sinks => {};
   Set<Subject> get subjects => {};
+  Set<Closable> get closables => {};
 
   @override
   void init() {}
@@ -40,7 +41,7 @@ abstract class BaseCubit<State> extends Cubit<State> implements Initializable {
     return stream.whereType<S>().firstWhere(f);
   }
 
-Future<S> nextState<S extends State>([bool Function(S state)? f]) {
+  Future<S> nextState<S extends State>([bool Function(S state)? f]) {
     f ??= (_) => true;
     return exclusiveStream.whereType<S>().firstWhere(f);
   }
@@ -55,6 +56,16 @@ Future<S> nextState<S extends State>([bool Function(S state)? f]) {
 
   @override
   Future<void> close() async {
+    closeNotifiers();
+    closeTimers();
+    closeSubscriptions();
+    closeSinks();
+    await closeSubjects();
+    await closeClosables();
+    return super.close();
+  }
+
+  void closeNotifiers() {
     notifiers.forEach((element) {
       try {
         element.dispose();
@@ -63,6 +74,9 @@ Future<S> nextState<S extends State>([bool Function(S state)? f]) {
         print(s);
       }
     });
+  }
+
+  void closeTimers() {
     timers.forEach((element) {
       try {
         element?.cancel();
@@ -71,6 +85,9 @@ Future<S> nextState<S extends State>([bool Function(S state)? f]) {
         print(s);
       }
     });
+  }
+
+  void closeSubscriptions() {
     subscriptions.forEach((element) {
       try {
         element?.cancel();
@@ -79,6 +96,9 @@ Future<S> nextState<S extends State>([bool Function(S state)? f]) {
         print(s);
       }
     });
+  }
+
+  void closeSinks() {
     sinks.forEach((element) {
       try {
         element.close();
@@ -87,6 +107,9 @@ Future<S> nextState<S extends State>([bool Function(S state)? f]) {
         print(s);
       }
     });
+  }
+
+  Future<void> closeSubjects() async {
     for (final subject in subjects) {
       try {
         await subject.drain().then((value) => subject.close());
@@ -95,6 +118,17 @@ Future<S> nextState<S extends State>([bool Function(S state)? f]) {
         print(s);
       }
     }
-    return super.close();
+  }
+
+  Future<void> closeClosables() async {
+    for (final closable in closables) {
+      try {
+        if (closable.isClosed) continue;
+        await closable.close();
+      } catch (e, s) {
+        print(e);
+        print(s);
+      }
+    }
   }
 }
