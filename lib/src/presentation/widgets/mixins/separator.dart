@@ -4,17 +4,17 @@ import 'package:flutter/material.dart';
 
 mixin SeparatorMixin on Widget {
   List<Widget> separateList(Iterable<Widget> items) {
-    return _seperateList<Widget>(this, items.toList());
+    return _separateList<Widget>(this, items.toList());
   }
 }
 
 extension SeperationUtils on Widget {
   List<W> separateList<W extends Widget>(Iterable<W> items) {
-    return _seperateList<W>(this as W, items.toList());
+    return _separateList<W>(this as W, items.toList());
   }
 }
 
-List<W> _seperateList<W extends Widget>(W seperator, List<W> items) {
+List<W> _separateList<W extends Widget>(W separator, List<W> items) {
   if (items.length <= 1) {
     return items;
   }
@@ -22,7 +22,7 @@ List<W> _seperateList<W extends Widget>(W seperator, List<W> items) {
   for (int i = 0; i < max(items.length - 1, 1); i++) {
     final child = items[i];
     newItems.add(child);
-    newItems.add(seperator);
+    newItems.add(separator);
   }
   newItems.add(items.last);
   return newItems;
