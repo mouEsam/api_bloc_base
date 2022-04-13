@@ -1,7 +1,7 @@
 import 'package:intl/intl.dart';
 
 abstract class TranslatableString {
-  final String? pattern;
+  final String pattern;
   final List<String?>? args;
   final List<TranslatableString>? translatableArgs;
 
@@ -12,7 +12,7 @@ class TranslatableText extends TranslatableString {
   final Map<String, String?>? namedArgs;
   final Map<String, TranslatableText>? translatableNamedArgs;
 
-  const TranslatableText(String? pattern,
+  const TranslatableText(String pattern,
       {List<String?>? args,
       this.namedArgs,
       List<TranslatableString>? translatableArgs,
@@ -24,7 +24,7 @@ class TranslatableNumber extends TranslatableString {
   final NumberFormat? format;
   final num? number;
 
-  const TranslatableNumber(String? pattern, this.number,
+  const TranslatableNumber(String pattern, this.number,
       {List<String?>? args,
       this.format,
       List<TranslatableText>? translatableArgs})
