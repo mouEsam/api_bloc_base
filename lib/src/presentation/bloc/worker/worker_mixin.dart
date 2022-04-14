@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:api_bloc_base/src/data/_index.dart';
-import 'package:api_bloc_base/src/domain/entity/entity.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:api_bloc_base/src/utils/_index.dart';
 import 'package:dartz/dartz.dart';
@@ -13,14 +12,19 @@ import '_defs.dart';
 import 'worker_state.dart';
 
 class _Work {
-  final String loadingMessage;
+  final String? loadingMessage;
   final CancelToken? cancelToken;
   final Stream<double>? progress;
   final bool announceLoading;
   final bool emitLoading;
 
-  const _Work(this.loadingMessage, this.cancelToken, this.progress,
-      this.emitLoading, this.announceLoading);
+  const _Work(
+    this.loadingMessage,
+    this.cancelToken,
+    this.progress,
+    this.emitLoading,
+    this.announceLoading,
+  );
 }
 
 mixin WorkerMixin<Output>
@@ -28,7 +32,7 @@ mixin WorkerMixin<Output>
   static const _DEFAULT_OPERATION = '_DEFAULT_OPERATION';
   final ValueNotifier<bool> _isNotOperation = ValueNotifier(true);
 
-  String get loading => 'loading';
+  String? get defaultLoadingMessage => null;
 
   Output get currentData;
 
@@ -110,11 +114,12 @@ mixin WorkerMixin<Output>
           silent: !item.value.announceLoading,
         ));
       }
+    } else if (!hasOperations && state is Operation) {
+      emitCurrent();
     }
   }
 
-  Future<T?> handleDataOperation<T>(
-      Result<Either<ResponseEntity, T>> result,
+  Future<T?> handleDataOperation<T>(Result<Either<ResponseEntity, T>> result,
       {String? loadingMessage,
       String? successMessage,
       bool announceFailure = true,
@@ -165,6 +170,7 @@ mixin WorkerMixin<Output>
       String? successMessage,
       bool announceLoading = true,
       bool announceFailure = true,
+      bool emitLoading = true,
       bool emitFailure = true,
       bool announceSuccess = true,
       bool emitSuccess = true,
@@ -173,7 +179,7 @@ mixin WorkerMixin<Output>
         cancelToken: result.cancelToken,
         progress: result.progress,
         announceLoading: announceLoading,
-        emitLoading: emitFailure || emitSuccess,
+        emitLoading: emitLoading,
         operationTag: operationTag);
     final future = await result.value;
     return handleResponse(future,
@@ -218,9 +224,7 @@ mixin WorkerMixin<Output>
       bool announceLoading = true,
       bool emitLoading = true,
       String operationTag = _DEFAULT_OPERATION}) {
-    message ??= loading;
-    print(announceLoading);
-    print("operationTag");
+    message ??= defaultLoadingMessage;
     _operationStack[operationTag] = _Work(
       message,
       cancelToken,

@@ -11,10 +11,11 @@ abstract class BaseCubit<State> extends Cubit<State> implements Initializable {
     init();
   }
 
-  Stream<State> get exclusiveStream => super.stream;
+  Stream<State> get coldStream => super.stream;
+  Stream<State> get hotStream => this.stream;
 
   @override
-  get stream => super.stream.shareValueSeeded(state).map((e) => state);
+  get stream => coldStream.shareValueSeeded(state).map((e) => state);
 
   Set<ChangeNotifier> get notifiers => {};
   Set<Timer?> get timers => {};
@@ -43,15 +44,19 @@ abstract class BaseCubit<State> extends Cubit<State> implements Initializable {
 
   Future<S> nextState<S extends State>([bool Function(S state)? f]) {
     f ??= (_) => true;
-    return exclusiveStream.whereType<S>().firstWhere(f);
+    return coldStream.whereType<S>().firstWhere(f);
   }
 
   Future<R> whenState<S extends State, R extends Object?>(
-      [FutureOr<R> Function()? f]) {
-    f ??= () => Future.value(null);
-    return exclusiveStream
-        .firstWhere((event) => event is S)
-        .then((value) => f!());
+      [FutureOr<R> Function(S state)? f]) {
+    f ??= (_) => Future.value(null);
+    return stream.whereType<S>().first.then((value) => f!(value));
+  }
+
+  Future<R> whenNextState<S extends State, R extends Object?>(
+      [FutureOr<R> Function(S state)? f]) {
+    f ??= (_) => Future.value(null);
+    return coldStream.whereType<S>().first.then((value) => f!(value));
   }
 
   @override

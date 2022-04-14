@@ -40,7 +40,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     }
     _init = true;
     _subscriptions = triggers.map((trigger) {
-      return trigger.exclusiveStream
+      return trigger.coldStream
           .map((event) => _TriggerState(event.data))
           .where((state) => _hasHandler(state, trigger.runtimeType))
           .listen((state) async {

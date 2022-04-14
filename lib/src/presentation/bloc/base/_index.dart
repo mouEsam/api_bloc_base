@@ -10,3 +10,4 @@ export 'stateful_bloc.dart';
 export 'tree.dart';
 export 'user_dependant_state.dart';
 export 'visibility_mixin.dart';
+export 'utility.dart';
