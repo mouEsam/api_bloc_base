@@ -104,7 +104,11 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output,
     } else {
       inputParameter = null;
       _parameterIsReady.value = false;
-      injectInputState(event);
+      if (event is Error && event is! UrgentState) {
+        injectInputState(UrgentError(event.response));
+      } else {
+        injectInputState(event);
+      }
     }
   }
 

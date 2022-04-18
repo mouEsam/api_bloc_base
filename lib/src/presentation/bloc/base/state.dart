@@ -18,9 +18,21 @@ class Loaded<T> extends BlocState {
   get props => [data];
 }
 
+abstract class UrgentState implements BlocState {
+  bool get isUrgent;
+}
+
+mixin UrgentStateMixin on BlocState implements UrgentState {
+  bool get isUrgent => true;
+}
+
 class Error extends BlocState {
   final ResponseEntity response;
   const Error(this.response);
   @override
   get props => [response];
+}
+
+class UrgentError extends Error with UrgentStateMixin {
+  const UrgentError(ResponseEntity response) : super(response);
 }

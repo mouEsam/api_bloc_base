@@ -70,6 +70,7 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
   }
 
   bool _init = false;
+  Completer<Tuple2<BlocState, List<BlocState>>?>? _futureState;
   void setupStreams() {
     if (_init) return;
     _init = true;
@@ -103,10 +104,32 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
       return Tuple2(a[0], a.skip(1).toList());
     })
             .asyncMap((event) {
-              return whenActive(producer: (_) => event);
+              if (_futureState?.isCompleted == false) {
+                _futureState?.complete();
+              }
+              _futureState = Completer();
+              var completer = _futureState!;
+              var mainEvent = event.value1;
+              if ((mainEvent is UrgentState && mainEvent.isUrgent) ||
+                  event.value2.any(
+                    (element) => (element is UrgentState && element.isUrgent),
+                  )) {
+                return event;
+              }
+              whenActive(producer: (_) => event).then((value) {
+                if (!completer.isCompleted) {
+                  completer.complete(value);
+                }
+              });
+              return completer.future;
             })
+            .whereType<Tuple2<BlocState, List<BlocState>>>()
             .throttleTime(throttleWindowDuration, trailing: true)
             .asyncMap((event) async {
+              final completer = _futureState;
+              if (completer != null && !completer.isCompleted) {
+                completer.complete();
+              }
               final work = Work.start(state);
               lastWork = work;
               var mainEvent = event.value1;

@@ -38,12 +38,16 @@ class LoadedState<T> extends WorkerState<T> implements Loaded<T> {
   List<Object?> get props => [this.data];
 }
 
-abstract class Operation {
+abstract class Operation implements UrgentState {
   String get operationTag;
   bool get silent;
 }
 
-class OnGoingOperationState<T> extends LoadedState<T> implements Operation {
+mixin OperationMixin on BlocState implements Operation, UrgentStateMixin {
+  bool get isUrgent => true;
+}
+
+class OnGoingOperationState<T> extends LoadedState<T> with OperationMixin {
   final String? loadingMessage;
   final CancelToken? token;
   final Stream<double>? progress;
@@ -76,7 +80,7 @@ class OnGoingOperationState<T> extends LoadedState<T> implements Operation {
       ];
 }
 
-class FailedOperationState<T> extends LoadedState<T> implements Operation {
+class FailedOperationState<T> extends LoadedState<T> with OperationMixin {
   final String operationTag;
   final Failure? failure;
   final Function()? retry;
@@ -121,7 +125,7 @@ class FailedOperationState<T> extends LoadedState<T> implements Operation {
       ];
 }
 
-class SuccessfulOperationState<T> extends LoadedState<T> implements Operation {
+class SuccessfulOperationState<T> extends LoadedState<T> with OperationMixin {
   final String operationTag;
   final Success success;
   final bool silent;

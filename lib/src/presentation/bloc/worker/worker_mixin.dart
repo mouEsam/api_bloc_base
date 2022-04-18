@@ -46,7 +46,7 @@ mixin WorkerMixin<Output>
 
   Box<BlocState> _nextState = Box();
   void emitState(BlocState state) {
-    if (state is Operation || lastTrafficLightsValue) {
+    if ((state is UrgentState && state.isUrgent) || lastTrafficLightsValue) {
       if (state is WorkerState<Output>) {
         emit(state);
       } else if (state is Loading) {

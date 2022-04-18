@@ -40,6 +40,7 @@ mixin OutputConverterMixin<Input, Output, State extends BlocState>
     } else {
       outputState = state;
     }
+
     handleOutputState(work.changeState(outputState));
   }
 
@@ -95,6 +96,7 @@ mixin OutputConverterMixin<Input, Output, State extends BlocState>
         }
       }
     }
+
     if (!output.isCancelled) {
       handleOutput(output);
     }
