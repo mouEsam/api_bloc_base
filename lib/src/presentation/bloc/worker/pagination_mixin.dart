@@ -116,7 +116,7 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
       newLast,
     );
     _shownPage ??= page;
-    return _fixForPage(newOutput, _shownPage!);
+    return _fixForPage(newOutput, _shownPage ?? page);
   }
 
   PaginatedOutput<Output> _fixForPage(

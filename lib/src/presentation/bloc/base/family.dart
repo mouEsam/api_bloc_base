@@ -1,13 +1,22 @@
 import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
+import 'package:api_bloc_base/src/utils/utils.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class FamilyMember<Bloc> {
   final Bloc bloc;
+  final bool keepAlive;
   final Set<FamilyListener> _listeners = {};
 
-  FamilyMember._(this.bloc);
+  FamilyMember<Bloc> copyWith({bool? keepAlive}) {
+    return FamilyMember._(
+      bloc,
+      keepAlive ?? this.keepAlive,
+    ).._listeners.addAll(_listeners);
+  }
+
+  FamilyMember._(this.bloc, this.keepAlive);
 }
 
 class FamilyArgKey<Arg> extends Equatable {
@@ -48,36 +57,50 @@ abstract class Family<Arg, Bloc extends Cubit>
     return null;
   }
 
-  Bloc call(Arg arg, FamilyListener listener, {bool? unique}) {
+  Bloc call(Arg arg, FamilyListener listener, {bool? unique, bool? keepAlive}) {
     final argKey = FamilyArgKey._(arg, unique == true ? listener : null);
     final existingBloc = state[argKey];
     if (existingBloc != null && !existingBloc.bloc.isClosed) {
       existingBloc._listeners.add(listener);
       return existingBloc.bloc;
     } else {
-      final newBloc = FamilyMember._(createBloc(arg));
+      FamilyMember<Bloc> newBloc() {
+        return FamilyMember._(createBloc(arg), keepAlive == true);
+      }
+
       final newMap = Map.of(state);
-      newMap.update(argKey, (value) {
+      final newMember = newMap.update(argKey, (value) {
         final oldBloc = value.bloc;
         if (!oldBloc.isClosed) {
-          oldBloc.close();
+          return value.copyWith(
+              keepAlive: keepAlive!.let((keepAlive) {
+            return keepAlive == true ? true : null;
+          }));
         }
-        return newBloc;
+        return newBloc();
       }, ifAbsent: () {
-        return newBloc;
+        return newBloc();
       });
       emit(newMap);
-      return newBloc.bloc;
+      return newMember.bloc;
     }
   }
 
-  void clear(Arg arg, FamilyListener listener, {bool? unique}) {
+  void clear(
+    Arg arg,
+    FamilyListener listener, {
+    bool? unique,
+    bool? keepAlive,
+  }) {
     final argKey = FamilyArgKey._(arg, unique == true ? listener : null);
     final newMap = Map.of(state);
     final existingBloc = state[argKey];
     if (existingBloc != null && !existingBloc.bloc.isClosed) {
       existingBloc._listeners.remove(listener);
-      if (autoDispose && existingBloc._listeners.isEmpty) {
+      if (autoDispose &&
+          keepAlive != true &&
+          existingBloc.keepAlive != true &&
+          existingBloc._listeners.isEmpty) {
         existingBloc.bloc.close();
         newMap.remove(argKey);
       }

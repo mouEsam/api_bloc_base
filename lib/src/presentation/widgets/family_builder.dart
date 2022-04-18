@@ -9,6 +9,7 @@ class FamilyBuilder<Arg, Bloc extends Cubit,
     FamilyBloc extends Family<Arg, Bloc>> extends StatelessWidget {
   final Arg arg;
   final bool? unique;
+  final bool? keepAlive;
   final Family<Arg, Bloc>? family;
   final FamilyWidgetBuilder<Bloc> builder;
 
@@ -18,6 +19,7 @@ class FamilyBuilder<Arg, Bloc extends Cubit,
     required this.builder,
     this.family,
     this.unique,
+    this.keepAlive,
   }) : super(key: key);
 
   @override
@@ -26,6 +28,7 @@ class FamilyBuilder<Arg, Bloc extends Cubit,
     return FamilyBlocProvider<Arg, Bloc>(
       arg: arg,
       unique: unique,
+      keepAlive: keepAlive,
       family: family,
       builder: builder,
     );
@@ -35,6 +38,7 @@ class FamilyBuilder<Arg, Bloc extends Cubit,
 class FamilyBlocProvider<Arg, Bloc extends Cubit> extends StatefulWidget {
   final Arg arg;
   final bool? unique;
+  final bool? keepAlive;
   final Family<Arg, Bloc> family;
   final FamilyWidgetBuilder<Bloc> builder;
 
@@ -43,6 +47,7 @@ class FamilyBlocProvider<Arg, Bloc extends Cubit> extends StatefulWidget {
     required this.family,
     required this.builder,
     this.unique,
+    this.keepAlive,
   }) : super(key: ValueKey(arg));
 
   @override
@@ -57,13 +62,23 @@ class _FamilyBlocProviderState<Arg, Bloc extends Cubit>
 
   @override
   void initState() {
-    _bloc = widget.family(widget.arg, this, unique: widget.unique);
+    _bloc = widget.family(
+      widget.arg,
+      this,
+      unique: widget.unique,
+      keepAlive: widget.keepAlive,
+    );
     super.initState();
   }
 
   @override
   void dispose() {
-    widget.family.clear(widget.arg, this, unique: widget.unique);
+    widget.family.clear(
+      widget.arg,
+      this,
+      unique: widget.unique,
+      keepAlive: widget.keepAlive,
+    );
     super.dispose();
   }
 

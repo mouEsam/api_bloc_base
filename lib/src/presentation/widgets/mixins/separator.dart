@@ -12,6 +12,9 @@ extension SeperationUtils on Widget {
   List<W> separateList<W extends Widget>(Iterable<W> items) {
     return _separateList<W>(this as W, items.toList());
   }
+  List<Widget> separateWidgets(Iterable<Widget> items) {
+    return separateList<Widget>(items);
+  }
 }
 
 List<W> _separateList<W extends Widget>(W separator, List<W> items) {
