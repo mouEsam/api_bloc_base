@@ -172,7 +172,7 @@ class _StatefulBlocContainerState<Data, StateType extends BlocState,
           operationData = OperationData(
               loadingMessage: widget.defaultLoadingMessage,
               onCancel: widget.showCancelOnLoading
-                  ? () => Navigator.pop(context)
+                  ? () => Navigator.maybePop(context)
                   : null);
         }
         if (state is OnGoingOperationState<Data> && !state.silent) {
