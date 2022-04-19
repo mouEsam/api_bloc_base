@@ -74,24 +74,27 @@ class ChainedResult<S, T> extends CompletableResult<T> {
         }).listen(_progress.add);
       }
     }
-    Future.value(first.value).then((value) {
-      final _second = secondFactory(value);
-      _completer.complete(_second.value);
-      second = _second;
-      cancelToken.second = _second.cancelToken;
-      if (_second.progress != null) {
-        if (!_progress.isClosed) {
-          Box<StreamSubscription> _sub = Box();
-          _sub.data = _second.progress?.doOnEach((notification) {
-            if (notification.isOnDone || notification.isOnError) {
-              _sub.nullableData?.cancel();
-            }
-          }).listen(_progress.add);
+    Future.value(first.value).then(
+      (value) {
+        final _second = secondFactory(value);
+        _completer.complete(_second.value);
+        second = _second;
+        cancelToken.second = _second.cancelToken;
+        if (_second.progress != null) {
+          if (!_progress.isClosed) {
+            Box<StreamSubscription> _sub = Box();
+            _sub.data = _second.progress?.doOnEach((notification) {
+              if (notification.isOnDone || notification.isOnError) {
+                _sub.nullableData?.cancel();
+              }
+            }).listen(_progress.add);
+          }
         }
-      }
-    }, onError: (e, s) {
-      _completer.completeError(e, s);
-    });
+      },
+      onError: (Object e, StackTrace? s) {
+        _completer.completeError(e, s);
+      },
+    );
   }
 }
 

@@ -73,7 +73,7 @@ class SocketStream<O> {
   }
 
   void setHeader(String headerName, String? value) {
-    final Map headers = _socket.io.options['extraHeaders'];
+    final Map headers = _socket.io.options['extraHeaders'] as Map;
     if (value == null) {
       headers.remove(headerName);
     } else {
@@ -82,7 +82,7 @@ class SocketStream<O> {
   }
 
   void setQueryParameter(String parameter, String? value) {
-    final Map queryParameter = _socket.io.options['query'];
+    final Map queryParameter = _socket.io.options['query'] as Map;
     if (value == null) {
       queryParameter.remove(parameter);
     } else {

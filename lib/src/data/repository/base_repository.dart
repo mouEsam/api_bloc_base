@@ -259,17 +259,17 @@ abstract class BaseRepository {
 
   z.Left<Failure, T> handleError<T>(error,
       {String? customErrorIfNoMessage,
-      Failure createFailure(String message)?}) {
+      Failure Function(String message)? createFailure}) {
     String? message = getErrorMessage(error, customErrorIfNoMessage);
     createFailure ??= (message) => Failure(message);
     return z.Left(createFailure(message!));
   }
 
-  FutureOr<ResponseEntity> tryWorkWithResponse(FutureOr work(),
+  FutureOr<ResponseEntity> tryWorkWithResponse(FutureOr Function() work,
       [String? customErrorIfNoMessage]) async {
     try {
       await work();
-      return Success();
+      return const Success();
     } catch (e, s) {
       print(e);
       print(s);
@@ -280,7 +280,7 @@ abstract class BaseRepository {
   String? getErrorMessage(error, [String? customErrorIfNoMessage]) {
     String? message;
     try {
-      message = error.response;
+      message = error.response as String;
     } catch (e, s) {
       message ??= customErrorIfNoMessage ?? defaultError;
     }

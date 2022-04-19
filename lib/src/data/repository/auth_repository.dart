@@ -108,7 +108,7 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
     }).catchError((e, s) {
       print(e);
       print(s);
-      return Failure(e.response);
+      return Failure(getErrorMessage(e));
     });
     return result.asResult;
   }

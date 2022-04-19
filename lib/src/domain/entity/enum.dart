@@ -26,8 +26,8 @@ abstract class Enum<E extends core.Enum> extends Entity {
     _init(values, value, allowUnknown);
   }
 
-  void _init(List<dynamic> values, String value, bool allowUnknown) {
-    final existingValue = EnumToString.fromString(values, value);
+  void _init(List<E> values, String value, bool allowUnknown) {
+    final existingValue = EnumToString.fromString<E>(values, value);
     if (existingValue != null) {
       _value = existingValue;
       _name = value;

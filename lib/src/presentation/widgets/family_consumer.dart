@@ -3,22 +3,6 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class FamilyFactory<Arg, Bloc extends Cubit> {
-  final FamilyFactoryCreator<Arg, Bloc> _createFamily;
-
-  const FamilyFactory(this._createFamily);
-
-  Bloc get(Arg arg, {bool? unique, bool? keepAlive}) {
-    return _createFamily(arg, unique: unique, keepAlive: keepAlive);
-  }
-}
-
-typedef FamilyFactoryCreator<Arg, Bloc> = Bloc Function(
-  Arg arg, {
-  bool? unique,
-  bool? keepAlive,
-});
-
 class FamilySeed<F extends Family> {
   final F _family;
 
@@ -26,8 +10,8 @@ class FamilySeed<F extends Family> {
 }
 
 abstract class FamilyReader {
-  FamilySeed<F> family<F extends Family>();
-  Bloc call<Arg, Bloc extends Cubit>(
+  FamilySeed<F> call<F extends Family>();
+  Bloc get<Arg, Bloc extends Cubit>(
     FamilySeed<Family<Arg, Bloc>> family,
     Arg arg, {
     bool? unique,
@@ -84,12 +68,12 @@ class _FamilyConsumerState extends State<FamilyConsumer>
   final Set<_Hook> _hooks = {};
 
   @override
-  FamilySeed<F> family<F extends Family>() {
+  FamilySeed<F> call<F extends Family>() {
     return FamilySeed(context.read<F>());
   }
 
   @override
-  Bloc call<Arg, Bloc extends Cubit>(
+  Bloc get<Arg, Bloc extends Cubit>(
     FamilySeed<Family<Arg, Bloc>> seed,
     Arg arg, {
     bool? unique,
@@ -112,19 +96,44 @@ class _FamilyConsumerState extends State<FamilyConsumer>
 
   @override
   void dispose() {
-    _hooks.forEach((hook) {
+    for (final hook in _hooks) {
       hook.family.clear(
         hook.arg,
         this,
         unique: hook.unique,
         keepAlive: hook.keepAlive,
       );
-    });
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return widget.builder(context, this, widget.child);
+  }
+}
+
+class MyBloc extends Cubit<int> {
+  MyBloc(int arg) : super(arg);
+}
+
+class MyFamily extends Family<int, MyBloc> {
+  @override
+  MyBloc createBloc(int arg) {
+    return MyBloc(arg);
+  }
+}
+
+class MyTest extends StatelessWidget {
+  const MyTest({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FamilyConsumer(
+      builder: (context, reader, child) {
+        final bloc = reader.get(reader<MyFamily>(), 0);
+        return const SizedBox();
+      },
+    );
   }
 }

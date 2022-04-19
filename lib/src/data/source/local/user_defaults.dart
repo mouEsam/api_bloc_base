@@ -42,7 +42,7 @@ class UserDefaults {
         return null;
       } else {
         final json = jsonDecode(value);
-        if (json != null) {
+        if (json != null && json is Map<String, dynamic>) {
           final profile = await profileFactory(json);
           return profile;
         } else {

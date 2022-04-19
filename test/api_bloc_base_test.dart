@@ -50,7 +50,7 @@ class _HandlerKey extends Equatable {
   get props => [data, trigger];
 }
 
-FutureOr<void> handleOutputToInject(output) async {
+FutureOr<void> handleOutputToInject(String output) async {
   for (final trigger in _triggers.entries) {
     final key = trigger.key;
     final value = trigger.value;
@@ -81,12 +81,12 @@ FutureOr<bool?> _handleTrigger(
 
 void onTriggerState<Data>(Trigger trigger, _Handler<Output, Data> handler) {
   final key = _HandlerKey(Data, trigger.runtimeType);
-  _handlers[key] = (output, trigger) => handler(output, trigger);
+  _handlers[key] = (String output, trigger) => handler(output, trigger as Data);
 }
 
 void onTrigger<Data>(Trigger<Data> trigger, _Handler<Output, Data> handler) {
   final key = _HandlerKey.general(trigger.runtimeType);
-  _handlers[key] = (output, trigger) => handler(output, trigger);
+  _handlers[key] = (String output, trigger) => handler(output, trigger as Data);
 }
 
 final List<Trigger> triggers = [];

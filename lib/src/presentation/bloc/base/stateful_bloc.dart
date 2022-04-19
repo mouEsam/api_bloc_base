@@ -15,10 +15,10 @@ abstract class StatefulBloc<Data, State extends BlocState>
     print(e);
     print(s);
     try {
-      return e.response;
+      return e.response as String;
     } catch (_) {
       try {
-        return e.message;
+        return e.message as String;
       } catch (_) {
         return defaultErrorMessage;
       }

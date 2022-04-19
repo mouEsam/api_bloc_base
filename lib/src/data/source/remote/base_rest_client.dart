@@ -161,29 +161,34 @@ class BaseRestClient {
         case RequestBodyType.FormData:
           final _data = FormData();
           for (final entry in formData.entries) {
-            if (entry.value != null) {
-              if (entry.value is UploadFile) {
-                final file = entry.value as UploadFile;
-                _data.files.add(MapEntry(
-                  entry.key,
-                  MultipartFile(
-                    file.file.openRead(),
-                    file.file.lengthSync(),
-                    filename: file.fileName,
-                    contentType: file.contentType,
+            final value = entry.value;
+            if (value != null) {
+              if (value is UploadFile) {
+                final file = value as UploadFile;
+                _data.files.add(
+                  MapEntry(
+                    entry.key,
+                    MultipartFile(
+                      file.file.openRead(),
+                      file.file.lengthSync(),
+                      filename: file.fileName,
+                      contentType: file.contentType,
+                    ),
                   ),
-                ));
-              } else if (entry.value is f.File) {
-                final file = entry.value as f.File;
-                _data.files.add(MapEntry(
-                  entry.key,
-                  MultipartFile.fromFileSync(
-                    file.path,
-                    filename: file.basename,
+                );
+              } else if (value is f.File) {
+                final file = value as f.File;
+                _data.files.add(
+                  MapEntry(
+                    entry.key,
+                    MultipartFile.fromFileSync(
+                      file.path,
+                      filename: file.basename,
+                    ),
                   ),
-                ));
-              } else if (entry.value is io.File) {
-                final file = entry.value as io.File;
+                );
+              } else if (value is io.File) {
+                final file = value as io.File;
                 _data.files.add(MapEntry(
                   entry.key,
                   MultipartFile.fromFileSync(
@@ -191,15 +196,15 @@ class BaseRestClient {
                     filename: p.basename(file.path),
                   ),
                 ));
-              } else if (entry.value is List) {
-                final list = entry.value as List;
+              } else if (value is List) {
+                final list = value as List;
                 list.where((e) => e != null).forEach((value) => _data.fields
                     .add(MapEntry(entry.key,
                         value is String ? value : jsonEncode(value))));
-              } else if (entry.value is String) {
-                _data.fields.add(MapEntry(entry.key, entry.value));
+              } else if (value is String) {
+                _data.fields.add(MapEntry(entry.key, value as String));
               } else {
-                _data.fields.add(MapEntry(entry.key, jsonEncode(entry.value)));
+                _data.fields.add(MapEntry(entry.key, jsonEncode(value)));
               }
             }
           }
@@ -279,10 +284,10 @@ class BaseRestClient {
         if (fromJson != null) {
           value = fromJson(result.data);
         } else {
-          value = result.data;
+          value = result.data as T?;
         }
       } else {
-        value = result.data;
+        value = result.data as T?;
       }
       return Response<T>(
           data: value,
@@ -353,9 +358,10 @@ class BaseRestClient {
         case RequestBodyType.FormData:
           final _data = FormData();
           for (final entry in formData.entries) {
-            if (entry.value != null) {
-              if (entry.value is f.File) {
-                final file = entry.value as f.File;
+            final value = entry.value;
+            if (value != null) {
+              if (value is f.File) {
+                final file = value as f.File;
                 _data.files.add(MapEntry(
                   entry.key,
                   MultipartFile.fromFileSync(
@@ -363,8 +369,8 @@ class BaseRestClient {
                     filename: file.basename,
                   ),
                 ));
-              } else if (entry.value is io.File) {
-                final file = entry.value as io.File;
+              } else if (value is io.File) {
+                final file = value as io.File;
                 _data.files.add(MapEntry(
                   entry.key,
                   MultipartFile.fromFileSync(
@@ -372,12 +378,12 @@ class BaseRestClient {
                     filename: p.basename(file.path),
                   ),
                 ));
-              } else if (entry.value is List) {
-                final list = entry.value as List;
+              } else if (value is List) {
+                final list = value as List;
                 list.where((e) => e != null).forEach((value) =>
                     _data.fields.add(MapEntry(entry.key, value.toString())));
               } else {
-                _data.fields.add(MapEntry(entry.key, entry.value.toString()));
+                _data.fields.add(MapEntry(entry.key, value.toString()));
               }
             }
           }
@@ -387,7 +393,7 @@ class BaseRestClient {
           body = jsonEncode(formData);
       }
     }
-    final _progressListener = (int count, int total) {
+    double _progressListener(int count, int total) {
       final newCount = math.max(count, 0);
       final newTotal = math.max(total, 0);
       final double progress = newTotal == 0 ? 0.0 : (newCount / newTotal);
@@ -395,9 +401,11 @@ class BaseRestClient {
         progressController.add(math.max(progress, 1.0));
       }
       return progress;
-    };
+    }
+
+    ;
     dio.options.baseUrl = baseUrl;
-    Future<Response<ResponseBody?>> response = dio
+    final Future<Response<ResponseBody?>> response = dio
         .download(path, savePath,
             queryParameters: queryParameters,
             cancelToken: cancelToken,

@@ -1037,7 +1037,7 @@ class RouteArgumentFactory<X> implements ArgumentFactory<RouteArgument<X>> {
   const RouteArgumentFactory({this.name = 'arg'});
   @override
   RouteArgument<X> fromMap(Map<String, dynamic> map) {
-    return RouteArgument(map[name]);
+    return RouteArgument(map[name] as X);
   }
 }
 

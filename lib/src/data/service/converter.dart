@@ -84,8 +84,12 @@ abstract class BaseResponseConverter<T extends BaseApiResponse, X>
 
   ResponseEntity? response(BaseApiResponse initialData) {
     if (isSuccessMessage(initialData)) {
-      return Success(initialData.message ??
-          (initialData.success is String ? initialData.success : null));
+      return Success(
+        initialData.message ??
+            (initialData.success is String
+                ? initialData.success as String
+                : null),
+      );
     } else if (isErrorMessage(initialData)) {
       return Failure(
           initialData.message ?? initialData.error, initialData.errors);
