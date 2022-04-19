@@ -1,4 +1,3 @@
-import 'package:api_bloc_base/src/presentation/bloc/base/base_bloc.dart';
 import 'package:api_bloc_base/src/utils/utils.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
@@ -120,7 +119,7 @@ abstract class Family<Arg, Bloc extends Cubit>
   }
 }
 
-class SimpleFamily<Arg, Bloc extends BaseCubit> extends Family<Arg, Bloc> {
+class SimpleFamily<Arg, Bloc extends Cubit> extends Family<Arg, Bloc> {
   final Bloc Function(Arg) creator;
 
   SimpleFamily(this.creator, {bool autoDispose = true}) : super(autoDispose);

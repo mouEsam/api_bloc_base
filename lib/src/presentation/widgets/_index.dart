@@ -3,6 +3,7 @@ export 'default_animation_controller.dart';
 export 'disposer.dart';
 export 'dots_indicator.dart';
 export 'family_builder.dart';
+export 'family_consumer.dart';
 export 'go_up_fab.dart';
 export 'lists/_index.dart';
 export 'loading_more.dart';
