@@ -27,20 +27,6 @@ typedef FamilyConsumerBuilder = Widget Function(
   Widget? child,
 );
 
-class FamilyConsumer extends StatefulWidget {
-  const FamilyConsumer({
-    Key? key,
-    required this.builder,
-    this.child,
-  }) : super(key: key);
-
-  final Widget? child;
-  final FamilyConsumerBuilder builder;
-
-  @override
-  State<FamilyConsumer> createState() => _FamilyConsumerState();
-}
-
 class _Hook<Arg, Bloc extends Cubit> extends Equatable {
   final Family<Arg, Bloc> family;
   final Arg arg;
@@ -56,11 +42,25 @@ class _Hook<Arg, Bloc extends Cubit> extends Equatable {
 
   @override
   List<Object?> get props => [
-        this.family,
-        this.arg,
-        this.keepAlive,
-        this.unique,
+        family,
+        arg,
+        keepAlive,
+        unique,
       ];
+}
+
+class FamilyConsumer extends StatefulWidget {
+  const FamilyConsumer({
+    Key? key,
+    required this.builder,
+    this.child,
+  }) : super(key: key);
+
+  final Widget? child;
+  final FamilyConsumerBuilder builder;
+
+  @override
+  State<FamilyConsumer> createState() => _FamilyConsumerState();
 }
 
 class _FamilyConsumerState extends State<FamilyConsumer>
@@ -69,6 +69,7 @@ class _FamilyConsumerState extends State<FamilyConsumer>
 
   @override
   FamilySeed<F> call<F extends Family>() {
+    assert(mounted);
     return FamilySeed(context.read<F>());
   }
 
