@@ -19,10 +19,16 @@ typedef FamilyFactoryCreator<Arg, Bloc> = Bloc Function(
   bool? keepAlive,
 });
 
+class FamilySeed<F extends Family> {
+  final F _family;
+
+  const FamilySeed(this._family);
+}
+
 abstract class FamilyReader {
-  F family<F extends Family>();
+  FamilySeed<F> family<F extends Family>();
   Bloc call<Arg, Bloc extends Cubit>(
-    Family<Arg, Bloc> family,
+    FamilySeed<Family<Arg, Bloc>> family,
     Arg arg, {
     bool? unique,
     bool? keepAlive,
@@ -78,18 +84,18 @@ class _FamilyConsumerState extends State<FamilyConsumer>
   final Set<_Hook> _hooks = {};
 
   @override
-  F family<F extends Family>() {
-    return context.read<F>();
+  FamilySeed<F> family<F extends Family>() {
+    return FamilySeed(context.read<F>());
   }
 
   @override
   Bloc call<Arg, Bloc extends Cubit>(
-    Family<Arg, Bloc> family,
+    FamilySeed<Family<Arg, Bloc>> seed,
     Arg arg, {
     bool? unique,
     bool? keepAlive,
   }) {
-    final hook = _Hook(family, arg, keepAlive, unique);
+    final hook = _Hook(seed._family, arg, keepAlive, unique);
     return registerHook<Arg, Bloc>(hook);
   }
 
