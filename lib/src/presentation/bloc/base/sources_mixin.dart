@@ -4,13 +4,30 @@ import 'package:api_bloc_base/src/presentation/bloc/base/_index.dart';
 import 'package:api_bloc_base/src/presentation/bloc/provider/_index.dart';
 import 'package:collection/collection.dart';
 import 'package:dartz/dartz.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:listenable_stream/listenable_stream.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'listenable_mixin.dart';
 import 'listener_mixin.dart';
 import 'traffic_lights_mixin.dart';
 import 'work.dart';
+
+class _StateComplex extends Equatable {
+  final bool isGreen;
+  final BlocState state;
+  final List<BlocState> states;
+
+  const _StateComplex({
+    required this.isGreen,
+    required this.state,
+    required this.states,
+  });
+
+  @override
+  List<Object?> get props => [state, states];
+}
 
 mixin SourcesMixin<Input, Output, State extends BlocState>
     on
@@ -22,7 +39,7 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
   late final StreamSubscription _dataSubscription;
 
   final ValueNotifier<bool> listeningToSources = ValueNotifier(true);
-  final throttleWindowDuration = Duration(milliseconds: 200);
+  final throttleWindowDuration = const Duration(milliseconds: 200);
 
   Work? _lastWork;
   Work? get lastWork {
@@ -39,9 +56,11 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
   Stream<BlocState> get inputStream;
 
   @override
-  get trafficLights => super.trafficLights..addAll([listeningToSources]);
+  List<ValueNotifier<bool>> get trafficLights =>
+      super.trafficLights..addAll([listeningToSources]);
   @override
-  get subscriptions => super.subscriptions..addAll([_dataSubscription]);
+  Set<StreamSubscription?> get subscriptions =>
+      super.subscriptions..addAll([_dataSubscription]);
 
   FutureOr<void> handleSourcesOutput(Work event);
 
@@ -98,64 +117,70 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
       ...sources,
       ...providers.map((e) => e.stream.shareValue())
     ];
-    _dataSubscription =
-        CombineLatestStream<BlocState, Tuple2<BlocState, List<BlocState>>>(
-                newSources, (a) {
-      return Tuple2(a[0], a.skip(1).toList());
-    })
-            .asyncMap((event) {
-              if (_futureState?.isCompleted == false) {
-                _futureState?.complete();
-              }
-              _futureState = Completer();
-              var completer = _futureState!;
-              var mainEvent = event.value1;
-              if ((mainEvent is UrgentState && mainEvent.isUrgent) ||
-                  event.value2.any(
-                    (element) => (element is UrgentState && element.isUrgent),
-                  )) {
-                return event;
-              }
-              whenActive(producer: (_) => event).then((value) {
-                if (!completer.isCompleted) {
-                  completer.complete(value);
-                }
-              });
-              return completer.future;
-            })
-            .whereType<Tuple2<BlocState, List<BlocState>>>()
-            .throttleTime(throttleWindowDuration, trailing: true)
-            .asyncMap((event) async {
-              final completer = _futureState;
-              if (completer != null && !completer.isCompleted) {
-                completer.complete();
-              }
-              final work = Work.start(state);
-              lastWork = work;
-              var mainEvent = event.value1;
-              if (mainEvent is Loading || mainEvent is Error) {
-                return work.changeState(mainEvent);
-              } else {
-                mainEvent = mainEvent as Loaded<Input>;
-                Error? errorState = event.value2
-                    .firstWhereOrNull((element) => element is Error) as Error?;
-                if (errorState != null) {
-                  return work.changeState(errorState);
-                } else if (event.value2.whereType<Loading>().isNotEmpty) {
-                  return null;
-                } else {
-                  final loaded = event.value2.whereType<Loaded>().toList();
-                  final result =
-                      await combineDataWithStates(mainEvent.data, loaded);
-                  return work.changeState(result);
-                }
-              }
-            })
-            .whereType<Work>()
-            .where((event) => !event.isCancelled)
-            .listen((event) {
-              handleSourcesOutput(event);
-            }, onError: handleSourcesError);
+    final combinedStreams =
+        CombineLatestStream<BlocState, List<BlocState>>(newSources, (a) => a);
+    final isGreenStream = isGreen.toValueStream(replayValue: true);
+    final stream =
+        CombineLatestStream.combine2<bool, List<BlocState>, _StateComplex>(
+      isGreenStream,
+      combinedStreams,
+      (isGreen, list) {
+        final mainState = list[0];
+        final states = list.skip(1).toList();
+        return _StateComplex(
+          isGreen: isGreen,
+          state: mainState,
+          states: states,
+        );
+      },
+    ).where((event) {
+      final state = event.state;
+      bool isUrgent(BlocState state) {
+        return state is UrgentState && state.isUrgent;
+      }
+
+      if (event.isGreen || isUrgent(state) || event.states.any(isUrgent)) {
+        return true;
+      } else {
+        return false;
+      }
+    });
+    _dataSubscription = stream
+        .distinct()
+        .throttleTime(throttleWindowDuration, trailing: true)
+        .asyncMap((event) async {
+          final completer = _futureState;
+          if (completer != null && !completer.isCompleted) {
+            completer.complete();
+          }
+          final work = Work.start(state);
+          lastWork = work;
+          var mainEvent = event.state;
+          if (mainEvent is Loading || mainEvent is Error) {
+            return work.changeState(mainEvent);
+          } else {
+            mainEvent = mainEvent as Loaded<Input>;
+            final errorState = event.states.whereType<Error>().firstOrNull;
+            if (errorState != null) {
+              return work.changeState(errorState);
+            } else if (event.states.whereType<Loading>().isNotEmpty) {
+              return null;
+            } else {
+              final loaded = event.states.whereType<Loaded>().toList();
+              final result =
+                  await combineDataWithStates(mainEvent.data, loaded);
+              return work.changeState(result);
+            }
+          }
+        })
+        .whereType<Work>()
+        .where((event) => !event.isCancelled)
+        .listen(
+          (event) {
+            handleSourcesOutput(event);
+          },
+          onError: handleSourcesError,
+        );
   }
 
   void handleSourcesError(e, s) {

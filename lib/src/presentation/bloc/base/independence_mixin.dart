@@ -27,8 +27,8 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   final ValueNotifier<bool> _alreadyFetchedData = ValueNotifier(false);
   final ValueNotifier<bool> _needsToRefresh = ValueNotifier(false);
   final ValueNotifier<bool> _needsToRefetch = ValueNotifier(false);
-  final Duration? refreshInterval = Duration(seconds: 30);
-  final Duration? retryInterval = Duration(seconds: 30);
+  final Duration? refreshInterval = const Duration(seconds: 30);
+  final Duration? retryInterval = const Duration(seconds: 30);
 
   Result<Either<ResponseEntity, Input>>? get singleDataSource;
   Either<ResponseEntity, Stream<Input>>? get dataStreamSource;
@@ -44,19 +44,21 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   bool _hasSingleSource = false;
 
   @override
-  get subscriptions => super.subscriptions
+  Set<StreamSubscription?> get subscriptions => super.subscriptions
     ..addAll([_streamSourceSubscription, _dataSourceSubscription]);
   @override
-  get trafficLights => super.trafficLights..addAll([_canFetchData]);
+  List<ValueNotifier<bool>> get trafficLights =>
+      super.trafficLights..addAll([_canFetchData]);
   @override
-  get notifiers => super.notifiers
+  Set<ChangeNotifier> get notifiers => super.notifiers
     ..addAll(
         [_needsToRefresh, _needsToRefetch, _canFetchData, _alreadyFetchedData]);
   @override
-  get timers => super.timers..addAll([_timer]);
+  Set<Timer?> get timers => super.timers..addAll([_timer]);
 
   Timer? _timer;
 
+  @override
   @mustCallSuper
   void stateChanged(State state) {
     if (_hasSingleSource) {

@@ -45,6 +45,10 @@ abstract class UtilityBloc extends BaseCubit<UtilityState> {
 
   @override
   void stateChanged(nextState) {
+    _giveLock(nextState);
+  }
+
+  void _giveLock(UtilityState nextState) {
     if (!nextState.isLocked) {
       final listCount = _lockListeners.length;
       for (int i = 0; i < listCount; i++) {
@@ -63,6 +67,7 @@ abstract class UtilityBloc extends BaseCubit<UtilityState> {
   Future<void> awaitLock([bool? lockAfter]) {
     final completer = Completer<void>();
     _lockListeners.add(_LockListener(completer, lockAfter == true));
+    _giveLock(state);
     return completer.future;
   }
 
