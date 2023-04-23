@@ -13,12 +13,15 @@ mixin StreamInputMixin<Input, Output, State extends BlocState>
         InputSinkMixin<Input, Output, State>,
         SourcesMixin<Input, Output, State> {
   final _inputSubject = StreamController<Work>.broadcast();
+
   @override
   Stream<BlocState> get inputStream => _inputSubject.stream
       .shareValue()
       .where((event) => !event.isCancelled)
       .map((event) => event.state);
+
   bool get isSinkClosed => _inputSubject.isClosed;
+
   StreamSink<Work> get inputSink => _inputSubject.sink;
 
   @override

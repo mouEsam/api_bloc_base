@@ -25,6 +25,7 @@ abstract class DeviceInfo {
   }
 
   String get deviceType;
+
   String get deviceName;
 }
 

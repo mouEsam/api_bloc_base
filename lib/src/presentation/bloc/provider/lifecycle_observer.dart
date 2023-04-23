@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 
 abstract class LifecycleAware {
   void onResume();
+
   void onPause();
+
   void onDetach();
+
   void onInactive();
 }
 

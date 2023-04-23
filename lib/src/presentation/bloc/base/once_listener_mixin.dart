@@ -5,6 +5,7 @@ import 'package:rxdart/rxdart.dart';
 
 mixin OnceListenerMixin<Data> on WorkerMixin<Data> {
   Map<Type, Stream> get streamSources;
+
   Map<Type, int> _wasCalled = {};
   Map<Type, StreamSubscription> _subs = {};
 
@@ -17,6 +18,7 @@ mixin OnceListenerMixin<Data> on WorkerMixin<Data> {
   }
 
   bool _init = false;
+
   void setUpSourcesListeners() {
     if (_init) return;
     _init = true;

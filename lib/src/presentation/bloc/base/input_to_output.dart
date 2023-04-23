@@ -9,7 +9,6 @@ import 'work.dart';
 
 mixin OutputConverterMixin<Input, Output, State extends BlocState>
     on SourcesMixin<Input, Output, State> {
-
   @override
   @mustCallSuper
   Future<void> handleSourcesOutput(Work work) async {
@@ -51,6 +50,7 @@ mixin OutputConverterMixin<Input, Output, State extends BlocState>
 
   @mustCallSuper
   FutureOr<void> handleInjectedInput(Input input) {}
+
   @mustCallSuper
   FutureOr<void> handleConvertedOutput(Output output) {}
 

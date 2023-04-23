@@ -50,18 +50,14 @@ class BaseRestClient {
   static CacheOptions createCacheOptions(
       {CacheOptions? cacheOptions, CachePolicy? cachePolicy}) {
     return CacheOptions(
-      store: cacheOptions?.store ?? MemCacheStore(), // Required.
-      policy: cachePolicy ??
-          cacheOptions?.policy ??
-          CachePolicy.request, // Default. Requests first and caches response.
-      hitCacheOnErrorExcept: cacheOptions?.hitCacheOnErrorExcept ??
-          [
-            401,
-            403
-          ], // Optional. Returns a cached response on error if available but for statuses 401 & 403.
-      priority: cacheOptions?.priority ??
-          CachePriority
-              .normal, // Optional. Default. Allows 3 cache levels and ease cleanup.
+      store: cacheOptions?.store ?? MemCacheStore(),
+      // Required.
+      policy: cachePolicy ?? cacheOptions?.policy ?? CachePolicy.request,
+      // Default. Requests first and caches response.
+      hitCacheOnErrorExcept: cacheOptions?.hitCacheOnErrorExcept ?? [401, 403],
+      // Optional. Returns a cached response on error if available but for statuses 401 & 403.
+      priority: cacheOptions?.priority ?? CachePriority.normal,
+      // Optional. Default. Allows 3 cache levels and ease cleanup.
       maxStale: cacheOptions?.maxStale ??
           const Duration(
               days:
@@ -118,8 +114,8 @@ class BaseRestClient {
     }
     final progressController = StreamController<double>.broadcast();
     if (params != null) {
-      print("PARAMS ${Map.fromEntries(
-          params.toMap().entries.where((element) => element.value != null))}");
+      print(
+          "PARAMS ${Map.fromEntries(params.toMap().entries.where((element) => element.value != null))}");
     }
     cancelToken ??= CancelToken();
     extra ??= <String, dynamic>{};

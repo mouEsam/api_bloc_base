@@ -5,8 +5,11 @@ typedef _SourceType = BaseCubit<BlocState>;
 mixin StateHandlerMixin<Output, State extends BlocState>
     on StatefulBloc<Output, State> {
   bool get handleStatesSequentially => false;
+
   HandlerAction get defaultHandlerAction => HandlerAction.Handled;
+
   List<_SourceType> get triggers;
+
   late final List<StreamSubscription> _subscriptions;
 
   final Map<Type, List<_TriggerState>> _triggers = {};
@@ -32,6 +35,7 @@ mixin StateHandlerMixin<Output, State extends BlocState>
   }
 
   bool _init = false;
+
   void _initializeTriggers() {
     if (_init) {
       return;

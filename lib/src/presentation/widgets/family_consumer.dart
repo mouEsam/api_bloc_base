@@ -11,6 +11,7 @@ class FamilySeed<F extends Family> {
 
 abstract class FamilyReader {
   FamilySeed<F> call<F extends Family>();
+
   Bloc get<Arg, Bloc extends Cubit>(
     FamilySeed<Family<Arg, Bloc>> family,
     Arg arg, {

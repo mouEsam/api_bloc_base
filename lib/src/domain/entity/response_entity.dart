@@ -22,6 +22,7 @@ class Success extends ResponseEntity {
 
 class SuccessWithData<D> extends Success {
   final D data;
+
   const SuccessWithData(this.data, [String? message = '']) : super(message);
 
   @override
@@ -39,6 +40,7 @@ class Failure extends ResponseEntity {
 
 class ConversionFailure extends Failure {
   final Type convertedType;
+
   const ConversionFailure(String message, this.convertedType,
       [BaseErrors? errors])
       : super(message, errors);
@@ -49,7 +51,9 @@ class ConversionFailure extends Failure {
 
 class InternetFailure extends Failure {
   final DioError dioError;
+
   int? get statusCode => dioError.response?.statusCode;
+
   const InternetFailure(String message, this.dioError, [BaseErrors? errors])
       : super(message, errors);
 

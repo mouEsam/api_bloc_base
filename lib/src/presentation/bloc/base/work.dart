@@ -14,6 +14,7 @@ class Work {
   final CancellationState cancellationState;
 
   Work._(this._state, this.cancellationState);
+
   Work.start(this._state, [VoidCallback? onCancelled])
       : cancellationState = CancellationState._(onCancelled);
 

@@ -14,11 +14,17 @@ import 'state.dart';
 
 abstract class Sailor {
   GlobalKey<NavigatorState> get navKey;
+
   Compass get compass;
+
   Future<T?> pushDestructively<T>(String routeName, {args});
+
   Future<T?> push<T>(String routeName, {args});
+
   Future<void> goHome();
+
   Future<void> popNum(int routes);
+
   Future<void> popUntil(RoutePredicate withName);
 }
 
@@ -27,6 +33,7 @@ mixin SailorMixin implements Sailor {
   final CompassNavigatorObserver _compass = CompassNavigatorObserver();
 
   Compass get compass => _compass;
+
   NavigatorObserver get navigatorObserver => _compass;
 
   Future<GlobalKey<NavigatorState>> ensureInitialized() async {
@@ -75,8 +82,11 @@ abstract class SailorBloc extends BaseCubit<NavigationState> with SailorMixin {
   static const _localHost = "localhost";
 
   String get mainHost;
+
   String get localHost => _localHost;
+
   String get internalInitialRoute;
+
   String get internalMainRoute;
 
   late final StreamSubscription<NavigationState> _sub;
@@ -85,6 +95,7 @@ abstract class SailorBloc extends BaseCubit<NavigationState> with SailorMixin {
   String? _loadedLink;
 
   bool _mainPageLoaded = false;
+
   bool get mainPageLoaded => _mainPageLoaded;
 
   String get initialRoute => _loadedLink ?? internalInitialRoute;

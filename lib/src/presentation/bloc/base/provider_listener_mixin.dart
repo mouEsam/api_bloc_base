@@ -28,6 +28,7 @@ mixin ProviderListenerMixin<Input, Output, State extends BlocState>
   }
 
   bool _init = false;
+
   void setupProviderListener() {
     if (_init) return;
     _init = true;

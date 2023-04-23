@@ -71,5 +71,6 @@ class LocalizedString extends Equatable {
 
   factory LocalizedString.fromJson(Map<String, dynamic> json) =>
       _$LocalizedStringFromJson(json);
+
   Map<String, dynamic> toJson() => _$LocalizedStringToJson(this);
 }

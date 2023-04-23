@@ -65,6 +65,8 @@ abstract class StatefulBloc<Data, State extends BlocState>
   }
 
   State createLoadingState();
+
   State createLoadedState(Data data);
+
   State createErrorState(ResponseEntity message);
 }

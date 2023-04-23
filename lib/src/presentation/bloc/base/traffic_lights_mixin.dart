@@ -9,12 +9,14 @@ mixin TrafficLightsMixin<State> on BaseCubit<State>, Initializable {
   final ValueNotifier<bool> isGreen = ValueNotifier(true);
 
   late final Listenable _singleTrafficLights;
+
   bool get lastTrafficLightsValue => isGreen.value;
 
   List<ValueNotifier<bool>> get trafficLights => [];
 
   @override
   get notifiers => super.notifiers..addAll([...trafficLights, isGreen]);
+
   bool get _trafficLightsValue {
     return trafficLights.every((element) => element.value);
   }
@@ -28,6 +30,7 @@ mixin TrafficLightsMixin<State> on BaseCubit<State>, Initializable {
   }
 
   bool _init = false;
+
   void setupTrafficLights() {
     if (_init) return;
     _init = true;

@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
 import 'route.dart';
-import 'screen.dart';
 
 class MaterialPageResultRoute<T, A extends RouteArguments,
         Route extends RouteInfo<T, A>> extends MaterialPageRoute<T>
@@ -131,10 +131,13 @@ class CupertinoDialogResultRoute<T, A extends RouteArguments,
 abstract class ScreenRoute<T, A extends RouteArguments>
     implements ModalRoute<T> {
   Uri get uri;
+
   A get arguments;
+
   RouteInfo<T, A> get route;
 
   void setResult(T? result, {bool? updateState});
+
   bool canBeResult(dynamic data);
 
   static ScreenRoute<T, A>? maybeOf<T, A extends RouteArguments>(
@@ -158,6 +161,7 @@ mixin ScreenRouteMixin<T, A extends RouteArguments> on ModalRoute<T>
   bool canBeResult(dynamic data) => route.canBeResult(data);
 
   T? _result;
+
   @override
   void setResult(T? result, {bool? updateState}) {
     _result = result;

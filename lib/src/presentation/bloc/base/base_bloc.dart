@@ -12,16 +12,22 @@ abstract class BaseCubit<State> extends Cubit<State> implements Initializable {
   }
 
   Stream<State> get coldStream => super.stream;
+
   Stream<State> get hotStream => this.stream;
 
   @override
   get stream => coldStream.shareValueSeeded(state).map((e) => state);
 
   Set<ChangeNotifier> get notifiers => {};
+
   Set<Timer?> get timers => {};
+
   Set<StreamSubscription?> get subscriptions => {};
+
   Set<StreamSink> get sinks => {};
+
   Set<Subject> get subjects => {};
+
   Set<Closable> get closables => {};
 
   @override

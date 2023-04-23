@@ -6,6 +6,7 @@ import 'package:http_parser/http_parser.dart';
 
 class JsonTransformer extends DefaultTransformer {
   final IJsonConvertor _convertor;
+
   JsonTransformer(this._convertor)
       : super(jsonDecodeCallback: _convertor.deserialize);
 

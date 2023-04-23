@@ -31,12 +31,17 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   final Duration? retryInterval = const Duration(seconds: 30);
 
   Result<Either<ResponseEntity, Input>>? get singleDataSource;
+
   Either<ResponseEntity, Stream<Input>>? get dataStreamSource;
+
   Stream<Either<ResponseEntity, Input>>? get streamDataSource;
 
   bool get enableRefresh;
+
   bool get enableRetry;
+
   bool get refreshOnActive;
+
   bool get refreshOnAppActive;
 
   StreamSubscription<Either<ResponseEntity, Input>>? _streamSourceSubscription;
@@ -46,13 +51,16 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   @override
   Set<StreamSubscription?> get subscriptions => super.subscriptions
     ..addAll([_streamSourceSubscription, _dataSourceSubscription]);
+
   @override
   List<ValueNotifier<bool>> get trafficLights =>
       super.trafficLights..addAll([_canFetchData]);
+
   @override
   Set<ChangeNotifier> get notifiers => super.notifiers
     ..addAll(
         [_needsToRefresh, _needsToRefetch, _canFetchData, _alreadyFetchedData]);
+
   @override
   Set<Timer?> get timers => super.timers..addAll([_timer]);
 

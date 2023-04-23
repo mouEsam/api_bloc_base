@@ -31,6 +31,7 @@ abstract class BaseRepository {
   BaseResponseConverter get converter;
 
   String get defaultError => 'Error';
+
   String get internetError => 'Internet Error';
 
   Result<z.Either<ResponseEntity, S>>

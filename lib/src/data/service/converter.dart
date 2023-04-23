@@ -4,11 +4,17 @@ import 'package:collection/collection.dart' show IterableExtension;
 
 abstract class Converter<IN, OUT> {
   const Converter();
+
   Type get inputType => IN;
+
   Type get outputType => OUT;
+
   bool acceptsInput(Type input) => input == inputType;
+
   bool returnsOutput(Type output) => output == outputType;
+
   List<Converter> get converters;
+
   OUT? convert(IN initialData);
 
   BaseModelConverter<I, O>? getConverter<I, O>() {

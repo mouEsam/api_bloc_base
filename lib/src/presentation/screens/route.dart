@@ -53,6 +53,7 @@ abstract class RouteName {
 class AutoName extends RouteName {
   final Iterable<Type>? types;
   final Map<Pattern, String> replacements;
+
   const AutoName._({this.types, this.replacements = const {}}) : super._();
 
   @override
@@ -142,6 +143,7 @@ class AutoNameWithOptions extends RouteName {
 
 class ManualName extends RouteName {
   final String name;
+
   const ManualName(this.name) : super._();
 
   @override
@@ -1016,6 +1018,7 @@ class RouteZeroArguments implements RouteArguments {
 
 class RouteZeroArgumentsFactory implements ArgumentFactory<RouteZeroArguments> {
   const RouteZeroArgumentsFactory();
+
   @override
   RouteZeroArguments fromMap(Map<String, dynamic> map) {
     return RouteInfo.noArgs;
@@ -1025,7 +1028,9 @@ class RouteZeroArgumentsFactory implements ArgumentFactory<RouteZeroArguments> {
 class RouteArgument<X> implements RouteArguments {
   final X arg;
   final String name;
+
   const RouteArgument(this.arg, {this.name = 'arg'});
+
   @override
   Map<String, dynamic> toJson() {
     return {name: arg};
@@ -1034,7 +1039,9 @@ class RouteArgument<X> implements RouteArguments {
 
 class RouteArgumentFactory<X> implements ArgumentFactory<RouteArgument<X>> {
   final String name;
+
   const RouteArgumentFactory({this.name = 'arg'});
+
   @override
   RouteArgument<X> fromMap(Map<String, dynamic> map) {
     return RouteArgument(map[name] as X);
@@ -1052,7 +1059,9 @@ abstract class JsonArgument<T> implements RouteArguments, Json {}
 class JsonArgumentFactory<A extends JsonArgument<A>>
     implements ArgumentFactory<A> {
   final FromJsonFactory<A> creator;
+
   const JsonArgumentFactory(this.creator);
+
   @override
   A fromMap(Map<String, dynamic> map) {
     return creator(map);
@@ -1061,7 +1070,9 @@ class JsonArgumentFactory<A extends JsonArgument<A>>
 
 class SimpleArgument<A extends Json> implements RouteArguments {
   final A arg;
+
   const SimpleArgument(this.arg);
+
   @override
   Map<String, dynamic> toJson() {
     return arg.toJson();
@@ -1071,7 +1082,9 @@ class SimpleArgument<A extends Json> implements RouteArguments {
 class SimpleArgumentFactory<A extends Json>
     implements ArgumentFactory<SimpleArgument<A>> {
   final A Function(Map<String, dynamic> json) creator;
+
   const SimpleArgumentFactory(this.creator);
+
   @override
   SimpleArgument<A> fromMap(Map<String, dynamic> map) {
     return SimpleArgument<A>(creator(map));
@@ -1080,7 +1093,9 @@ class SimpleArgumentFactory<A extends Json>
 
 class MapArgument implements RouteArguments {
   final Map<String, dynamic> arg;
+
   const MapArgument(this.arg);
+
   @override
   Map<String, dynamic> toJson() {
     return arg;
@@ -1089,6 +1104,7 @@ class MapArgument implements RouteArguments {
 
 class RouteMapArgumentFactory implements ArgumentFactory<MapArgument> {
   const RouteMapArgumentFactory();
+
   @override
   MapArgument fromMap(Map<String, dynamic> map) {
     return MapArgument(map);

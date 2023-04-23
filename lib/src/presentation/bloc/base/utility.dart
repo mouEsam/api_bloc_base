@@ -14,6 +14,7 @@ class UtilityState extends Equatable {
   const UtilityState.initial()
       : isWorking = false,
         isLocked = false;
+
   const UtilityState(this.isLocked, this.isWorking);
 
   UtilityState copyWith({
@@ -72,6 +73,7 @@ abstract class UtilityBloc extends BaseCubit<UtilityState> {
   }
 
   bool get isFree => !state.isWorking;
+
   bool get isWorking => state.isWorking;
 
   void incrementWorkers([bool? locked]) {

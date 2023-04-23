@@ -7,8 +7,11 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
         SourcesMixin<Input, Output, State>,
         OutputConverterMixin<Input, Output, State> {
   HandlerAction get defaultHandlerAction => HandlerAction.Handled;
+
   bool get handleTriggersSequentially => true;
+
   List<_TriggerType> get triggers;
+
   late final List<StreamSubscription> _subscriptions;
 
   final Map<Type, List<_TriggerState>> _triggers = {};
@@ -34,6 +37,7 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
   }
 
   bool _init = false;
+
   void _initializeTriggers() {
     if (_init) {
       return;

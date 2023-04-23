@@ -15,8 +15,11 @@ class _NavEvent {
 
 abstract class Compass {
   Route? get currentRoute;
+
   FutureOr<Route> awaitRoute(RoutePredicate predicate);
+
   FutureOr<Route> awaitAdded(RoutePredicate predicate);
+
   FutureOr<Route> awaitRemoved(RoutePredicate predicate);
 }
 

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:api_bloc_base/src/presentation/bloc/base/input_to_output.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
-import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
 import 'package:equatable/equatable.dart';
 
 import 'base_bloc.dart';
@@ -25,6 +24,7 @@ class _TriggerState<T> {
   Completer<bool> _handle = Completer()..complete(false);
   bool _isHandled = false;
   bool _isBeingHandled = false;
+
   _TriggerState(this.data) : type = data.runtimeType;
 
   FutureOr<bool> get isHandled => _handle.future;
@@ -108,16 +108,19 @@ extension on HandlerAction? {
         HandlerAction.RemoveEventRemoveHandler,
         HandlerAction.RemoveEventDeactivateHandler,
       ].contains(this);
+
   bool get isHandled => [
         HandlerAction.Handled,
         HandlerAction.HandledRemoveHandler
       ].contains(this);
+
   bool get isRemoveHandler => [
         HandlerAction.RemoveHandler,
         HandlerAction.RemoveEventRemoveHandler,
         HandlerAction.HandledRemoveHandler,
         HandlerAction.UnhandledRemoveHandler
       ].contains(this);
+
   bool get isDeactivateHandler => [
         HandlerAction.DeactivateHandler,
         HandlerAction.RemoveEventDeactivateHandler,
@@ -154,7 +157,7 @@ class _HandlerWrapper<Source, Data> {
   static _HandlerWrapper<Source, Data> wrap<Source, Data>(
     Type trigger,
     _Handler<Source, Data> _handler,
-      bool Function(dynamic stateData) _canHandle,
+    bool Function(dynamic stateData) _canHandle,
   ) {
     final key = _HandlerKey(Source, trigger);
     return _HandlerWrapper._(key, _handler, _canHandle);

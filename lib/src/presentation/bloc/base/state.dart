@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 
 abstract class BlocState extends Equatable {
   const BlocState();
+
   @override
   get props => [];
 }
@@ -13,7 +14,9 @@ class Loading extends BlocState {
 
 class Loaded<T> extends BlocState {
   final T data;
+
   const Loaded(this.data);
+
   @override
   get props => [data];
 }
@@ -28,7 +31,9 @@ mixin UrgentStateMixin on BlocState implements UrgentState {
 
 class Error extends BlocState {
   final ResponseEntity response;
+
   const Error(this.response);
+
   @override
   get props => [response];
 }

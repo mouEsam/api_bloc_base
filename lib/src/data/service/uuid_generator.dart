@@ -6,6 +6,7 @@ class UuidGenerator {
   final _uuid = const Uuid();
 
   String timeBasedUuid() => _uuid.v4();
+
   String randomUuid() => _uuid.v1();
 
   String forNamespace(String namespace) =>

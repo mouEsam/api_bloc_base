@@ -3,7 +3,7 @@ export "credentials.dart";
 export "entity.dart";
 export "enum.dart";
 export "localized_string.dart";
+export 'locked_list.dart';
 export "paginated_input.dart";
 export "response_entity.dart";
 export 'token.dart';
-export 'locked_list.dart';

@@ -4,6 +4,7 @@ import 'package:dartz/dartz.dart';
 
 mixin UserProfileUtilsMixin<T extends BaseProfile<T>> on BaseRepository {
   UserDefaults get userDefaults;
+
   String get noAccountSavedInError;
 
   Future<bool> get _wasSaved async {

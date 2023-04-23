@@ -11,11 +11,16 @@ mixin UserDependantMixin<Input, Output, State extends BlocState,
         Profile extends BaseProfile<Profile>>
     on IndependenceMixin<Input, Output, State> {
   DateTime? lastLogin;
+
   BaseUserBloc<Profile> get userBloc;
+
   Profile? get safeCurrentUser => userBloc.currentUser;
+
   Profile get currentUser => safeCurrentUser!;
   String? authToken;
+
   get userId => safeCurrentUser?.id;
+
   String get requireAuthToken =>
       userBloc.currentUser?.accessToken ?? authToken!;
   StreamSubscription? _subscription;
@@ -25,6 +30,7 @@ mixin UserDependantMixin<Input, Output, State extends BlocState,
 
   @override
   get trafficLights => super.trafficLights..addAll([userIsGreen]);
+
   @override
   get subscriptions => super.subscriptions..addAll([_subscription]);
 
@@ -39,6 +45,7 @@ mixin UserDependantMixin<Input, Output, State extends BlocState,
   }
 
   bool _init = false;
+
   void setupUserListener() {
     if (_init) return;
     _init = true;

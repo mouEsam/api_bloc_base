@@ -34,6 +34,7 @@ mixin ListenableMixin<BlocState> on TrafficLightsMixin<BlocState> {
 
   @override
   get notifiers => super.notifiers..add(_isListenedTo);
+
   @override
   get trafficLights => super.trafficLights..add(_isListenedTo);
 

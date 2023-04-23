@@ -23,6 +23,7 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output,
   Box<InputParameter> _inputParameter = Box(null);
 
   InputParameter get inputParameter => _inputParameter.data;
+
   set inputParameter(InputParameter? inputParameter) =>
       _inputParameter.data = inputParameter;
 
@@ -66,6 +67,7 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output,
   }
 
   bool _init = false;
+
   void setupListenableParametersDependence() {
     if (_init) return;
     _init = true;

@@ -10,15 +10,19 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
   const BaseAuthRepository(this.converter, this.userDefaults);
 
   BaseResponseConverter<BaseUserResponse, T> get refreshConverter => converter;
+
   BaseResponseConverter<BaseUserResponse, T> get autoLoginConverter =>
       converter;
 
   RequestConversionOperation<BaseUserResponse, T> internalLogin(
       BaseAuthParams params);
+
   RequestConversionOperation<BaseUserResponse, T>? internalRefreshToken(
       T account);
+
   RequestConversionOperation<BaseUserResponse, T>? internalRefreshProfile(
       T account);
+
   RequestResult<BaseApiResponse>? internalLogout(T account);
 
   Result<Either<ResponseEntity, T>> login(BaseAuthParams params) {

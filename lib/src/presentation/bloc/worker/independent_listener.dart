@@ -17,7 +17,6 @@ abstract class IndependentListener<Input, Output>
         InputSinkWorkerMixin<Input, Output>,
         StreamInputWorkerMixin<Input, Output>,
         IndependenceWorkerMixin<Input, Output> {
-
   @override
   final Result<Either<ResponseEntity, Input>>? singleDataSource;
   @override

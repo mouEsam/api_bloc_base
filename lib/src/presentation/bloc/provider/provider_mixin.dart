@@ -17,9 +17,13 @@ mixin ProviderMixin<Data> on StatefulProviderBloc<Data> implements Refreshable {
   final BehaviorSubject<Data?> _dataSubject = BehaviorSubject<Data?>();
   var _dataFuture = Completer<Data?>();
   var _stateFuture = Completer<ProviderState<Data>>();
+
   Future<Data?> get dataFuture => _dataFuture.future;
+
   Future<ProviderState<Data>> get stateFuture => _stateFuture.future;
+
   bool get hasData => latestData != null;
+
   Data? get latestData => _dataSubject.valueOrNull;
 
   Stream<Data?> get dataStream =>
@@ -34,6 +38,7 @@ mixin ProviderMixin<Data> on StatefulProviderBloc<Data> implements Refreshable {
   }
 
   FutureOr<void> refreshData();
+
   FutureOr<void> refetchData();
 
   @override

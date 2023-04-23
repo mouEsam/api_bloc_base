@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 class ValueListener<T> extends StatelessWidget {
   final ValueListenable<T> value;

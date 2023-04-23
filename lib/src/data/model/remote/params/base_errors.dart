@@ -15,5 +15,6 @@ class BaseErrors {
 
   factory BaseErrors.fromJson(Map<String, dynamic> json) =>
       _$BaseErrorsFromJson(json);
+
   Map<String, dynamic> toJson() => _$BaseErrorsToJson(this);
 }

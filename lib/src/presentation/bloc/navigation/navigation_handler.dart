@@ -7,6 +7,7 @@ import 'action_state.dart';
 
 class NavigationHandler extends BaseCubit<Loaded<ActionState>> {
   final Sailor _sailor;
+
   Compass get compass => _sailor.compass;
 
   NavigationHandler(this._sailor) : super(Loaded(NoActionState()));

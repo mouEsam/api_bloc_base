@@ -1,6 +1,7 @@
 import 'dart:io';
-import 'package:http_parser/http_parser.dart';
+
 import 'package:equatable/equatable.dart';
+import 'package:http_parser/http_parser.dart';
 
 class UploadFile extends Equatable {
   final String? fileName;

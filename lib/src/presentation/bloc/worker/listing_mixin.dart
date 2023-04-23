@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:api_bloc_base/src/presentation/bloc/worker/listener_bloc.dart';
 import 'package:rxdart/rxdart.dart';
+
 import '../base/state.dart';
 
 abstract class FilterType {}
@@ -26,17 +27,23 @@ mixin ListingMixin<Input, Output, Filtering extends FilterType>
   }
 
   final _filterSubject = BehaviorSubject<Filtering?>()..value = null;
+
   Stream<Filtering?> get filterStream => _filterSubject.shareValue();
+
   Filtering? get filter => _filterSubject.valueOrNull;
+
   set filter(Filtering? filter) {
     _filterSubject.add(filter);
   }
 
   final _querySubject = BehaviorSubject<String>()..value = '';
+
   Stream<String> get queryStream => _querySubject
       .shareValue()
       .debounceTime(Duration(milliseconds: searchDelayMillis));
+
   String get query => _querySubject.value;
+
   set query(String query) {
     _querySubject.add(query);
   }

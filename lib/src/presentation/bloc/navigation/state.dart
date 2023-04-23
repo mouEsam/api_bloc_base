@@ -11,6 +11,7 @@ abstract class NavigationState extends Equatable implements Type {
 
   @override
   get stringify => true;
+
   @override
   get props => [];
 }

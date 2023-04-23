@@ -10,8 +10,11 @@ abstract class Enum<E extends core.Enum> extends Entity {
   late final E? _value;
 
   String get name => _name;
+
   E? get value => _value;
+
   E get requireValue => _value as E;
+
   bool get exists => _value != null;
 
   Enum(E value)
@@ -51,7 +54,9 @@ mixin ClosedEnumMixin<E extends core.Enum> on Enum<E> {
 
 extension EnumName on core.Enum {
   String get name => EnumToString.convertToString(this);
+
   String get key => name;
+
   String get shortName => '${key}_SHORT';
 }
 

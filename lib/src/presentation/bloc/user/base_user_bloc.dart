@@ -15,8 +15,11 @@ abstract class BaseUserBloc<T extends BaseProfile<T>>
   final Duration? refreshInterval;
   final BaseAuthRepository<T> authRepository;
   final BehaviorSubject<T?> _userAccount = BehaviorSubject<T?>();
+
   Stream<T?> get userStream => _userAccount.shareValue();
+
   StreamSink<T?> get userSink => _userAccount.sink;
+
   T? get currentUser => _userAccount.valueOrNull;
 
   Timer? _tokenRefreshTimer;
@@ -32,6 +35,7 @@ abstract class BaseUserBloc<T extends BaseProfile<T>>
 
   @override
   get timers => {_tokenRefreshTimer};
+
   @override
   get subjects => {_userAccount};
 

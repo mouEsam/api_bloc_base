@@ -61,12 +61,15 @@ class ValueNotifierSource<T> extends ValueSource<T> with _ValueEditor<T> {
 
 mixin _ValueSource<T> implements Closable {
   ValueListenable<T> get _listenable;
+
   T get value => _listenable.value;
+
   void close();
 }
 
 mixin _ValueEditor<T> {
   ValueNotifier<T> get _listenable;
+
   set value(T value) {
     _listenable.value = value;
   }

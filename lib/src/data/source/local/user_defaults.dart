@@ -12,6 +12,7 @@ class UserDefaults {
   final storage = const FlutterSecureStorage();
   final FutureOr<BaseProfile> Function(Map<String, dynamic> json)
       profileFactory;
+
   const UserDefaults(this.profileFactory);
 
   Future<void> setUserToken(String? userToken) {

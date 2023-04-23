@@ -10,8 +10,11 @@ class ProviderWrapper<Output> extends StatefulProviderBloc<Output>
     with ProviderMixin<Output> {
   var _dataFuture = Completer<Output?>();
   var _stateFuture = Completer<ProviderState<Output>>();
+
   Future<Output?> get dataFuture => _dataFuture.future;
+
   Future<ProviderState<Output>> get stateFuture => _stateFuture.future;
+
   bool get hasData => _latestData != null;
   Output? _latestData;
 

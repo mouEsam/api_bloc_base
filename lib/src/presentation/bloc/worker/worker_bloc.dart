@@ -25,8 +25,11 @@ class WorkerBloc<Output> extends StatefulWorkerBloc<Output>
   Box<Output>? _output;
 
   bool get hasData => _output != null;
+
   Output get currentData => _output!.data;
+
   Output? get safeData => _output?.nullableData;
+
   set currentData(Output data) {
     _output = Box(data);
     emitCurrent();

@@ -7,6 +7,7 @@ mixin VisibilityMixin<State> on TrafficLightsMixin<State> {
   bool get isVisible => _isVisible.value;
 
   get notifiers => super.notifiers..add(_isVisible);
+
   get trafficLights => super.trafficLights..add(_isVisible);
 
   void setVisible(bool visible) {

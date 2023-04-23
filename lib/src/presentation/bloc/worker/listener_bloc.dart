@@ -21,10 +21,12 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
   late final StreamSubscription _outputSubscription;
 
   final _outputSubject = StreamController<Work>.broadcast();
+
   Stream<BlocState> get outputStream => _outputSubject.stream
       .shareValue()
       .where((event) => !event.isCancelled)
       .map((event) => event.state);
+
   StreamSink<Work> get _outputSink => _outputSubject.sink;
 
   // Stream<provider.ProviderState<Output>> get providerStream =>
@@ -42,6 +44,7 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
   //         .asBroadcastStream(onCancel: (sub) => sub.cancel()));
 
   get sinks => super.sinks..addAll([_outputSubject]);
+
   get subscriptions => super.subscriptions..addAll([_outputSubscription]);
 
   final List<Stream<BlocState>> sources;
@@ -58,6 +61,7 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
   }
 
   bool _init = false;
+
   void setupOutputStream() {
     if (_init) return;
     _init = true;

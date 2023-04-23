@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 abstract class ActionState extends Equatable {
   const ActionState();
+
   @override
   get props => [];
 }
@@ -16,7 +17,9 @@ abstract class ActionDoneState extends ActionState {
 
 class SimpleActionDoneState<R> extends ActionDoneState {
   final R? result;
+
   const SimpleActionDoneState([this.result]) : super();
+
   @override
   get props => [result];
 }
@@ -24,6 +27,7 @@ class SimpleActionDoneState<R> extends ActionDoneState {
 abstract class NavigationActionState<S extends ActionDoneState, R>
     extends ActionState {
   final String routeName;
+
   dynamic get args => null;
   final bool Function(S) doneState;
   final R? Function(S) extractResult;
@@ -36,6 +40,7 @@ abstract class NavigationActionState<S extends ActionDoneState, R>
     this.extractResult, {
     this.returnWhenDone = true,
   }) : super();
+
   @override
   get props => [routeName, args, doneState, extractResult, returnWhenDone];
 }

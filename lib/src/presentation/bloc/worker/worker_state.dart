@@ -40,6 +40,7 @@ class LoadedState<T> extends WorkerState<T> implements Loaded<T> {
 
 abstract class Operation implements UrgentState {
   String get operationTag;
+
   bool get silent;
 }
 
@@ -113,6 +114,7 @@ class FailedOperationState<T> extends LoadedState<T> with OperationMixin {
   }
 
   String? get errorMessage => failure?.message;
+
   BaseErrors? get errors => failure?.errors;
 
   @override
