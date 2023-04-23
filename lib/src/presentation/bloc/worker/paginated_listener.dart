@@ -13,30 +13,31 @@ import 'pagination_mixin.dart';
 abstract class PaginatedListener<Paginated extends PaginatedInput<Output>,
         Output> extends IndependentListener<Paginated, PaginatedOutput<Output>>
     with PaginationMixin<Paginated, Output> {
-  PaginatedListener(
-      {List<Stream<BlocState>> sources = const [],
-      List<ProviderBloc> providers = const [],
-      Result<Either<ResponseEntity, Paginated>>? singleDataSource,
-      Either<ResponseEntity, Stream<Paginated>>? dataStreamSource,
-      Stream<Either<ResponseEntity, Paginated>>? streamDataSource,
-      LifecycleObserver? appLifecycleObserver,
-      bool enableRefresh = false,
-      bool refreshOnActive = false,
-      bool refreshOnAppActive = false,
-      bool enableRetry = true,
-      bool fetchOnCreate = true,
-      PaginatedOutput<Output>? currentData})
-      : super(
-            sources: sources,
-            providers: providers,
-            singleDataSource: singleDataSource,
-            dataStreamSource: dataStreamSource,
-            streamDataSource: streamDataSource,
-            appLifecycleObserver: appLifecycleObserver,
-            enableRefresh: enableRefresh,
-            refreshOnActive: refreshOnActive,
-            refreshOnAppActive: refreshOnAppActive,
-            enableRetry: enableRetry,
-            fetchOnCreate: fetchOnCreate,
-            currentData: currentData);
+  PaginatedListener({
+    List<Stream<BlocState>> sources = const [],
+    List<ProviderBloc> providers = const [],
+    Result<Either<ResponseEntity, Paginated>>? singleDataSource,
+    Either<ResponseEntity, Stream<Paginated>>? dataStreamSource,
+    Stream<Either<ResponseEntity, Paginated>>? streamDataSource,
+    LifecycleObserver? appLifecycleObserver,
+    bool enableRefresh = false,
+    bool refreshOnActive = false,
+    bool refreshOnAppActive = false,
+    bool enableRetry = true,
+    bool fetchOnCreate = true,
+    PaginatedOutput<Output>? currentData,
+  }) : super(
+          sources: sources,
+          providers: providers,
+          singleDataSource: singleDataSource,
+          dataStreamSource: dataStreamSource,
+          streamDataSource: streamDataSource,
+          appLifecycleObserver: appLifecycleObserver,
+          enableRefresh: enableRefresh,
+          refreshOnActive: refreshOnActive,
+          refreshOnAppActive: refreshOnAppActive,
+          enableRetry: enableRetry,
+          fetchOnCreate: fetchOnCreate,
+          currentData: currentData,
+        );
 }

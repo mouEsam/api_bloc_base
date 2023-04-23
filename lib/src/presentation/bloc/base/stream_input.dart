@@ -13,6 +13,7 @@ mixin StreamInputMixin<Input, Output, State extends BlocState>
         InputSinkMixin<Input, Output, State>,
         SourcesMixin<Input, Output, State> {
   final _inputSubject = StreamController<Work>.broadcast();
+  @override
   Stream<BlocState> get inputStream => _inputSubject.stream
       .shareValue()
       .where((event) => !event.isCancelled)
@@ -21,7 +22,7 @@ mixin StreamInputMixin<Input, Output, State extends BlocState>
   StreamSink<Work> get inputSink => _inputSubject.sink;
 
   @override
-  get sinks => super.sinks..addAll([_inputSubject]);
+  Set<StreamSink> get sinks => super.sinks..addAll([_inputSubject]);
 
   @override
   void handleInput(Work input) {

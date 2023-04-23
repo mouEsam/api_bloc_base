@@ -13,6 +13,7 @@ abstract class Converter<IN, OUT> {
 
   BaseModelConverter<I, O>? getConverter<I, O>() {
     final converter = converters
+        .cast<Converter>()
         .followedBy([this])
         .whereType<BaseModelConverter<I, O>>()
         .firstOrNull;

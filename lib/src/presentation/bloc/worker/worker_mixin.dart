@@ -18,17 +18,15 @@ class _Work {
   final bool announceLoading;
   final bool emitLoading;
 
-  const _Work(
-    this.loadingMessage,
-    this.cancelToken,
-    this.progress,
-    this.emitLoading,
-    this.announceLoading,
-  );
+  const _Work(this.loadingMessage,
+      this.cancelToken,
+      this.progress,
+      this.emitLoading,
+      this.announceLoading,);
 }
 
 mixin WorkerMixin<Output>
-    on StatefulWorkerBloc<Output>, TrafficLightsWorkerMixin<Output> {
+on StatefulWorkerBloc<Output>, TrafficLightsWorkerMixin<Output> {
   static const _DEFAULT_OPERATION = '_DEFAULT_OPERATION';
   final ValueNotifier<bool> _isNotOperation = ValueNotifier(true);
 
@@ -45,6 +43,7 @@ mixin WorkerMixin<Output>
   get notifiers => super.notifiers..add(_isNotOperation);
 
   Box<BlocState> _nextState = Box();
+
   void emitState(BlocState state) {
     if ((state is UrgentState && state.isUrgent) || lastTrafficLightsValue) {
       if (state is WorkerState<Output>) {
@@ -121,16 +120,16 @@ mixin WorkerMixin<Output>
 
   Future<T?> handleDataOperation<T>(Result<Either<ResponseEntity, T>> result,
       {String? loadingMessage,
-      String? successMessage,
-      bool announceFailure = true,
-      bool announceSuccess = true,
-      bool announceLoading = true,
-      bool emitFailure = true,
-      bool emitSuccess = true,
-      bool emitLoading = true,
-      String operationTag = _DEFAULT_OPERATION,
-      bool Function(ResponseEntity response, String tag)?
-          handleResponse}) async {
+        String? successMessage,
+        bool announceFailure = true,
+        bool announceSuccess = true,
+        bool announceLoading = true,
+        bool emitFailure = true,
+        bool emitSuccess = true,
+        bool emitLoading = true,
+        String operationTag = _DEFAULT_OPERATION,
+        bool Function(ResponseEntity response, String tag)?
+        handleResponse,}) async {
     startOperation(loadingMessage,
         cancelToken: result.cancelToken,
         progress: result.progress,
@@ -139,7 +138,7 @@ mixin WorkerMixin<Output>
         operationTag: operationTag);
     final future = await result.value;
     return future.fold<T?>(
-      (l) {
+          (l) {
         bool? handled = handleResponse?.call(l, operationTag);
         if (handled == true) {
           removeOperation(operationTag: operationTag);
@@ -153,7 +152,7 @@ mixin WorkerMixin<Output>
         }
         return null;
       },
-      (r) {
+          (r) {
         successfulOperation(
           SuccessWithData(r, successMessage),
           emitSuccess: emitSuccess,
@@ -167,14 +166,14 @@ mixin WorkerMixin<Output>
 
   Future<Operation?> handleOperation(Result<ResponseEntity> result,
       {String? loadingMessage,
-      String? successMessage,
-      bool announceLoading = true,
-      bool announceFailure = true,
-      bool emitLoading = true,
-      bool emitFailure = true,
-      bool announceSuccess = true,
-      bool emitSuccess = true,
-      String operationTag = _DEFAULT_OPERATION}) async {
+        String? successMessage,
+        bool announceLoading = true,
+        bool announceFailure = true,
+        bool emitLoading = true,
+        bool emitFailure = true,
+        bool announceSuccess = true,
+        bool emitSuccess = true,
+        String operationTag = _DEFAULT_OPERATION}) async {
     startOperation(loadingMessage,
         cancelToken: result.cancelToken,
         progress: result.progress,
@@ -190,8 +189,7 @@ mixin WorkerMixin<Output>
         operationTag: operationTag);
   }
 
-  Operation? handleResponse(
-    ResponseEntity l, {
+  Operation? handleResponse(ResponseEntity l, {
     String operationTag = _DEFAULT_OPERATION,
     Function()? retry,
     bool announceFailure = true,
@@ -220,10 +218,10 @@ mixin WorkerMixin<Output>
 
   void startOperation(String? message,
       {CancelToken? cancelToken,
-      Stream<double>? progress,
-      bool announceLoading = true,
-      bool emitLoading = true,
-      String operationTag = _DEFAULT_OPERATION}) {
+        Stream<double>? progress,
+        bool announceLoading = true,
+        bool emitLoading = true,
+        String operationTag = _DEFAULT_OPERATION}) {
     message ??= defaultLoadingMessage;
     _operationStack[operationTag] = _Work(
       message,
@@ -250,8 +248,7 @@ mixin WorkerMixin<Output>
     checkOperations();
   }
 
-  Operation successfulOperation<R>(
-    Success success, {
+  Operation successfulOperation<R>(Success success, {
     bool announceSuccess = true,
     bool emitSuccess = true,
     String operationTag = _DEFAULT_OPERATION,
@@ -270,10 +267,10 @@ mixin WorkerMixin<Output>
 
   FailedOperationState failedOperationMessage(String? message,
       {bool announceFailure = true,
-      bool emitFailure = true,
-      BaseErrors? errors,
-      Function()? retry,
-      String operationTag = _DEFAULT_OPERATION}) {
+        bool emitFailure = true,
+        BaseErrors? errors,
+        Function()? retry,
+        String operationTag = _DEFAULT_OPERATION}) {
     final op = FailedOperationState.message(currentData,
         errorMessage: message,
         operationTag: operationTag,
@@ -286,9 +283,9 @@ mixin WorkerMixin<Output>
 
   FailedOperationState failedOperation(Failure? failure,
       {bool announceFailure = true,
-      bool emitFailure = true,
-      Function()? retry,
-      String operationTag = _DEFAULT_OPERATION}) {
+        bool emitFailure = true,
+        Function()? retry,
+        String operationTag = _DEFAULT_OPERATION}) {
     final op = FailedOperationState(currentData,
         silent: !announceFailure,
         failure: failure,

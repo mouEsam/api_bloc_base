@@ -12,12 +12,13 @@ abstract class Paginated<T> {
 }
 
 class SimplePaginated<T> extends Equatable implements Paginated<T> {
+  @override
   final T item;
 
   const SimplePaginated(this.item);
 
   @override
-  get props => [item];
+  List<Object?> get props => [item];
 }
 
 abstract class PaginatedInput<T> extends Equatable {
@@ -28,7 +29,7 @@ abstract class PaginatedInput<T> extends Equatable {
   const PaginatedInput(this.input, this.nextUrl, this.currentPage);
 
   @override
-  get props => [this.input, this.nextUrl, this.currentPage];
+  List<Object?> get props => [input, nextUrl, currentPage];
 }
 
 class PaginatedOutput<T> extends Equatable {
@@ -36,7 +37,7 @@ class PaginatedOutput<T> extends Equatable {
   final Paginated<T> _data;
   final bool isThereMore;
   final int currentPage;
-  final int lastPage;
+  final int? lastPage;
 
   T get page => _data.item;
 
@@ -59,12 +60,12 @@ class PaginatedOutput<T> extends Equatable {
   }
 
   @override
-  get props => [
-        this.dataMap,
-        this._data,
-        this.isThereMore,
-        this.currentPage,
-        this.lastPage,
+  List<Object?> get props => [
+        dataMap,
+        _data,
+        isThereMore,
+        currentPage,
+        lastPage,
       ];
 }
 
@@ -74,15 +75,21 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
         IndependenceMixin<Input, PaginatedOutput<Output>,
             WorkerState<PaginatedOutput<Output>>> {
   int get startPage => 1;
+
   int get invalidPage => startPage - 1;
 
   int get currentPage => safeData?.currentPage ?? invalidPage;
+
   int get lastPage => safeData?.lastPage ?? currentPage;
-  late int? _shownPage = startPage;
-  int get nextPage => _shownPage ?? startPage;
+
+  late int? _wantedPage = startPage;
+
+  int get nextPage => _wantedPage ?? startPage;
 
   bool get canGoBack => currentPage > startPage;
+
   bool get canGoForward => currentPage < lastPage || isThereMore;
+
   bool get isThereMore => safeData?.isThereMore != false;
 
   @override
@@ -90,8 +97,11 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
     return _createOutput(input.input, input.currentPage, input.nextUrl);
   }
 
-  PaginatedOutput<Output> _createOutput(Output data, int page,
-      [String? nextPage]) {
+  PaginatedOutput<Output> _createOutput(
+    Output data,
+    int page, [
+    String? nextPage,
+  ]) {
     final Map<int, Output> initialDataMap = safeData?.dataMap ?? {};
     final bool initialIsThereMore = safeData?.isThereMore ?? true;
     final int initialCurrentPage = safeData?.currentPage ?? invalidPage;
@@ -100,7 +110,7 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
     final newMap = Map.of(initialDataMap);
     newMap[page] = data;
     final newLast = newMap.keys.reduce((value, element) => max(value, element));
-    late final bool isThereMore;
+    final bool isThereMore;
     if (page != initialLastPage && page == newLast) {
       isThereMore = nextPage != null;
     } else {
@@ -115,12 +125,13 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
       page,
       newLast,
     );
-    _shownPage ??= page;
-    return _fixForPage(newOutput, _shownPage ?? page);
+    return _fixForPage(newOutput, _wantedPage ??= page);
   }
 
   PaginatedOutput<Output> _fixForPage(
-      PaginatedOutput<Output> startData, int page) {
+    PaginatedOutput<Output> startData,
+    int page,
+  ) {
     final newData = createOutput(startData.dataMap, page);
     return createPaginatedOutput(
       startData.dataMap,
@@ -154,7 +165,7 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
     Paginated<Output> data,
     bool isThereMore,
     int currentPage,
-    int lastPage,
+    int? lastPage,
   ) {
     return PaginatedOutput(
       dataMap,
@@ -180,7 +191,7 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
   }
 
   void getPage(int page) {
-    _shownPage = page;
+    _wantedPage = page;
     final previousData = safeData?.dataMap[nextPage];
     if (safeData != null && previousData != null) {
       injectOutput(_createOutput(previousData, nextPage));
@@ -193,7 +204,7 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
   @override
   void clean() {
     super.clean();
-    _shownPage = null;
+    _wantedPage = null;
   }
 
   @override
@@ -201,8 +212,12 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
     if (!hasData || safeData is! PaginatedOutput<Output>) {
       super.handleErrorState(errorState);
     } else {
-      emit(ErrorGettingNextPageState<PaginatedOutput<Output>>(
-          currentData, errorState.response));
+      emit(
+        ErrorGettingNextPageState<PaginatedOutput<Output>>(
+          currentData,
+          errorState.response,
+        ),
+      );
     }
   }
 

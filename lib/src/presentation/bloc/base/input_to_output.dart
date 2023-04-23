@@ -9,11 +9,14 @@ import 'work.dart';
 
 mixin OutputConverterMixin<Input, Output, State extends BlocState>
     on SourcesMixin<Input, Output, State> {
+
+  @override
   @mustCallSuper
-  void handleSourcesOutput(work) async {
+  Future<void> handleSourcesOutput(Work work) async {
     final state = work.state;
-    late final BlocState outputState;
+    BlocState outputState;
     void throwIfCancelled() => work.throwIfCancelled();
+
     if (state is Loaded<Input>) {
       try {
         throwIfCancelled();
@@ -31,6 +34,8 @@ mixin OutputConverterMixin<Input, Output, State extends BlocState>
         throwIfCancelled();
         outputState = Loaded<Output>(newOutput);
       } catch (e, s) {
+        print(e);
+        print(s);
         if (e is CancellationError) {
           return;
         } else {

@@ -118,8 +118,8 @@ class BaseRestClient {
     }
     final progressController = StreamController<double>.broadcast();
     if (params != null) {
-      print(Map.fromEntries(
-          params.toMap().entries.where((element) => element.value != null)));
+      print("PARAMS ${Map.fromEntries(
+          params.toMap().entries.where((element) => element.value != null))}");
     }
     cancelToken ??= CancelToken();
     extra ??= <String, dynamic>{};
@@ -134,7 +134,7 @@ class BaseRestClient {
     if (queryParams != null) {
       queryParameters.addAll(queryParams.getQueryParams());
     }
-    print(queryParameters);
+    print("QUERY $queryParameters");
     queryParameters.removeWhere((k, v) => v == null);
     queryParameters.forEach((key, value) {
       if (value is List) {

@@ -42,6 +42,7 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
   final throttleWindowDuration = const Duration(milliseconds: 200);
 
   Work? _lastWork;
+
   Work? get lastWork {
     return _lastWork;
   }
@@ -58,6 +59,7 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
   @override
   List<ValueNotifier<bool>> get trafficLights =>
       super.trafficLights..addAll([listeningToSources]);
+
   @override
   Set<StreamSubscription?> get subscriptions =>
       super.subscriptions..addAll([_dataSubscription]);
@@ -90,6 +92,7 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
 
   bool _init = false;
   Completer<Tuple2<BlocState, List<BlocState>>?>? _futureState;
+
   void setupStreams() {
     if (_init) return;
     _init = true;
@@ -146,7 +149,6 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
       }
     });
     _dataSubscription = stream
-        .distinct()
         .throttleTime(throttleWindowDuration, trailing: true)
         .asyncMap((event) async {
           final completer = _futureState;
