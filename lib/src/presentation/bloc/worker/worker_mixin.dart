@@ -36,7 +36,7 @@ mixin WorkerMixin<Output>
 
   Output get currentData;
 
-  Map<String, _Work> _operationStack = {};
+  final Map<String, _Work> _operationStack = {};
 
   @override
   get trafficLights => super.trafficLights..add(_isNotOperation);

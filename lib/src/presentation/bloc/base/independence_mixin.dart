@@ -23,6 +23,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
         InputSinkMixin<Input, Output, State>,
         StreamInputMixin<Input, Output, State>
     implements Refreshable {
+  final ValueNotifier<bool> _dataGreenLight = ValueNotifier(false);
   final ValueNotifier<bool> _canFetchData = ValueNotifier(false);
   final ValueNotifier<bool> _alreadyFetchedData = ValueNotifier(false);
   final ValueNotifier<bool> _needsToRefresh = ValueNotifier(false);
@@ -53,18 +54,32 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     ..addAll([_streamSourceSubscription, _dataSourceSubscription]);
 
   @override
-  List<ValueNotifier<bool>> get trafficLights =>
-      super.trafficLights..addAll([_canFetchData]);
+  List<ValueNotifier<bool>> get trafficLights => super.trafficLights
+    ..addAll([
+      _dataGreenLight,
+    ]);
 
   @override
   Set<ChangeNotifier> get notifiers => super.notifiers
-    ..addAll(
-        [_needsToRefresh, _needsToRefetch, _canFetchData, _alreadyFetchedData]);
+    ..addAll([
+      _needsToRefresh,
+      _needsToRefetch,
+      _canFetchData,
+      _alreadyFetchedData,
+    ]);
 
   @override
   Set<Timer?> get timers => super.timers..addAll([_timer]);
 
   Timer? _timer;
+
+  @override
+  void init() {
+    super.init();
+    Listenable.merge([_canFetchData, _alreadyFetchedData]).addListener(() {
+      _dataGreenLight.value = _canFetchData.value | _alreadyFetchedData.value;
+    });
+  }
 
   @override
   @mustCallSuper
@@ -73,6 +88,10 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
       setupTimer();
     }
     super.stateChanged(state);
+  }
+
+  void setHasData() {
+    _alreadyFetchedData.value = true;
   }
 
   void beginFetching() {
