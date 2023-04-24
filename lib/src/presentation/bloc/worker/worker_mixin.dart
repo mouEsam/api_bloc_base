@@ -69,6 +69,14 @@ mixin WorkerMixin<Output>
 
   void emitData(Output event);
 
+  void reEmitCurrent() {
+    final newState = createLoadedState(currentData);
+    if (newState == state) {
+      emitLoading();
+    }
+    emit(newState);
+  }
+
   void emitCurrent() {
     emitLoaded(currentData);
   }
