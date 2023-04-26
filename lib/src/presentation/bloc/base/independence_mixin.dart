@@ -26,8 +26,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   final ValueNotifier<bool> _dataGreenLight = ValueNotifier(false);
   final ValueNotifier<bool> _canFetchData = ValueNotifier(false);
   final ValueNotifier<bool> _alreadyFetchedData = ValueNotifier(false);
-  final ValueNotifier<bool> _needsToRefresh = ValueNotifier(false);
-  final ValueNotifier<bool> _needsToRefetch = ValueNotifier(false);
+  final ValueNotifier<bool?> shouldRefetchOrRefresh = ValueNotifier(null);
   final Duration? refreshInterval = const Duration(seconds: 30);
   final Duration? retryInterval = const Duration(seconds: 30);
 
@@ -38,6 +37,8 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   Stream<Either<ResponseEntity, Input>>? get streamDataSource;
 
   bool get enableRefresh;
+
+  bool get refreshIsRefetch;
 
   bool get enableRetry;
 
@@ -62,8 +63,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   @override
   Set<ChangeNotifier> get notifiers => super.notifiers
     ..addAll([
-      _needsToRefresh,
-      _needsToRefetch,
+      shouldRefetchOrRefresh,
       _canFetchData,
       _alreadyFetchedData,
     ]);
@@ -133,7 +133,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
 
   @mustCallSuper
   FutureOr<bool> fetchSingleData() async {
-    final singleSource = this.singleDataSource;
+    final singleSource = singleDataSource;
     if (singleSource != null) {
       await _handleSingleSource(singleSource);
     }
@@ -142,7 +142,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
 
   @mustCallSuper
   bool fetchStream() {
-    final dataSource = this.dataStreamSource;
+    final dataSource = dataStreamSource;
     if (dataSource != null) {
       _handleStreamSource(dataSource);
     }
@@ -151,18 +151,20 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
 
   @mustCallSuper
   bool fetchStreamData() {
-    final streamSource = this.streamDataSource;
+    final streamSource = streamDataSource;
     if (streamSource != null) {
       _handleDataSource(streamSource);
     }
     return streamSource != null;
   }
 
+  @override
   void clean() {
     _alreadyFetchedData.value = false;
     super.clean();
   }
 
+  @override
   FutureOr<void> refetchData({bool remember = false}) {
     return fetchData(
       refresh: false,
@@ -174,6 +176,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     );
   }
 
+  @override
   FutureOr<void> refreshData({bool remember = false}) {
     return fetchData(refresh: true, remember: remember);
   }
@@ -213,7 +216,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
   void setupTimer() {
     if (state is Error && enableRetry) {
       if (retryInterval != null) {
-        markNeedsRefetch(delay: retryInterval!);
+        markNeedsRefresh(delay: retryInterval!);
       }
     } else if (state is Loaded<Output> &&
         enableRefresh &&
@@ -225,65 +228,63 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     }
   }
 
-  void markNeedsRefetch({Duration delay = Duration.zero}) {
-    _timer?.cancel();
-    _timer = Timer(delay, () {
-      if (!_needsToRefetch.value) {
-        _needsToRefetch.value = true;
-        if (lastTrafficLightsValue) {
-          _performMarkedRefetch();
-        }
-      }
-    });
-  }
-
-  FutureOr<void> _performMarkedRefetch() async {
-    if (!_needsToRefetch.value) return;
-    _timer?.cancel();
-    _needsToRefetch.value = false;
-    return refetchData();
-  }
-
   void markNeedsRefresh({Duration delay = Duration.zero}) {
     _timer?.cancel();
     _timer = Timer(delay, () {
-      if (!_needsToRefresh.value) {
-        _needsToRefresh.value = true;
-        if (lastTrafficLightsValue) {
-          _performMarkedRefresh();
-        }
+      final refetchOrRefresh = shouldRefetchOrRefresh.value ?? false;
+      shouldRefetchOrRefresh.value = refetchOrRefresh || false;
+      if (lastTrafficLightsValue) {
+        _performMarkedRefresh();
       }
     });
   }
 
-  FutureOr<void> _performMarkedRefresh() async {
-    if (!_needsToRefresh.value) return;
+  void markNeedsRefetch({Duration delay = Duration.zero}) {
     _timer?.cancel();
-    _needsToRefresh.value = false;
-    return refreshData();
+    _timer = Timer(delay, () {
+      shouldRefetchOrRefresh.value = true;
+      if (lastTrafficLightsValue) {
+        _performMarkedRefresh();
+      }
+    });
+  }
+
+  void markNeedsRefetchOrRefresh({Duration delay = Duration.zero}) {
+    if (refreshIsRefetch) {
+      markNeedsRefetch(delay: delay);
+    } else {
+      markNeedsRefresh(delay: delay);
+    }
+  }
+
+  FutureOr<void> _performMarkedRefresh() async {
+    final refetchOrRefresh = shouldRefetchOrRefresh.value;
+    if (refetchOrRefresh == null) return;
+    _timer?.cancel();
+    shouldRefetchOrRefresh.value = null;
+    return refetchOrRefresh ? refetchData() : refreshData();
   }
 
   @override
   void onAppState(bool isActive) {
     super.onAppState(isActive);
     if (isActive && refreshOnAppActive && !refreshOnActive) {
-      markNeedsRefresh();
+      markNeedsRefetchOrRefresh();
     }
   }
 
+  @override
   @mustCallSuper
   void trafficLightsChanged(bool green) {
     if (green) {
       _streamSourceSubscription?.resume();
       if (!_alreadyFetchedData.value) {
         fetchData();
-      } else if (_needsToRefetch.value) {
-        _performMarkedRefetch();
-      } else if (_needsToRefresh.value) {
+      } else if (shouldRefetchOrRefresh.value != null) {
         _performMarkedRefresh();
       }
       if (refreshOnActive) {
-        markNeedsRefresh();
+        markNeedsRefetchOrRefresh();
       }
       if (_hasSingleSource) {
         setupTimer();

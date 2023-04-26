@@ -14,18 +14,30 @@ abstract class IndependentProvider<Input, Output>
         InputSinkProviderMixin<Input, Output>,
         StreamInputProviderMixin<Input, Output>,
         IndependenceProviderMixin<Input, Output> {
+  @override
   final Duration? refreshInterval = Duration(seconds: 30);
+  @override
   final Duration? retryInterval = Duration(seconds: 30);
 
+  @override
   final Result<Either<ResponseEntity, Input>>? singleDataSource;
+  @override
   final Either<ResponseEntity, Stream<Input>>? dataStreamSource;
+  @override
   final Stream<Either<ResponseEntity, Input>>? streamDataSource;
 
+  @override
+  final bool refreshIsRefetch;
+  @override
   final bool enableRefresh;
+  @override
   final bool enableRetry;
+  @override
   final bool canRunWithoutListeners;
 
+  @override
   final bool refreshOnActive;
+  @override
   final bool refreshOnAppActive;
 
   IndependentProvider({
@@ -36,6 +48,7 @@ abstract class IndependentProvider<Input, Output>
     LifecycleObserver? appLifecycleObserver,
     List<ProviderMixin> providers = const [],
     List<Stream<ProviderState>> sources = const [],
+    this.refreshIsRefetch = false,
     this.enableRefresh = false,
     this.enableRetry = false,
     this.canRunWithoutListeners = true,

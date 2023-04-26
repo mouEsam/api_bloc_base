@@ -197,7 +197,7 @@ mixin PaginationMixin<Input extends PaginatedInput<Output>, Output>
       injectOutput(_createOutput(previousData, nextPage));
       emitCurrent();
     } else {
-      fetchData(refresh: false);
+      fetchData();
     }
   }
 

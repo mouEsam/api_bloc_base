@@ -17,12 +17,19 @@ abstract class PermissionHandler {
   }
 
   Future<bool> requestStorage();
+
+  Future<bool> requestNotifications();
 }
 
 class _MobilePermissionHandlerImpl implements PermissionHandler {
   @override
   Future<bool> requestStorage() async {
     return _requestPerm(Permission.storage);
+  }
+
+  @override
+  Future<bool> requestNotifications() async {
+    return _requestPerm(Permission.notification);
   }
 
   Future<bool> _requestPerm(Permission perm) async {
@@ -37,6 +44,11 @@ class _MobilePermissionHandlerImpl implements PermissionHandler {
 class _WebPermissionHandlerImpl implements PermissionHandler {
   @override
   Future<bool> requestStorage() async {
+    return true;
+  }
+
+  @override
+  Future<bool> requestNotifications() async {
     return true;
   }
 }

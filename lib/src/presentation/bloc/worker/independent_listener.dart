@@ -28,6 +28,8 @@ abstract class IndependentListener<Input, Output>
   final LifecycleObserver? appLifecycleObserver;
 
   @override
+  final bool refreshIsRefetch;
+  @override
   final bool enableRefresh;
   @override
   final bool enableRetry;
@@ -46,6 +48,7 @@ abstract class IndependentListener<Input, Output>
     this.streamDataSource,
     this.appLifecycleObserver,
     this.enableRefresh = true,
+    this.refreshIsRefetch = false,
     this.enableRetry = true,
     this.canRunWithoutListeners = true,
     this.refreshOnAppActive = true,
