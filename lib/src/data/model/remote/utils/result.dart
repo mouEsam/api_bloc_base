@@ -26,7 +26,7 @@ class Result<T> {
   }
 
   Result<T> sideEffect(FutureOr<void> Function(T value) func) {
-    return this.next((value) async {
+    return next((value) async {
       await func(value);
       return value;
     });
@@ -39,9 +39,10 @@ class CompletableResult<T> extends Result<T> {
   CompletableResult(this._completer,
       {CancelToken? cancelToken, Stream<double>? progress})
       : super(
-            value: _completer.future,
-            cancelToken: cancelToken,
-            progress: progress);
+          value: _completer.future,
+          cancelToken: cancelToken,
+          progress: progress,
+        );
 
   bool get isCompleted => _completer.isCompleted;
 }
@@ -118,10 +119,10 @@ extension FutureResult<T> on FutureOr<T> {
   Result<T> get asResult => Result(value: this);
 
   Result<ResponseEntity> get asResponseResult => Result(
-      value: this
-          .future
-          .then<ResponseEntity>((value) => const Success())
-          .onError((error, stackTrace) => const Failure()));
+        value: future
+            .then<ResponseEntity>((value) => const Success())
+            .onError((error, stackTrace) => const Failure()),
+      );
 
   Result<S> result<S>(FutureOr<S> Function(T value) nextProcess) {
     return Result(value: this).next(nextProcess);

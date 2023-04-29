@@ -36,7 +36,8 @@ abstract class BaseRepository {
 
   Result<z.Either<ResponseEntity, S>>
       handleResponseOperation<T extends BaseApiResponse, S>(
-          RequestConversionOperation<T, S> operation) {
+    RequestConversionOperation<T, S> operation,
+  ) {
     return handleFullResponse<T, S>(
       operation.result,
       converter: operation.converter,
@@ -58,7 +59,7 @@ abstract class BaseRepository {
     FutureOr<S> Function(S data)? dataConverter,
     FutureOr<S> Function(ResponseEntity failure)? failureRecovery,
   }) {
-    final _converter = converter ??
+    final converter_ = converter ??
         (this.converter as BaseResponseConverter<BaseApiResponse, S>);
     final cancelToken = result.cancelToken;
     final future = Future.value(result.value)
@@ -67,10 +68,10 @@ abstract class BaseRepository {
       S? result;
       late ResponseEntity responseEntity;
       if (data != null) {
-        if (_converter.hasData(data)) {
+        if (converter_.hasData(data)) {
           try {
             interceptData?.call(data);
-            result = _converter.convert(data);
+            result = converter_.convert(data);
           } catch (e, s) {
             print(e);
             print(s);
@@ -80,10 +81,10 @@ abstract class BaseRepository {
             );
           }
         } else {
-          responseEntity = _converter.response(data)!;
+          responseEntity = converter_.response(data)!;
         }
       } else {
-        responseEntity = Failure(defaultError);
+        responseEntity = InternetFailure(defaultError, response: value);
       }
       if (result == null && failureRecovery != null) {
         result = await failureRecovery(responseEntity);
@@ -95,10 +96,12 @@ abstract class BaseRepository {
           } catch (e, s) {
             print(e);
             print(s);
-            return z.Left<ResponseEntity, S>(ConversionFailure(
-              defaultError,
-              result.runtimeType,
-            ));
+            return z.Left<ResponseEntity, S>(
+              ConversionFailure(
+                defaultError,
+                result.runtimeType,
+              ),
+            );
           }
         }
         return z.Right<ResponseEntity, S>(result!);
@@ -114,9 +117,9 @@ abstract class BaseRepository {
       late ResponseEntity failure;
       if (e is DioError) {
         if (e.type == DioErrorType.cancel) {
-          failure = Cancellation();
+          failure = const Cancellation();
         } else {
-          failure = InternetFailure(internetError, e);
+          failure = InternetFailure.dio(internetError, e);
         }
       } else {
         failure = Failure(defaultError);
@@ -151,22 +154,22 @@ abstract class BaseRepository {
     void Function(T)? interceptData,
     void Function(ResponseEntity)? interceptResult,
   }) {
-    final _converter = converter ?? this.converter;
+    final converter_ = converter ?? this.converter;
     final cancelToken = result.cancelToken;
     final future =
         Future.value(result.value).then<ResponseEntity>((value) async {
       final data = value.data!;
       interceptData?.call(data);
-      return _converter.response(data)!;
+      return converter_.response(data)!;
     }).catchError((e, s) async {
       print("Exception caught");
       print(e);
       print(s);
       if (e is DioError) {
         if (e.type == DioErrorType.cancel) {
-          return Cancellation();
+          return const Cancellation();
         } else {
-          return InternetFailure(internetError, e);
+          return InternetFailure.dio(internetError, e);
         }
       } else {
         return Failure(defaultError);
@@ -198,12 +201,10 @@ abstract class BaseRepository {
       print(s);
       if (e is DioError) {
         if (e.type == DioErrorType.cancel) {
-          return z.Left<ResponseEntity, S>(
-            Cancellation(),
-          );
+          return z.Left<ResponseEntity, S>(const Cancellation());
         } else {
           return z.Left<ResponseEntity, S>(
-            InternetFailure(internetError, e),
+            InternetFailure.dio(internetError, e),
           );
         }
       } else {
@@ -228,13 +229,15 @@ abstract class BaseRepository {
     );
   }
 
-  FutureOr<z.Either<Failure, T>> tryWork<T>(FutureOr<T> work(),
-      [String? customErrorIfNoMessage,
-      Failure createFailure(String message)?]) {
+  FutureOr<z.Either<Failure, T>> tryWork<T>(
+    FutureOr<T> Function() work, [
+    String? customErrorIfNoMessage,
+    Failure Function(String message)? createFailure,
+  ]) {
     try {
       final workSync = work();
       if (workSync is Future<T>) {
-        Future<T> workAsync = workSync;
+        final Future<T> workAsync = workSync;
         return workAsync
             .then<z.Either<Failure, T>>((value) => z.Right<Failure, T>(value))
             .catchError((e, s) {
@@ -246,7 +249,7 @@ abstract class BaseRepository {
               customErrorIfNoMessage: customErrorIfNoMessage);
         });
       } else {
-        T result = workSync;
+        final T result = workSync;
         return z.Right(result);
       }
     } catch (e, s) {
@@ -258,16 +261,20 @@ abstract class BaseRepository {
     }
   }
 
-  z.Left<Failure, T> handleError<T>(error,
-      {String? customErrorIfNoMessage,
-      Failure Function(String message)? createFailure}) {
-    String? message = getErrorMessage(error, customErrorIfNoMessage);
+  z.Left<Failure, T> handleError<T>(
+    dynamic error, {
+    String? customErrorIfNoMessage,
+    Failure Function(String message)? createFailure,
+  }) {
+    final String? message = getErrorMessage(error, customErrorIfNoMessage);
     createFailure ??= (message) => Failure(message);
     return z.Left(createFailure(message!));
   }
 
-  FutureOr<ResponseEntity> tryWorkWithResponse(FutureOr Function() work,
-      [String? customErrorIfNoMessage]) async {
+  FutureOr<ResponseEntity> tryWorkWithResponse(
+    FutureOr Function() work, [
+    String? customErrorIfNoMessage,
+  ]) async {
     try {
       await work();
       return const Success();
@@ -278,7 +285,7 @@ abstract class BaseRepository {
     }
   }
 
-  String? getErrorMessage(error, [String? customErrorIfNoMessage]) {
+  String? getErrorMessage(dynamic error, [String? customErrorIfNoMessage]) {
     String? message;
     try {
       message = error.response as String;

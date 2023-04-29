@@ -39,9 +39,9 @@ abstract class Converter<IN, OUT> {
   List<X> resolveListConverter<X, Y>(List<Y>? input) {
     final converter = getConverter<Y, X>();
     List<X> result = input
-        ?.map((item) => converter?.convert(item))
-        .whereType<X>()
-        .toList() ??
+            ?.map((item) => converter?.convert(item))
+            .whereType<X>()
+            .toList() ??
         <X>[];
     return result;
   }
@@ -52,12 +52,12 @@ abstract class Converter<IN, OUT> {
     return Map.from(entries ?? {});
   }
 
-  Map<K, X> resolveKeyedMapConverter<K, X, Y>(Map<String, Y>? input,
-      K Function(String key) keyConverter) {
+  Map<K, X> resolveKeyedMapConverter<K, X, Y>(
+      Map<String, Y>? input, K Function(String key) keyConverter) {
     final converter = getConverter<Y, X>();
     final entries = input
         ?.map((key, value) =>
-        MapEntry(keyConverter(key), converter?.convertSingle(value)))
+            MapEntry(keyConverter(key), converter?.convertSingle(value)))
         .entries
         .whereType<MapEntry<K, X>>()
         .toList();
@@ -99,7 +99,9 @@ abstract class BaseResponseConverter<T extends BaseApiResponse, X>
       );
     } else if (isErrorMessage(initialData)) {
       return Failure(
-        initialData.message ?? initialData.error, initialData.errors,);
+        initialData.message ?? initialData.error,
+        initialData.errors,
+      );
     }
     return null;
   }
@@ -133,18 +135,18 @@ abstract class BaseModelConverter<Input, Output>
 
   List<Output> convertList(List<Input?>? initialData) {
     final result = initialData
-        ?.map((itemModel) => convertSingle(itemModel))
-        .whereType<Output>()
-        .toList() ??
+            ?.map((itemModel) => convertSingle(itemModel))
+            .whereType<Output>()
+            .toList() ??
         <Output>[];
     return result;
   }
 
   Map<K, Output> convertMap<K>(Map<K, Input?>? initialData) {
     final entries = initialData?.entries
-        .map((entry) => MapEntry(entry.key, convertSingle(entry.value)))
-        .whereType<MapEntry<K, Output>>()
-        .toList() ??
+            .map((entry) => MapEntry(entry.key, convertSingle(entry.value)))
+            .whereType<MapEntry<K, Output>>()
+            .toList() ??
         <MapEntry<K, Output>>[];
     return Map.fromEntries(entries);
   }
@@ -171,19 +173,19 @@ mixin ReverseModelConverter<IN, OUT> on BaseModelConverter<IN, OUT> {
 
   List<IN> reverseConvertList(List<OUT?>? initialData) {
     final result = initialData
-        ?.map((itemModel) => reverseConvertSingle(itemModel))
-        .whereType<IN>()
-        .toList() ??
+            ?.map((itemModel) => reverseConvertSingle(itemModel))
+            .whereType<IN>()
+            .toList() ??
         <IN>[];
     return result;
   }
 
   Map<K, IN> reverseConvertMap<K>(Map<K, OUT?>? initialData) {
     final entries = initialData?.entries
-        .map((entry) =>
-        MapEntry(entry.key, reverseConvertSingle(entry.value)))
-        .whereType<MapEntry<K, IN>>()
-        .toList() ??
+            .map((entry) =>
+                MapEntry(entry.key, reverseConvertSingle(entry.value)))
+            .whereType<MapEntry<K, IN>>()
+            .toList() ??
         <MapEntry<K, IN>>[];
     return Map.fromEntries(entries);
   }
@@ -209,9 +211,9 @@ mixin ReverseModelConverter<IN, OUT> on BaseModelConverter<IN, OUT> {
   List<X> resolveListReverseConverter<X, Y>(List<Y>? input) {
     final converter = getReverseConverter<Y, X>();
     List<X> result = input
-        ?.map((item) => converter?.reverseConvert(item))
-        .whereType<X>()
-        .toList() ??
+            ?.map((item) => converter?.reverseConvert(item))
+            .whereType<X>()
+            .toList() ??
         <X>[];
     return result;
   }
@@ -222,12 +224,12 @@ mixin ReverseModelConverter<IN, OUT> on BaseModelConverter<IN, OUT> {
     return Map.from(entries ?? {});
   }
 
-  Map<K, X> resolveKeyedMapReverseConverter<K, X, Y>(Map<String, Y>? input,
-      K Function(String key) keyConverter) {
+  Map<K, X> resolveKeyedMapReverseConverter<K, X, Y>(
+      Map<String, Y>? input, K Function(String key) keyConverter) {
     final converter = getReverseConverter<Y, X>();
     final entries = input
         ?.map((key, value) =>
-        MapEntry(keyConverter(key), converter?.reverseConvertSingle(value)))
+            MapEntry(keyConverter(key), converter?.reverseConvertSingle(value)))
         .entries
         .whereType<MapEntry<K, X>>()
         .toList();
