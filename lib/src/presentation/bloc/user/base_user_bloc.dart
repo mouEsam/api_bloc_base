@@ -34,19 +34,19 @@ abstract class BaseUserBloc<T extends BaseProfile<T>>
       });
 
   @override
-  get timers => {_tokenRefreshTimer};
+  Set<Timer?> get timers => {_tokenRefreshTimer};
 
   @override
-  get subjects => {_userAccount};
+  Set<Subject> get subjects => {_userAccount};
 
   BaseUserBloc(this.refreshInterval, this.authRepository)
-      : super(UserLoadingState()) {
+      : super(const UserLoadingState()) {
     autoSignIn();
   }
 
   Future<Either<ResponseEntity, T>> autoSignIn([bool silent = true]) async {
     if (!silent) {
-      emit(UserLoadingState());
+      emit(const UserLoadingState());
     }
     final result = await authRepository.autoLogin().value;
     result.fold((l) {
@@ -93,7 +93,7 @@ abstract class BaseUserBloc<T extends BaseProfile<T>>
       if (result is Success ||
           (result is Failure && result is! InternetFailure)) {
         handleUser(null);
-        return Success();
+        return const Success();
       } else {
         return result;
       }
@@ -107,7 +107,7 @@ abstract class BaseUserBloc<T extends BaseProfile<T>>
       if (result is Success ||
           (result is Failure && result is! InternetFailure)) {
         handleUser(null);
-        return Success();
+        return const Success();
       } else {
         return result;
       }
@@ -172,7 +172,7 @@ abstract class BaseUserBloc<T extends BaseProfile<T>>
       handleUser(oldAccount);
     } else {
       if (silent) {
-        scheduleRefresh(Duration(seconds: 5), true);
+        scheduleRefresh(const Duration(seconds: 5), true);
       } else {
         emit(TokenRefreshFailedState(oldAccount));
       }
@@ -181,7 +181,7 @@ abstract class BaseUserBloc<T extends BaseProfile<T>>
 
   Future<void> handleUser(T? user) async {
     if (user == null) {
-      emit(SignedOutState());
+      emit(const SignedOutState());
     } else {
       emitSignedUser(user);
     }

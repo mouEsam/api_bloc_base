@@ -1,8 +1,7 @@
 import 'package:api_bloc_base/src/data/model/remote/params/base_errors.dart';
+import 'package:api_bloc_base/src/domain/entity/base_profile.dart';
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
-
-import 'base_profile.dart';
 
 class ResponseEntity extends Equatable {
   final String? message;
@@ -10,7 +9,7 @@ class ResponseEntity extends Equatable {
   const ResponseEntity(this.message);
 
   @override
-  List<Object?> get props => [this.message];
+  List<Object?> get props => [message];
 }
 
 class Success extends ResponseEntity {
@@ -26,7 +25,7 @@ class SuccessWithData<D> extends Success {
   const SuccessWithData(this.data, [String? message = '']) : super(message);
 
   @override
-  List<Object?> get props => [...super.props, this.data];
+  List<Object?> get props => [...super.props, data];
 }
 
 class Failure extends ResponseEntity {
@@ -35,18 +34,20 @@ class Failure extends ResponseEntity {
   const Failure([String? message, this.errors]) : super(message);
 
   @override
-  List<Object?> get props => [...super.props, this.errors];
+  List<Object?> get props => [...super.props, errors];
 }
 
 class ConversionFailure extends Failure {
   final Type convertedType;
 
-  const ConversionFailure(String message, this.convertedType,
-      [BaseErrors? errors])
-      : super(message, errors);
+  const ConversionFailure(
+    String message,
+    this.convertedType, {
+    BaseErrors? errors,
+  }) : super(message, errors);
 
   @override
-  List<Object?> get props => [...super.props, this.convertedType];
+  List<Object?> get props => [...super.props, convertedType];
 }
 
 class InternetFailure extends Failure {
@@ -54,11 +55,14 @@ class InternetFailure extends Failure {
 
   int? get statusCode => dioError.response?.statusCode;
 
-  const InternetFailure(String message, this.dioError, [BaseErrors? errors])
-      : super(message, errors);
+  const InternetFailure(
+    String message,
+    this.dioError, {
+    BaseErrors? errors,
+  }) : super(message, errors);
 
   @override
-  List<Object?> get props => [...super.props, this.dioError];
+  List<Object?> get props => [...super.props, dioError];
 }
 
 class Cancellation extends ResponseEntity {
@@ -69,19 +73,26 @@ class Cancellation extends ResponseEntity {
 }
 
 class NoAccountSavedFailure extends Failure {
-  const NoAccountSavedFailure(String message, [BaseErrors? errors])
-      : super(message, errors);
+  const NoAccountSavedFailure(
+    String message, {
+    BaseErrors? errors,
+  }) : super(message, errors);
 
   @override
-  get props => [...super.props];
+  List<Object?> get props => [...super.props];
 }
 
 class RefreshFailure<T extends BaseProfile<T>> extends Failure {
   final T oldProfile;
+  final Failure? baseFailure;
 
-  const RefreshFailure(String? message, this.oldProfile, [BaseErrors? errors])
-      : super(message, errors);
+  const RefreshFailure(
+    String? message,
+    this.oldProfile, {
+    this.baseFailure,
+    BaseErrors? errors,
+  }) : super(message, errors);
 
   @override
-  get props => [...super.props, this.oldProfile];
+  List<Object?> get props => [...super.props, oldProfile, baseFailure];
 }

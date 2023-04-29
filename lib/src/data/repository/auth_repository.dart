@@ -49,8 +49,9 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
           overwriteSavedAccount(user);
         };
         final result = handleResponseOperation<BaseUserResponse, T>(operation);
-        return result.next((value) =>
-            value.leftMap((l) => handleReAuthFailure(l, savedAccount)));
+        return result.next(
+          (value) => value.leftMap((l) => handleReAuthFailure(l, savedAccount)),
+        );
       }
       return Result(value: Right(savedAccount));
     });
@@ -60,9 +61,9 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
     final operation = internalRefreshToken(profile);
     if (operation != null) {
       operation.converter ??= autoLoginConverter;
-      final _intercept = operation.interceptResult;
+      final intercept_ = operation.interceptResult;
       operation.interceptResult = (user) {
-        _intercept?.call(user);
+        intercept_?.call(user);
         overwriteSavedAccount(user);
       };
       final result = handleResponseOperation<BaseUserResponse, T>(operation);
@@ -77,21 +78,25 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
     final operation = internalRefreshProfile(profile);
     if (operation != null) {
       operation.converter ??= refreshConverter;
-      operation.dataConverter ??= (r) => r.updateToken(
-            profile.userToken,
-          );
+      operation.dataConverter ??= (r) => r.updateToken(profile.userToken);
       final result = handleResponseOperation(operation);
       return result.next(
         (value) => value.leftMap((l) => handleReAuthFailure(l, profile)),
       );
     }
-    return Result(value: Left(Failure()));
+    return const Result(value: Left(Failure()));
   }
 
-  ResponseEntity handleReAuthFailure(ResponseEntity responseEntity,
-      [T? oldAccount]) {
+  ResponseEntity handleReAuthFailure(
+    ResponseEntity responseEntity, [
+    T? oldAccount,
+  ]) {
     if (oldAccount != null) {
-      return RefreshFailure(responseEntity.message, oldAccount);
+      return RefreshFailure(
+        responseEntity.message,
+        oldAccount,
+        baseFailure: responseEntity is Failure ? responseEntity : null,
+      );
     } else {
       return responseEntity;
     }
@@ -102,13 +107,13 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
       if (profile.active) {
         saveAccount(profile);
       }
-      return Success().asResult;
+      return const Success().asResult;
     });
   }
 
   Result<ResponseEntity> offlineSignOut() {
     final result = saveAccount(null).then<ResponseEntity>((value) {
-      return Success();
+      return const Success();
     }).catchError((e, s) {
       print(e);
       print(s);
