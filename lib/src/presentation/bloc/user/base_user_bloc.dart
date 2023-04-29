@@ -49,35 +49,34 @@ abstract class BaseUserBloc<T extends BaseProfile<T>>
       emit(const UserLoadingState());
     }
     final result = await authRepository.autoLogin().value;
-    result.fold((l) {
-      if (l is RefreshFailure<T>) {
-        handleFailedRefresh(l.oldProfile, silent);
-      } else {
-        handleUser(null);
-      }
-    }, (user) => handleUser(user));
+    result.fold(
+      (l) => handleReAuthFailure(l, silent),
+      (user) => handleUser(user),
+    );
     return result;
   }
 
   Future<Either<ResponseEntity, T>> refreshToken() async {
     final result = await authRepository.refreshToken(currentUser!).value;
-    result.fold((l) {
-      handleReAuthFailure(l);
-    }, (user) => handleUser(user));
+    result.fold(
+      (l) => handleReAuthFailure(l),
+      (user) => handleUser(user),
+    );
     return result;
   }
 
   Future<Either<ResponseEntity, T>> refreshProfile() async {
     final result = await authRepository.refreshProfile(currentUser!).value;
-    result.fold((l) {
-      handleReAuthFailure(l);
-    }, (user) => handleUser(user));
+    result.fold(
+      (l) => handleReAuthFailure(l),
+      (user) => handleUser(user),
+    );
     return result;
   }
 
-  void handleReAuthFailure(ResponseEntity response) {
+  void handleReAuthFailure(ResponseEntity response, [bool silent = true]) {
     if (response is RefreshFailure<T>) {
-      handleFailedRefresh(response.oldProfile, true);
+      handleFailedRefresh(response.oldProfile, silent);
     } else {
       handleUser(null);
     }
