@@ -47,32 +47,34 @@ class BaseRestClient {
 
   CacheOptions? _cacheOptions;
 
-  static CacheOptions createCacheOptions(
-      {CacheOptions? cacheOptions, CachePolicy? cachePolicy}) {
+  static CacheOptions createCacheOptions({
+    CacheOptions? cacheOptions,
+    CachePolicy? cachePolicy,
+  }) {
     return CacheOptions(
-      store: cacheOptions?.store ?? MemCacheStore(),
       // Required.
-      policy: cachePolicy ?? cacheOptions?.policy ?? CachePolicy.request,
+      store: cacheOptions?.store ?? MemCacheStore(),
       // Default. Requests first and caches response.
-      hitCacheOnErrorExcept: cacheOptions?.hitCacheOnErrorExcept ?? [401, 403],
+      policy: cachePolicy ?? cacheOptions?.policy ?? CachePolicy.request,
       // Optional. Returns a cached response on error if available but for statuses 401 & 403.
-      priority: cacheOptions?.priority ?? CachePriority.normal,
+      hitCacheOnErrorExcept: cacheOptions?.hitCacheOnErrorExcept ?? [401, 403],
       // Optional. Default. Allows 3 cache levels and ease cleanup.
-      maxStale: cacheOptions?.maxStale ??
-          const Duration(
-              days:
-                  7), // Very optional. Overrides any HTTP directive to delete entry past this duration.
+      priority: cacheOptions?.priority ?? CachePriority.normal,
+      // Very optional. Overrides any HTTP directive to delete entry past this duration.
+      maxStale: cacheOptions?.maxStale ?? const Duration(days: 7),
     );
   }
 
   static final _jsonConvertor = jsonConvertor;
 
-  BaseRestClient(this.baseUrl,
-      {Iterable<Interceptor> interceptors = const [],
-      CacheOptions? cacheOptions,
-      CachePolicy? cachePolicy,
-      BaseOptions? options})
-      : dio = Dio() {
+  BaseRestClient(
+    this.baseUrl, {
+    Iterable<Interceptor> interceptors = const [],
+    CacheOptions? cacheOptions,
+    CachePolicy? cachePolicy,
+    BaseOptions? options,
+        bool validateStatusCodes = true,
+  }) : dio = Dio() {
     dio.interceptors.addAll(interceptors);
     _cacheOptions = createCacheOptions(
         cacheOptions: cacheOptions, cachePolicy: cachePolicy);
@@ -81,7 +83,9 @@ class BaseRestClient {
       dio.options.connectTimeout = 15000;
       dio.options.headers[io.HttpHeaders.acceptHeader] = 'application/json';
       dio.options.receiveDataWhenStatusError = true;
-      dio.options.validateStatus = (_) => true;
+      if (!validateStatusCodes) {
+        dio.options.validateStatus = (_) => true;
+      }
       dio.transformer = JsonTransformer(_jsonConvertor);
     } else {
       dio.options = options;
