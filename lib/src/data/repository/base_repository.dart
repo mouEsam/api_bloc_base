@@ -4,6 +4,7 @@ import 'package:api_bloc_base/src/data/_index.dart';
 import 'package:api_bloc_base/src/domain/entity/response_entity.dart';
 import 'package:dartz/dartz.dart' as z;
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 class RequestConversionOperation<T extends BaseApiResponse, S> {
   final RequestResult<T> result;
@@ -73,8 +74,8 @@ abstract class BaseRepository {
             interceptData?.call(data);
             result = converter_.convert(data);
           } catch (e, s) {
-            print(e);
-            print(s);
+            debugPrint("$e");
+            debugPrint("$s");
             responseEntity = ConversionFailure(
               defaultError,
               data.runtimeType,
@@ -94,8 +95,8 @@ abstract class BaseRepository {
           try {
             result = await dataConverter(result);
           } catch (e, s) {
-            print(e);
-            print(s);
+            debugPrint("$e");
+            debugPrint("$s");
             return z.Left<ResponseEntity, S>(
               ConversionFailure(
                 defaultError,
@@ -106,24 +107,15 @@ abstract class BaseRepository {
         }
         return z.Right<ResponseEntity, S>(result!);
       } else {
-        print(data.runtimeType);
-        print(data);
+        debugPrint(data.runtimeType.toString());
+        debugPrint("$data");
         return z.Left<ResponseEntity, S>(responseEntity);
       }
     }).catchError((e, s) async {
-      print("Exception caught");
-      print(e);
-      print(s);
-      late ResponseEntity failure;
-      if (e is DioError) {
-        if (e.type == DioErrorType.cancel) {
-          failure = const Cancellation();
-        } else {
-          failure = InternetFailure.dio(internetError, e);
-        }
-      } else {
-        failure = Failure(defaultError);
-      }
+      debugPrint("Exception caught");
+      debugPrint("$e");
+      debugPrint("$s");
+      final ResponseEntity failure = _extractFailure(e, converter_);
       if (failureRecovery != null) {
         final result = await failureRecovery(failure);
         if (result != null) {
@@ -162,18 +154,10 @@ abstract class BaseRepository {
       interceptData?.call(data);
       return converter_.response(data)!;
     }).catchError((e, s) async {
-      print("Exception caught");
-      print(e);
-      print(s);
-      if (e is DioError) {
-        if (e.type == DioErrorType.cancel) {
-          return const Cancellation();
-        } else {
-          return InternetFailure.dio(internetError, e);
-        }
-      } else {
-        return Failure(defaultError);
-      }
+      debugPrint("Exception caught");
+      debugPrint("$e");
+      debugPrint("$s");
+      return _extractFailure(e, converter_);
     }).then((value) {
       interceptResult?.call(value);
       return value;
@@ -196,22 +180,11 @@ abstract class BaseRepository {
       final data = value.data!;
       return z.Right<ResponseEntity, S>(data);
     }).catchError((e, s) async {
-      print("Exception caught");
-      print(e);
-      print(s);
-      if (e is DioError) {
-        if (e.type == DioErrorType.cancel) {
-          return z.Left<ResponseEntity, S>(const Cancellation());
-        } else {
-          return z.Left<ResponseEntity, S>(
-            InternetFailure.dio(internetError, e),
-          );
-        }
-      } else {
-        return z.Left<ResponseEntity, S>(
-          Failure(defaultError),
-        );
-      }
+      debugPrint("Exception caught");
+      debugPrint("$e");
+      debugPrint("$s");
+      final ResponseEntity failure = _extractFailure(e);
+      return z.Left<ResponseEntity, S>(failure);
     }).then((value) {
       if (interceptFailure != null || interceptResult != null) {
         value.fold((l) {
@@ -229,6 +202,25 @@ abstract class BaseRepository {
     );
   }
 
+  ResponseEntity _extractFailure(
+    e, [
+    BaseResponseConverter? converter,
+  ]) {
+    ResponseEntity? failure;
+    if (e is DioError) {
+      if (e.type == DioErrorType.cancel) {
+        failure = const Cancellation();
+      } else {
+        final data = e.response?.data;
+        if (converter != null && data is BaseApiResponse) {
+          failure = converter.response(data);
+        }
+        failure ??= InternetFailure.dio(internetError, e);
+      }
+    }
+    return failure ?? Failure(defaultError);
+  }
+
   FutureOr<z.Either<Failure, T>> tryWork<T>(
     FutureOr<T> Function() work, [
     String? customErrorIfNoMessage,
@@ -241,23 +233,27 @@ abstract class BaseRepository {
         return workAsync
             .then<z.Either<Failure, T>>((value) => z.Right<Failure, T>(value))
             .catchError((e, s) {
-          print("Exception caught");
-          print(e);
-          print(s);
-          return handleError<T>(e,
-              createFailure: createFailure,
-              customErrorIfNoMessage: customErrorIfNoMessage);
+          debugPrint("Exception caught");
+          debugPrint("$e");
+          debugPrint("$s");
+          return handleError<T>(
+            e,
+            createFailure: createFailure,
+            customErrorIfNoMessage: customErrorIfNoMessage,
+          );
         });
       } else {
         final T result = workSync;
         return z.Right(result);
       }
     } catch (e, s) {
-      print(e);
-      print(s);
-      return handleError<T>(e,
-          createFailure: createFailure,
-          customErrorIfNoMessage: customErrorIfNoMessage);
+      debugPrint("$e");
+      debugPrint("$s");
+      return handleError<T>(
+        e,
+        createFailure: createFailure,
+        customErrorIfNoMessage: customErrorIfNoMessage,
+      );
     }
   }
 
@@ -279,8 +275,8 @@ abstract class BaseRepository {
       await work();
       return const Success();
     } catch (e, s) {
-      print(e);
-      print(s);
+      debugPrint("$e");
+      debugPrint("$s");
       return Failure(getErrorMessage(e, customErrorIfNoMessage));
     }
   }

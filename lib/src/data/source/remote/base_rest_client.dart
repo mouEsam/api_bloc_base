@@ -73,11 +73,13 @@ class BaseRestClient {
     CacheOptions? cacheOptions,
     CachePolicy? cachePolicy,
     BaseOptions? options,
-        bool validateStatusCodes = true,
+    bool validateStatusCodes = true,
   }) : dio = Dio() {
     dio.interceptors.addAll(interceptors);
     _cacheOptions = createCacheOptions(
-        cacheOptions: cacheOptions, cachePolicy: cachePolicy);
+      cacheOptions: cacheOptions,
+      cachePolicy: cachePolicy,
+    );
     dio.interceptors.add(DioCacheInterceptor(options: _cacheOptions!));
     if (options == null) {
       dio.options.connectTimeout = 15000;
@@ -114,18 +116,22 @@ class BaseRestClient {
   }) {
     if (T == BaseApiResponse) {
       throw FormatException(
-          'T must be either be a generic encodable Type or a sub class of BaseApiResponse');
+        'T must be either be a generic encodable Type or a sub class of BaseApiResponse',
+      );
     }
     final progressController = StreamController<double>.broadcast();
     if (params != null) {
       print(
-          "PARAMS ${Map.fromEntries(params.toMap().entries.where((element) => element.value != null))}");
+        "PARAMS ${Map.fromEntries(params.toMap().entries.where((element) => element.value != null))}",
+      );
     }
     cancelToken ??= CancelToken();
     extra ??= <String, dynamic>{};
     if (cachePolicy != null) {
       options = createCacheOptions(
-          cacheOptions: options ?? _cacheOptions, cachePolicy: cachePolicy);
+        cacheOptions: options ?? _cacheOptions,
+        cachePolicy: cachePolicy,
+      );
     }
     if (options != null) {
       extra.addAll(options.toExtra());
@@ -189,18 +195,25 @@ class BaseRestClient {
                 );
               } else if (value is io.File) {
                 final file = value as io.File;
-                _data.files.add(MapEntry(
-                  entry.key,
-                  MultipartFile.fromFileSync(
-                    file.path,
-                    filename: p.basename(file.path),
+                _data.files.add(
+                  MapEntry(
+                    entry.key,
+                    MultipartFile.fromFileSync(
+                      file.path,
+                      filename: p.basename(file.path),
+                    ),
                   ),
-                ));
+                );
               } else if (value is List) {
                 final list = value as List;
-                list.where((e) => e != null).forEach((value) => _data.fields
-                    .add(MapEntry(entry.key,
-                        value is String ? value : jsonEncode(value))));
+                list.where((e) => e != null).forEach(
+                      (value) => _data.fields.add(
+                        MapEntry(
+                          entry.key,
+                          value is String ? value : jsonEncode(value),
+                        ),
+                      ),
+                    );
               } else if (value is String) {
                 _data.fields.add(MapEntry(entry.key, value as String));
               } else {
@@ -247,17 +260,20 @@ class BaseRestClient {
     Future<Response> result;
     if (mockedResult == null) {
       dio.options.baseUrl = newBaseUrl;
-      result = dio.request(path,
-          queryParameters: queryParameters,
-          cancelToken: cancelToken,
-          onReceiveProgress: _progressListener,
-          onSendProgress: _progressListener,
-          options: Options(
-              method: method.method,
-              headers: headers,
-              extra: extra,
-              responseType: responseType),
-          data: body);
+      result = dio.request(
+        path,
+        queryParameters: queryParameters,
+        cancelToken: cancelToken,
+        onReceiveProgress: _progressListener,
+        onSendProgress: _progressListener,
+        options: Options(
+          method: method.method,
+          headers: headers,
+          extra: extra,
+          responseType: responseType,
+        ),
+        data: body,
+      );
     } else {
       result = mockedResult.future.then((value) {
         return Response(
@@ -266,18 +282,19 @@ class BaseRestClient {
           //isRedirect: false,
           extra: extra,
           requestOptions: RequestOptions(
-              method: method.method,
-              headers: headers,
-              extra: extra,
-              baseUrl: newBaseUrl,
-              path: path),
+            method: method.method,
+            headers: headers,
+            extra: extra,
+            baseUrl: newBaseUrl,
+            path: path,
+          ),
           statusCode: 200,
           statusMessage: 'success',
         );
       });
       _progressListener(100, 100);
     }
-    final response = result.then((result) {
+    Response<T> handleResponse(Response<dynamic> result) {
       print(result.data);
       T? value;
       if (mockedResult == null) {
@@ -290,21 +307,41 @@ class BaseRestClient {
         value = result.data as T?;
       }
       return Response<T>(
-          data: value,
-          extra: result.extra,
-          headers: result.headers,
-          isRedirect: result.isRedirect,
-          redirects: result.redirects,
-          requestOptions: result.requestOptions,
-          statusCode: result.statusCode,
-          statusMessage: result.statusMessage);
+        data: value,
+        extra: result.extra,
+        headers: result.headers,
+        isRedirect: result.isRedirect,
+        redirects: result.redirects,
+        requestOptions: result.requestOptions,
+        statusCode: result.statusCode,
+        statusMessage: result.statusMessage,
+      );
+    }
+
+    final response = result.catchError((Object e) {
+      if (e is DioError) {
+        var response = e.response;
+        if (response != null) {
+          response = handleResponse(response);
+          throw DioError(
+            response: response,
+            requestOptions: e.requestOptions,
+            type: e.type,
+            error: e.error,
+          );
+        }
+      }
+      throw e;
+    }).then((result) {
+      return handleResponse(result);
     });
     response.whenComplete(() => progressController.close());
     return RequestResult(
       cancelToken: cancelToken,
       value: response,
-      progress: progressController.stream
-          .asBroadcastStream(onCancel: (sub) => sub.cancel()),
+      progress: progressController.stream.asBroadcastStream(
+        onCancel: (sub) => sub.cancel(),
+      ),
     );
   }
 
@@ -326,14 +363,19 @@ class BaseRestClient {
   }) {
     final progressController = StreamController<double>.broadcast();
     if (params != null) {
-      print(Map.fromEntries(
-          params.toMap().entries.where((element) => element.value != null)));
+      print(
+        Map.fromEntries(
+          params.toMap().entries.where((element) => element.value != null),
+        ),
+      );
     }
     cancelToken ??= CancelToken();
     extra ??= <String, dynamic>{};
     if (cachePolicy != null) {
       options = createCacheOptions(
-          cacheOptions: options ?? _cacheOptions, cachePolicy: cachePolicy);
+        cacheOptions: options ?? _cacheOptions,
+        cachePolicy: cachePolicy,
+      );
     }
     extra.addAll(options?.toExtra() ?? <String, dynamic>{});
     queryParameters ??= <String, dynamic>{};
@@ -362,26 +404,32 @@ class BaseRestClient {
             if (value != null) {
               if (value is f.File) {
                 final file = value as f.File;
-                _data.files.add(MapEntry(
-                  entry.key,
-                  MultipartFile.fromFileSync(
-                    file.path,
-                    filename: file.basename,
+                _data.files.add(
+                  MapEntry(
+                    entry.key,
+                    MultipartFile.fromFileSync(
+                      file.path,
+                      filename: file.basename,
+                    ),
                   ),
-                ));
+                );
               } else if (value is io.File) {
                 final file = value as io.File;
-                _data.files.add(MapEntry(
-                  entry.key,
-                  MultipartFile.fromFileSync(
-                    file.path,
-                    filename: p.basename(file.path),
+                _data.files.add(
+                  MapEntry(
+                    entry.key,
+                    MultipartFile.fromFileSync(
+                      file.path,
+                      filename: p.basename(file.path),
+                    ),
                   ),
-                ));
+                );
               } else if (value is List) {
                 final list = value as List;
-                list.where((e) => e != null).forEach((value) =>
-                    _data.fields.add(MapEntry(entry.key, value.toString())));
+                list.where((e) => e != null).forEach(
+                      (value) => _data.fields
+                          .add(MapEntry(entry.key, value.toString())),
+                    );
               } else {
                 _data.fields.add(MapEntry(entry.key, value.toString()));
               }
@@ -406,13 +454,16 @@ class BaseRestClient {
     ;
     dio.options.baseUrl = baseUrl;
     final Future<Response<ResponseBody?>> response = dio
-        .download(path, savePath,
-            queryParameters: queryParameters,
-            cancelToken: cancelToken,
-            onReceiveProgress: _progressListener,
-            options:
-                Options(method: method.method, headers: headers, extra: extra),
-            data: body)
+        .download(
+          path,
+          savePath,
+          queryParameters: queryParameters,
+          cancelToken: cancelToken,
+          onReceiveProgress: _progressListener,
+          options:
+              Options(method: method.method, headers: headers, extra: extra),
+          data: body,
+        )
         .then((value) => value as Response<ResponseBody?>);
     response.whenComplete(() => progressController.close());
     return RequestResult(
