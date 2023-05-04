@@ -295,6 +295,7 @@ class BaseRestClient {
       _progressListener(100, 100);
     }
     Response<T> handleResponse(Response<dynamic> result) {
+      print("URI ${result.realUri.toString()}");
       print(result.data);
       T? value;
       if (mockedResult == null) {

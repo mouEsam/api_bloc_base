@@ -53,6 +53,7 @@ class ConversionFailure extends Failure {
 class InternetFailure extends Failure {
   final DioError? dioError;
   final Response? response;
+  final Failure? baseFailure;
 
   int? get statusCode => (response ?? dioError?.response)?.statusCode;
 
@@ -60,19 +61,21 @@ class InternetFailure extends Failure {
     String message, {
     this.dioError,
     this.response,
+    this.baseFailure,
     BaseErrors? errors,
   }) : super(message, errors);
 
   InternetFailure.dio(
     String message,
     DioError error, {
+    this.baseFailure,
     BaseErrors? errors,
   })  : dioError = error,
         response = error.response,
         super(message, errors);
 
   @override
-  List<Object?> get props => [...super.props, dioError, response];
+  List<Object?> get props => [...super.props, dioError, response, baseFailure];
 }
 
 class Cancellation extends ResponseEntity {
