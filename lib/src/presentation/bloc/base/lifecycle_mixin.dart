@@ -42,6 +42,11 @@ mixin LifecycleMixin<State> on TrafficLightsMixin<State>
   }
 
   @override
+  void onActive() {
+    _onChange(true);
+  }
+
+  @override
   void onPause() {
     _onChange(false);
   }

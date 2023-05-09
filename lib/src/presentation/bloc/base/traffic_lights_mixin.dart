@@ -46,7 +46,6 @@ mixin TrafficLightsMixin<State> on BaseCubit<State>, Initializable {
   }
 
   void _changed() {
-    print("CHANGED @ ${_trafficLightsValue}");
     _isGreen.value = _trafficLightsValue;
   }
 
@@ -63,7 +62,6 @@ mixin TrafficLightsMixin<State> on BaseCubit<State>, Initializable {
 
   @override
   Future<void> close() {
-    print("ASDASD Removing ${this}");
     isGreen.removeListener(_alert);
     _singleTrafficLights.removeListener(_changed);
     return super.close();

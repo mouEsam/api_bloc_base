@@ -5,6 +5,8 @@ abstract class LifecycleAware {
 
   void onPause();
 
+  void onActive();
+
   void onDetach();
 
   void onInactive();
@@ -28,11 +30,16 @@ mixin LifecycleObserver on WidgetsBindingObserver {
       _listeners
           .whereType<LifecycleAware>()
           .forEach((element) => element.onPause());
-    } else if (state == AppLifecycleState.resumed &&
-        _lastAppState == AppLifecycleState.paused) {
-      _listeners
-          .whereType<LifecycleAware>()
-          .forEach((element) => element.onResume());
+    } else if (state == AppLifecycleState.resumed) {
+      if (_lastAppState != AppLifecycleState.resumed) {
+        _listeners
+            .whereType<LifecycleAware>()
+            .forEach((element) => element.onResume());
+      } else {
+        _listeners
+            .whereType<LifecycleAware>()
+            .forEach((element) => element.onActive());
+      }
     } else if (state == AppLifecycleState.inactive) {
       _listeners
           .whereType<LifecycleAware>()

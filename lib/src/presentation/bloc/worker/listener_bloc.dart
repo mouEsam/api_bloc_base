@@ -51,9 +51,7 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
   final List<ProviderMixin> providers;
 
   ListenerBloc(this.sources, this.providers, {Output? currentData})
-      : super(currentData) {
-    init();
-  }
+      : super(currentData);
 
   bool _init = false;
   @override
@@ -61,6 +59,7 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
     if (_init) return;
     _init = true;
     _setupOutputStream();
+    super.init();
   }
 
   void _setupOutputStream() {

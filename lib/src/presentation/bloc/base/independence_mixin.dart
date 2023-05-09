@@ -82,6 +82,7 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     Listenable.merge([_canFetchData, _alreadyFetchedData]).addListener(() {
       _dataGreenLight.value = _canFetchData.value | _alreadyFetchedData.value;
     });
+    super.init();
   }
 
   @override
