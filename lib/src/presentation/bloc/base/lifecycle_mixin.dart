@@ -10,11 +10,17 @@ mixin LifecycleMixin<State> on TrafficLightsMixin<State>
     implements LifecycleAware {
   LifecycleObserver? get appLifecycleObserver;
 
-  final ValueNotifier<bool> isAppGreen = ValueNotifier(true);
+  final ValueNotifier<bool> _isAppGreen = ValueNotifier(true);
+  ValueListenable<bool> get isAppGreen => _isAppGreen;
 
-  get trafficLights => super.trafficLights..add(isAppGreen);
+  @override
+  List<ValueListenable<bool>> get trafficLights => super.trafficLights..add(isAppGreen);
 
-  init() {
+  bool _init = false;
+  @override
+  void init() {
+    if (_init) return;
+    _init = true;
     appLifecycleObserver?.addListener(this);
     super.init();
   }
@@ -42,7 +48,7 @@ mixin LifecycleMixin<State> on TrafficLightsMixin<State>
 
   void _onChange(bool isActive) {
     onAppState(isActive);
-    isAppGreen.value = isActive;
+    _isAppGreen.value = isActive;
     onAppStateChanged(isActive);
   }
 
@@ -59,7 +65,7 @@ mixin LifecycleMixin<State> on TrafficLightsMixin<State>
   void onAppStateChanged(bool isActive) {}
 
   @override
-  close() {
+  Future<void> close() {
     appLifecycleObserver?.removeListener(this);
     return super.close();
   }

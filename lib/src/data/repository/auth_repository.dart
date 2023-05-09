@@ -33,6 +33,8 @@ abstract class BaseAuthRepository<T extends BaseProfile<T>>
       _intercept?.call(user);
       if (user.active == true && params.rememberMe) {
         saveAccount(user);
+      } else {
+        saveAccount(null);
       }
     };
     return handleResponseOperation<BaseUserResponse, T>(operation);

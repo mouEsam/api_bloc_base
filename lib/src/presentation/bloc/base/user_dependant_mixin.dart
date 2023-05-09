@@ -37,17 +37,16 @@ mixin UserDependantMixin<Input, Output, State extends BlocState,
   @override
   Set<StreamSubscription?> get subscriptions => super.subscriptions..addAll([_subscription]);
 
+  bool _init = false;
   @override
   void init() {
-    setupUserListener();
+    if (_init) return;
+    _init = true;
+    _setupUserListener();
     super.init();
   }
 
-  bool _init = false;
-
-  void setupUserListener() {
-    if (_init) return;
-    _init = true;
+  void _setupUserListener() {
     _subscription = userBloc.userStream.distinct().listen(
       (user) {
         final newToken = user?.accessToken;

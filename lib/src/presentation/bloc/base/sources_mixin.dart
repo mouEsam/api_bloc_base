@@ -85,18 +85,18 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
   //   super.trafficLightsChanged(green);
   // }
 
+  bool _init = false;
   @override
   void init() {
-    setupStreams();
+    if (_init) return;
+    _init = true;
+    _setupStreams();
     super.init();
   }
 
-  bool _init = false;
   Completer<Tuple2<BlocState, List<BlocState>>?>? _futureState;
 
-  void setupStreams() {
-    if (_init) return;
-    _init = true;
+  void _setupStreams() {
     providers
         .whereType<ListenableMixin>()
         .forEach((element) => element.addListener(this));

@@ -60,17 +60,16 @@ mixin ParametersDependenceMixin<InputParameter, Input, Output,
   //   super.trafficLightsChanged(green);
   // }
 
+  bool _init = false;
   @override
   void init() {
-    setupListenableParametersDependence();
+    if (_init) return;
+    _init = true;
+    _setupListenableParametersDependence();
     super.init();
   }
 
-  bool _init = false;
-
-  void setupListenableParametersDependence() {
-    if (_init) return;
-    _init = true;
+  void _setupListenableParametersDependence() {
     parametersSources.forEach((element) => element.addListener(this));
     final List<Stream<BlocState>> newSources = [
       ...parametersSourceStreams,

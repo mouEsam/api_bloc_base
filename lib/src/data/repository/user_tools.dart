@@ -13,7 +13,7 @@ mixin UserProfileUtilsMixin<T extends BaseProfile<T>> on BaseRepository {
 
   Future<void> overwriteSavedAccount(T account) async {
     if (await _wasSaved) {
-      saveAccount(account);
+      return saveAccount(account);
     }
   }
 

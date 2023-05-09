@@ -74,9 +74,11 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
 
   Timer? _timer;
 
+  bool _init = false;
   @override
   void init() {
-    super.init();
+    if (_init) return;
+    _init = true;
     Listenable.merge([_canFetchData, _alreadyFetchedData]).addListener(() {
       _dataGreenLight.value = _canFetchData.value | _alreadyFetchedData.value;
     });

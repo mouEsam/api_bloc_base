@@ -31,18 +31,16 @@ mixin TriggerHandlerMixin<Input, Output, State extends BlocState>
     super.clean();
   }
 
-  init() {
+  bool _init = false;
+  @override
+  void init() {
+    if (_init) return;
+    _init = true;
     _initializeTriggers();
     super.init();
   }
 
-  bool _init = false;
-
   void _initializeTriggers() {
-    if (_init) {
-      return;
-    }
-    _init = true;
     _subscriptions = triggers.map((trigger) {
       return trigger.coldStream
           .map((event) => _TriggerState(event.data))

@@ -21,17 +21,16 @@ mixin ProviderListenerMixin<Input, Output, State extends BlocState>
   @override
   get subscriptions => super.subscriptions..addAll([_blocSubscription]);
 
+  bool _init = false;
   @override
   void init() {
-    setupProviderListener();
+    if (_init) return;
+    _init = true;
+    _setupProviderListener();
     super.init();
   }
 
-  bool _init = false;
-
-  void setupProviderListener() {
-    if (_init) return;
-    _init = true;
+  void _setupProviderListener() {
     if (provider is ListenableMixin) {
       (provider as ListenableMixin).addListener(this);
     }

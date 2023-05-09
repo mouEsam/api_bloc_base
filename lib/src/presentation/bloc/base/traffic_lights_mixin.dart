@@ -25,17 +25,16 @@ mixin TrafficLightsMixin<State> on BaseCubit<State>, Initializable {
 
   void trafficLightsChanged(bool green) {}
 
+  bool _init = false;
   @override
   void init() {
-    setupTrafficLights();
+    if (_init) return;
+    _init = true;
+    _setupTrafficLights();
     super.init();
   }
 
-  bool _init = false;
-
-  void setupTrafficLights() {
-    if (_init) return;
-    _init = true;
+  void _setupTrafficLights() {
     _isGreen.value = _trafficLightsValue;
     _isGreen.addListener(_alert);
     _singleTrafficLights = Listenable.merge(trafficLights);
@@ -47,6 +46,7 @@ mixin TrafficLightsMixin<State> on BaseCubit<State>, Initializable {
   }
 
   void _changed() {
+    print("CHANGED @ ${_trafficLightsValue}");
     _isGreen.value = _trafficLightsValue;
   }
 
@@ -63,6 +63,7 @@ mixin TrafficLightsMixin<State> on BaseCubit<State>, Initializable {
 
   @override
   Future<void> close() {
+    print("ASDASD Removing ${this}");
     isGreen.removeListener(_alert);
     _singleTrafficLights.removeListener(_changed);
     return super.close();

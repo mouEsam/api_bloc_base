@@ -12,16 +12,16 @@ mixin OnceListenerMixin<Data> on WorkerMixin<Data> {
   @override
   get subscriptions => super.subscriptions..addAll(_subs.values);
 
+  bool _init = false;
+  @override
   void init() {
-    setUpSourcesListeners();
+    if (_init) return;
+    _init = true;
+    _setUpSourcesListeners();
     super.init();
   }
 
-  bool _init = false;
-
-  void setUpSourcesListeners() {
-    if (_init) return;
-    _init = true;
+  void _setUpSourcesListeners() {
     _subs = streamSources.map((type, value) => MapEntry(
         type,
         value
