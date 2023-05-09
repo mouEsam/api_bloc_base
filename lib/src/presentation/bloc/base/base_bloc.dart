@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -18,7 +19,7 @@ abstract class BaseCubit<State> extends Cubit<State> implements Initializable {
   @override
   get stream => coldStream.shareValueSeeded(state).map((e) => state);
 
-  Set<ChangeNotifier> get notifiers => {};
+  Set<Listenable> get notifiers => {};
 
   Set<Timer?> get timers => {};
 
@@ -79,7 +80,9 @@ abstract class BaseCubit<State> extends Cubit<State> implements Initializable {
   void closeNotifiers() {
     notifiers.forEach((element) {
       try {
-        element.dispose();
+        if (element is ChangeNotifier) {
+          element.dispose();
+        }
       } catch (e, s) {
         print(e);
         print(s);

@@ -45,7 +45,7 @@ abstract class StatefulBloc<Data, State extends BlocState>
     if (e is Failure) {
       return e;
     }
-    return Failure(extractErrorMessage(e, s));
+    return UnknownFailure(e, extractErrorMessage(e, s));
   }
 
   void clean() {}

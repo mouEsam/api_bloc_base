@@ -6,16 +6,18 @@ import 'package:flutter/foundation.dart';
 import 'package:listenable_stream/listenable_stream.dart';
 
 mixin TrafficLightsMixin<State> on BaseCubit<State>, Initializable {
-  final ValueNotifier<bool> isGreen = ValueNotifier(true);
+
+  final ValueNotifier<bool> _isGreen = ValueNotifier(true);
+  ValueListenable<bool> get isGreen => _isGreen;
 
   late final Listenable _singleTrafficLights;
 
   bool get lastTrafficLightsValue => isGreen.value;
 
-  List<ValueNotifier<bool>> get trafficLights => [];
+  List<ValueListenable<bool>> get trafficLights => [];
 
   @override
-  get notifiers => super.notifiers..addAll([...trafficLights, isGreen]);
+  Set<Listenable> get notifiers => super.notifiers..addAll([...trafficLights, isGreen]);
 
   bool get _trafficLightsValue {
     return trafficLights.every((element) => element.value);
@@ -34,18 +36,18 @@ mixin TrafficLightsMixin<State> on BaseCubit<State>, Initializable {
   void setupTrafficLights() {
     if (_init) return;
     _init = true;
-    isGreen.value = _trafficLightsValue;
-    isGreen.addListener(_alert);
+    _isGreen.value = _trafficLightsValue;
+    _isGreen.addListener(_alert);
     _singleTrafficLights = Listenable.merge(trafficLights);
     _singleTrafficLights.addListener(_changed);
   }
 
   void _alert() {
-    trafficLightsChanged(isGreen.value);
+    trafficLightsChanged(_isGreen.value);
   }
 
   void _changed() {
-    isGreen.value = _trafficLightsValue;
+    _isGreen.value = _trafficLightsValue;
   }
 
   Future<R> whenActive<R extends Object?>({

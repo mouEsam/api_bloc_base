@@ -218,18 +218,19 @@ abstract class BaseRepository {
         if (converter != null && data is BaseApiResponse) {
           failure = converter.response(data);
         }
-        failure ??= Failure(defaultError);
+        failure ??= UnknownFailure(e, defaultError);
+      }
+
+      if (failure == null || failure is Failure) {
+        failure = InternetFailure.dio(
+          failure?.message ?? internetError,
+          e,
+          errors: failure is Failure ? failure.errors : null,
+          baseFailure: failure is Failure ? failure : null,
+        );
       }
     }
-    if (failure == null || failure is Failure) {
-      failure = InternetFailure.dio(
-        failure?.message ?? internetError,
-        e,
-        errors: failure is Failure ? failure.errors : null,
-        baseFailure: failure is Failure ? failure : null,
-      );
-    }
-    return failure!;
+    return failure ?? UnknownFailure(e, defaultError);
   }
 
   FutureOr<z.Either<Failure, T>> tryWork<T>(FutureOr<T> Function() work, [

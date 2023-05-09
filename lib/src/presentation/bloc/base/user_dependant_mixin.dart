@@ -25,18 +25,17 @@ mixin UserDependantMixin<Input, Output, State extends BlocState,
       userBloc.currentUser?.accessToken ?? authToken!;
   StreamSubscription? _subscription;
 
-  late final ValueNotifier<bool> userIsGreen = ValueNotifier(
-      userBloc.currentUser != null && shouldStart(userBloc.currentUser!));
+  ValueListenable<bool> get userIsGreen => _userIsGreen;
+
+  late final ValueNotifier<bool> _userIsGreen = ValueNotifier(
+    userBloc.currentUser != null && shouldStart(userBloc.currentUser!),
+  );
 
   @override
-  get trafficLights => super.trafficLights..addAll([userIsGreen]);
+  List<ValueListenable<bool>> get trafficLights => super.trafficLights..addAll([userIsGreen]);
 
   @override
-  get subscriptions => super.subscriptions..addAll([_subscription]);
-
-  bool _isAGo = false;
-
-  bool get isAGo => _isAGo;
+  Set<StreamSubscription?> get subscriptions => super.subscriptions..addAll([_subscription]);
 
   @override
   void init() {
@@ -56,13 +55,13 @@ mixin UserDependantMixin<Input, Output, State extends BlocState,
           authToken = newToken;
           if (shouldStart(user!)) {
             lastLogin = DateTime.now();
-            userIsGreen.value = true;
+            _userIsGreen.value = true;
           } else {
-            userIsGreen.value = false;
+            _userIsGreen.value = false;
           }
         } else {
           authToken = null;
-          userIsGreen.value = false;
+          _userIsGreen.value = false;
         }
       },
     );

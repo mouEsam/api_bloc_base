@@ -87,20 +87,22 @@ class FailedOperationState<T> extends LoadedState<T> with OperationMixin {
   final Function()? retry;
   final bool silent;
 
-  const FailedOperationState(T data,
-      {required this.operationTag,
-      required this.silent,
-      this.failure,
-      this.retry})
-      : super(data);
+  const FailedOperationState(
+    T data, {
+    required this.operationTag,
+    required this.silent,
+    this.failure,
+    this.retry,
+  }) : super(data);
 
-  FailedOperationState.message(T data,
-      {required this.operationTag,
-      required this.silent,
-      String? errorMessage,
-      BaseErrors? errors,
-      this.retry})
-      : failure = Failure(errorMessage, errors),
+  FailedOperationState.message(
+    T data, {
+    required this.operationTag,
+    required this.silent,
+    String? errorMessage,
+    BaseErrors? errors,
+    this.retry,
+  })  : failure = Failure(errorMessage, errors),
         super(data);
 
   String? get message {

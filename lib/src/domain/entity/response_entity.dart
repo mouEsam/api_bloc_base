@@ -37,6 +37,19 @@ class Failure extends ResponseEntity {
   List<Object?> get props => [...super.props, errors];
 }
 
+class UnknownFailure extends Failure {
+  final dynamic error;
+
+  const UnknownFailure(
+    this.error, [
+    String? message,
+    BaseErrors? errors,
+  ]) : super(message, errors);
+
+  @override
+  List<Object?> get props => super.props..add(error);
+}
+
 class ConversionFailure extends Failure {
   final Type convertedType;
 

@@ -6,6 +6,7 @@ import 'package:collection/collection.dart';
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:listenable_stream/listenable_stream.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -57,7 +58,7 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
   Stream<BlocState> get inputStream;
 
   @override
-  List<ValueNotifier<bool>> get trafficLights =>
+  List<ValueListenable<bool>> get trafficLights =>
       super.trafficLights..addAll([listeningToSources]);
 
   @override

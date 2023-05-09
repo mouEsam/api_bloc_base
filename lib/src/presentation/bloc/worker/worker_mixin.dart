@@ -97,9 +97,9 @@ mixin WorkerMixin<Output>
     });
   }
 
-  void interceptResponse(Result<ResponseEntity> result,
+  Future<void> interceptResponse(Result<ResponseEntity> result,
       {void onSuccess()?, void onFailure()?}) {
-    Future.value(result.value).then((value) {
+    return Future.value(result.value).then((value) {
       if (value is Success) {
         onSuccess?.call();
       } else if (value is Failure) {

@@ -9,6 +9,7 @@ import 'package:api_bloc_base/src/presentation/bloc/base/stateful_bloc.dart';
 import 'package:api_bloc_base/src/presentation/bloc/base/traffic_lights_mixin.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 
 import 'input_sink.dart';
 import 'state.dart';
@@ -55,13 +56,13 @@ mixin IndependenceMixin<Input, Output, State extends BlocState>
     ..addAll([_streamSourceSubscription, _dataSourceSubscription]);
 
   @override
-  List<ValueNotifier<bool>> get trafficLights => super.trafficLights
+  List<ValueListenable<bool>> get trafficLights => super.trafficLights
     ..addAll([
       _dataGreenLight,
     ]);
 
   @override
-  Set<ChangeNotifier> get notifiers => super.notifiers
+  Set<Listenable> get notifiers => super.notifiers
     ..addAll([
       shouldRefetchOrRefresh,
       _canFetchData,
