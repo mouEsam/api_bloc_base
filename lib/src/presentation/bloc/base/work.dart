@@ -18,6 +18,10 @@ class Work {
   Work.start(this._state, [VoidCallback? onCancelled])
       : cancellationState = CancellationState._(onCancelled);
 
+  Work.cancelled()
+      : _state = const Loading(),
+        cancellationState = CancellationState._(null, true);
+
   void cancel() {
     cancellationState.cancel();
   }

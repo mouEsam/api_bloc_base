@@ -8,6 +8,10 @@ abstract class BlocState extends Equatable {
   get props => [];
 }
 
+class Initial extends BlocState {
+  const Initial();
+}
+
 class Loading extends BlocState {
   const Loading();
 }

@@ -43,11 +43,15 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
   //         .whereType<provider.ProviderState<Output>>()
   //         .asBroadcastStream(onCancel: (sub) => sub.cancel()));
 
+  @override
   get sinks => super.sinks..addAll([_outputSubject]);
 
+  @override
   get subscriptions => super.subscriptions..addAll([_outputSubscription]);
 
+  @override
   final List<Stream<BlocState>> sources;
+  @override
   final List<ProviderMixin> providers;
 
   ListenerBloc(this.sources, this.providers, {Output? currentData})
@@ -61,6 +65,15 @@ abstract class ListenerBloc<Input, Output> extends WorkerBloc<Output>
     _setupOutputStream();
     super.init();
   }
+
+  @override
+  void clean() {
+    if (!_outputSubject.isClosed) {
+      _outputSubject.add(Work.start(const Initial()));
+    }
+    super.clean();
+  }
+
 
   void _setupOutputStream() {
     _outputSubscription = outputStream.listen(emitState, onError: handleError);

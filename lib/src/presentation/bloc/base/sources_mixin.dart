@@ -161,8 +161,8 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
           var mainEvent = event.state;
           if (mainEvent is Loading || mainEvent is Error) {
             return work.changeState(mainEvent);
-          } else {
-            mainEvent = mainEvent as Loaded<Input>;
+          } else if (mainEvent is Loaded<Input>) {
+            mainEvent = mainEvent;
             final errorState = event.states.whereType<Error>().firstOrNull;
             if (errorState != null) {
               return work.changeState(errorState);
@@ -174,6 +174,8 @@ mixin SourcesMixin<Input, Output, State extends BlocState>
                   await combineDataWithStates(mainEvent.data, loaded);
               return work.changeState(result);
             }
+          } else {
+            return work.changeState(mainEvent);
           }
         })
         .whereType<Work>()

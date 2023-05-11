@@ -28,6 +28,14 @@ mixin StreamInputMixin<Input, Output, State extends BlocState>
   Set<StreamSink> get sinks => super.sinks..addAll([_inputSubject]);
 
   @override
+  void clean() {
+    if (!_inputSubject.isClosed) {
+      _inputSubject.add(Work.start(const Initial()));
+    }
+    super.clean();
+  }
+
+  @override
   void handleInput(Work input) {
     inputSink.add(input);
   }
