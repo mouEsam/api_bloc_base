@@ -12,6 +12,7 @@ abstract class StatefulBloc<Data, State extends BlocState>
   bool get hasData;
 
   String extractErrorMessage(e, [s]) {
+    print("Error in $this");
     print(e);
     print(s);
     try {

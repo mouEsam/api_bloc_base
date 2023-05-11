@@ -21,9 +21,9 @@ class VisibilityWrapper extends StatelessWidget {
       onVisibilityChanged: (VisibilityInfo info) {
         onVisibilityChanged?.call(info.visibleFraction);
         if (info.visibleFraction > 0.0) {
-          visibilityDetector?.setVisible(false);
-        } else {
           visibilityDetector?.setVisible(true);
+        } else {
+          visibilityDetector?.setVisible(false);
         }
       },
       child: child,

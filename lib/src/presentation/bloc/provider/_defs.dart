@@ -44,6 +44,7 @@ typedef StreamInputProviderMixin<Input, Output>
     = StreamInputMixin<Input, Output, ProviderState<Output>>;
 typedef ProviderListenerProviderMixin<Input, Output>
     = ProviderListenerMixin<Input, Output, ProviderState<Output>>;
+typedef VisibilityProviderMixin<Output> = VisibilityMixin<ProviderState<Output>>;
 typedef ParametersDependenceProviderMixin<ParameterType, Input, Output>
     = ParametersDependenceMixin<ParameterType, Input, Output,
         ProviderState<Output>>;
